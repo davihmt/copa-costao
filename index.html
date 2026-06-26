@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#071a02">
+<title>Copa Costão</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#071a02;--bg2:#0b2505;--card:#112a08;
+  --gold:#FFD700;--green:#27ae60;--red:#c0392b;
+  --text:#f0f0f0;--muted:#7a9c7a;--border:#1e4018;
+}
+body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+/* HEADER */
+header{background:linear-gradient(135deg,#0a2a00 0%,#1a5a00 100%);padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;border-bottom:2px solid var(--gold)}
+#backBtn{background:none;border:none;color:var(--gold);font-size:30px;cursor:pointer;display:none;align-items:center;justify-content:center;width:36px;height:36px;padding:0;line-height:1;flex-shrink:0}
+#backBtn.visible{display:flex}
+#headerLogo{height:48px;object-fit:contain;flex:1;display:block}
+#mgrBtn{background:rgba(255,215,0,.15);border:1.5px solid var(--gold);color:var(--gold);width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* HOME */
+#homeView{padding:14px}
+.home-title{text-align:center;color:var(--gold);font-size:18px;font-weight:bold;margin-bottom:14px;letter-spacing:1px}
+#grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.player-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;-webkit-tap-highlight-color:transparent}
+.player-card:active{transform:scale(.97);box-shadow:0 0 0 2px var(--gold)}
+.player-photo{width:100%;aspect-ratio:1/1;background-size:cover;background-position:center top;background-color:#0a2005}
+.player-name{padding:7px 8px 3px;font-weight:bold;font-size:13px;text-align:center;color:var(--text)}
+.player-gols{padding:3px 8px 9px;font-size:13px;color:var(--gold);text-align:center}
+.collab-picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;max-height:160px;overflow-y:auto;padding:4px 0}
+.collab-chip{background:var(--bg2);border:1.5px solid var(--border);border-radius:20px;padding:6px 11px;font-size:12px;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.collab-chip.selected{background:var(--green);border-color:var(--green);color:#fff;font-weight:bold}
+.collab-sel-hint{font-size:11px;color:var(--muted);margin-bottom:8px}
+/* ALBUM */
+#albumView{padding:14px;display:none}
+.album-top{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:14px}
+.album-foto{width:84px;height:84px;border-radius:50%;background-size:cover;background-position:center top;background-color:#0a2005;border:3px solid var(--gold);flex-shrink:0}
+.album-nome{font-size:20px;font-weight:bold;margin-bottom:8px}
+.album-badge{display:inline-flex;align-items:center;gap:5px;background:var(--gold);color:#000;padding:5px 14px;border-radius:20px;font-weight:bold;font-size:15px}
+.sec-title{font-size:15px;font-weight:bold;color:var(--gold);margin:16px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+/* CORINGAS */
+.coringas-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.coringa-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:12px;text-align:center;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.coringa-card.earned{border-color:var(--gold);background:#142a00}
+.coringa-gols{font-size:11px;color:var(--muted)}
+.coringa-img{width:68px;height:auto;border-radius:8px;margin:4px 0}
+.coringa-lock{font-size:26px}
+.coringa-premio{font-size:11px;color:var(--text);line-height:1.3}
+.coringa-card.earned .coringa-premio{color:var(--gold);font-weight:bold}
+.locked-text{color:var(--muted)}
+/* STICKERS */
+.stickers-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sticker-card{background:var(--card);border:2px solid;border-radius:12px;padding:12px;text-align:center}
+.sticker-qty{font-size:22px;font-weight:bold;margin-bottom:2px}
+.sticker-nome{font-size:12px;font-weight:bold;margin:3px 0}
+.sticker-gols{font-size:11px;color:var(--muted)}
+.no-stickers{color:var(--muted);text-align:center;padding:24px;font-style:italic;grid-column:1/-1}
+/* PUNIÇÕES */
+.punicoes-list{display:flex;flex-direction:column;gap:8px}
+.pu-item{background:#1f0000;border:1px solid #4a0000;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:13px}
+.pu-emoji{font-size:20px;flex-shrink:0}
+.pu-desc{flex:1;color:var(--text)}
+.pu-gols{color:var(--red);font-weight:bold;flex-shrink:0}
+.pu-date{color:var(--muted);font-size:11px;flex-shrink:0}
+/* EVENTS */
+.events-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+.ev-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:10px;font-size:12px}
+.ev-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ev-desc{flex:1;color:var(--text)}
+.ev-gols{font-weight:bold;flex-shrink:0}
+.ev-gols.plus{color:var(--green)}
+.ev-gols.minus{color:var(--red)}
+.ev-date{color:var(--muted);font-size:11px;flex-shrink:0}
+/* MANAGER */
+#managerView{padding:14px;display:none}
+.mgr-head{text-align:center;margin-bottom:18px}
+.mgr-head h2{color:var(--gold);font-size:22px}
+.mgr-sub{color:var(--muted);font-size:13px;margin-top:4px}
+.mgr-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+.mgr-card h3{color:var(--text);font-size:15px;margin-bottom:12px}
+select{width:100%;padding:12px;background:#0d2508;border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;margin-bottom:10px;-webkit-appearance:none;appearance:none}
+.btn-p{width:100%;padding:14px;background:linear-gradient(135deg,#145c00,#27ae60);border:none;color:#fff;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:4px}
+.btn-d{width:100%;padding:14px;background:linear-gradient(135deg,#5c0000,#c0392b);border:none;color:#fff;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;margin-top:4px}
+.btn-out{width:100%;padding:12px;background:transparent;border:1px solid var(--muted);color:var(--muted);border-radius:8px;font-size:14px;cursor:pointer;margin-top:8px}
+.rank-item{display:flex;align-items:center;padding:8px 4px;border-bottom:1px solid var(--border);gap:12px}
+.rank-item:last-child{border-bottom:none}
+.rank-pos{color:var(--gold);font-weight:bold;font-size:14px;min-width:28px}
+.rank-nome{flex:1;font-size:14px}
+.rank-gols{color:var(--gold);font-size:14px}
+/* MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal.open{display:flex}
+.modal-box{background:#0b2005;border:2px solid var(--gold);border-radius:18px;padding:24px;width:300px;max-width:100%}
+.modal-box h3{color:var(--gold);text-align:center;font-size:18px;margin-bottom:18px}
+.modal-box input[type=password]{width:100%;padding:13px;background:#0d2508;border:1.5px solid var(--border);color:var(--text);border-radius:8px;font-size:16px;margin-bottom:14px;text-align:center;letter-spacing:3px}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;padding:13px;border-radius:8px;font-size:15px;cursor:pointer;border:none;font-weight:bold}
+.btn-enter{background:var(--green);color:#fff}
+.btn-cancel{background:#222;color:var(--muted)}
+
+/* CARTAS REAIS */
+.sticker-card-img{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;text-align:center;padding-bottom:10px}
+.sticker-img-wrap{position:relative;display:inline-block;width:100%}
+.sticker-img-real{width:100%;display:block;border-radius:0}
+.sticker-qty-badge{position:absolute;top:6px;right:6px;background:var(--gold);color:#000;font-weight:bold;font-size:13px;padding:2px 8px;border-radius:12px}
+.sticker-img-label{font-size:12px;font-weight:bold;color:var(--text);padding:6px 8px 2px}
+.sticker-img-gols{font-size:11px;color:var(--gold)}
+
+/* CORREÇÃO DE ERROS */
+.mgr-card-danger{border-color:#4a1000!important}
+.corr-hint{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.4}
+.corr-list{display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:320px;overflow-y:auto}
+.corr-item{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 10px}
+.corr-item-pun{background:#1a0000;border-color:#4a0000}
+.corr-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.corr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.corr-label{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.corr-date{font-size:10px;color:var(--muted)}
+.corr-gols{font-size:13px;font-weight:bold;flex-shrink:0}
+.corr-gols.plus{color:var(--green)}
+.corr-gols.minus{color:var(--red)}
+.corr-del{background:#3a0000;border:1px solid #7a0000;color:#ff6b6b;width:28px;height:28px;border-radius:6px;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:bold}
+.corr-del:active{background:#5a0000}
+.corr-empty{color:var(--muted);font-size:13px;text-align:center;padding:16px;font-style:italic}
+
+/* CARTA PICKER */
+.carta-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;max-height:360px;overflow-y:auto;padding:2px}
+.carta-pick{background:var(--bg2);border:2px solid var(--border);border-radius:10px;padding:6px;text-align:center;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.carta-pick:active{transform:scale(.96)}
+.carta-pick.selected{border-color:var(--gold);background:#1a3500}
+.carta-pick-img{width:100%;border-radius:6px;display:block;margin-bottom:4px}
+.carta-pick-fallback{height:60px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#fff;margin-bottom:4px}
+.carta-pick-nome{font-size:10px;color:var(--text);font-weight:bold;line-height:1.2}
+.carta-pick-gols{font-size:10px;color:var(--gold);margin-top:2px}
+
+/* RANKING */
+.rank-open-btn{width:100%;padding:12px;background:linear-gradient(135deg,#1a5c00,#27ae60);border:none;color:#fff;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:14px;letter-spacing:.5px}
+#rankingView{padding:14px}
+.rank-tabs{display:flex;gap:8px;margin-bottom:16px}
+.rank-tab{flex:1;padding:11px 4px;border:1.5px solid var(--border);background:var(--card);color:var(--muted);border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;text-align:center;transition:all .15s}
+.rank-tab.active{background:var(--gold);color:#000;border-color:var(--gold)}
+.rank-list{display:flex;flex-direction:column;gap:10px}
+.rank-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer}
+.rank-row:active{transform:scale(.98)}
+.rank-row.top1{border-color:#FFD700;background:#1a3000}
+.rank-row.top2{border-color:#C0C0C0}
+.rank-row.top3{border-color:#CD7F32}
+.rank-medal{font-size:22px;width:28px;text-align:center;flex-shrink:0}
+.rank-avatar{width:46px;height:46px;border-radius:50%;background-size:cover;background-position:center top;background-color:#0a2005;flex-shrink:0;border:2px solid var(--border)}
+.rank-row.top1 .rank-avatar{border-color:var(--gold)}
+.rank-info{flex:1;min-width:0}
+.rank-info-nome{font-size:15px;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-info-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.rank-score{font-size:20px;font-weight:bold;color:var(--gold);flex-shrink:0}
+.rank-zero{color:var(--muted);text-align:center;padding:30px;font-style:italic}
+.rank-head{text-align:center;margin-bottom:18px}
+.rank-head h2{color:var(--gold);font-size:20px}
+.rank-head p{color:var(--muted);font-size:13px;margin-top:4px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a4a00;border:1.5px solid var(--green);color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:bold;z-index:300;transition:transform .3s;max-width:90vw;text-align:center;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* TABS DO GERENTE */
+.mgr-tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.mgr-tab{padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap;transition:all .15s}
+.mgr-tab.active{background:var(--gold);color:#000;border-color:var(--gold)}
+.mgr-panel{display:none}
+.mgr-panel.active{display:block}
+
+/* INPUTS */
+input[type="text"],input[type="number"]{width:100%;padding:12px;background:#0d2508;border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:14px;margin-bottom:10px}
+input::placeholder{color:var(--muted)}
+
+/* PLAYER FORM */
+.player-form{display:flex;flex-direction:column;gap:10px}
+.form-row{display:flex;gap:10px}
+.form-row input{flex:1;margin-bottom:0}
+
+/* GOAL INPUTS */
+.goal-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.goal-row:last-child{border-bottom:none}
+.goal-name{flex:1;font-size:14px}
+.goal-controls{display:flex;align-items:center;gap:8px}
+.goal-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--bg2);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.goal-btn:active{background:var(--border)}
+.goal-value{font-size:16px;font-weight:bold;min-width:30px;text-align:center;color:var(--gold)}
+
+/* PUNISHMENT TYPES */
+.punish-types{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.punish-type{padding:12px;background:var(--bg2);border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;transition:all .15s}
+.punish-type.selected{border-color:var(--red);background:#1a0000}
+.punish-emoji{font-size:24px;margin-bottom:4px}
+.punish-name{font-size:11px;font-weight:bold;color:var(--text)}
+.punish-gols{font-size:10px;color:var(--red);margin-top:2px}
+
+/* BACKUP */
+.backup-area{width:100%;min-height:120px;padding:12px;background:#0d2508;border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:12px;font-family:monospace;margin-bottom:10px;resize:vertical}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<header>
+  <button id="backBtn" onclick="goBack()">&#8249;</button>
+  <div id="headerLogo" style="flex:1;text-align:center;color:var(--gold);font-weight:bold;font-size:16px;letter-spacing:1px;">COPA COSTÃO</div>
+  <button id="mgrBtn" onclick="openManager()" title="Painel Gerente">&#9881;</button>
+</header>
+
+<div id="homeView">
+  <div class="home-title">&#127942; COPA COSTÃO</div>
+  <button class="rank-open-btn" onclick="openRanking()">&#127942; Ranking Goleadores</button>
+  <div id="grid"></div>
+</div>
+
+<div id="albumView"></div>
+<div id="managerView"></div>
+<div id="rankingView" style="display:none"></div>
+
+<!-- Password modal -->
+<div id="pwModal" class="modal">
+  <div class="modal-box">
+    <h3>&#128274; Acesso Gerente</h3>
+    <input type="password" id="pwInput" placeholder="Digite a senha">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closePw()">Cancelar</button>
+      <button class="btn-enter" onclick="checkPass()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ==================== CONFIGURAÇÃO ====================
+const ADMIN_PASSWORD = 'copa2026';
+
+// ==================== DADOS INICIAIS (ZERADOS) ====================
+const defaultData = {
+  players: [],
+  stickers: [
+    { id: 'luxo-verao', name: 'Luxo Verão', gols: 3, color: '#FFD700', image: null },
+    { id: 'master-inverno', name: 'Master Inverno', gols: 2, color: '#C0C0C0', image: null },
+    { id: 'luxo-media', name: 'Luxo Média', gols: 1, color: '#CD7F32', image: null },
+    { id: 'luxo-alta', name: 'Luxo Alta', gols: 4, color: '#FF6B6B', image: null },
+    { id: 'master-verao', name: 'Master Verão', gols: 5, color: '#4ECDC4', image: null },
+    { id: 'coringa', name: 'Coringa', gols: 10, color: '#FF006E', image: null }
+  ],
+  rewards: [
+    { id: 1, gols: 10, name: 'Bronze', emoji: '🥉', unlocked: false },
+    { id: 2, gols: 20, name: 'Prata', emoji: '🥈', unlocked: false },
+    { id: 3, gols: 30, name: 'Ouro', emoji: '🥇', unlocked: false },
+    { id: 4, gols: 40, name: 'Diamante', emoji: '💎', unlocked: false }
+  ],
+  events: [],
+  punishments: [
+    { id: 'amarelo', name: 'Cartão Amarelo', gols: -2, emoji: '🟨' },
+    { id: 'vermelho', name: 'Cartão Vermelho', gols: -5, emoji: '🟥' },
+    { id: 'advertencia', name: 'Advertência', gols: -1, emoji: '⚠️' }
+  ]
+};
+
+// ==================== ESTADO ====================
+let data = JSON.parse(JSON.stringify(defaultData));
+let currentView = 'home';
+let selectedPlayer = null;
+let managerTab = 'dashboard';
+
+// ==================== LOCALSTORAGE ====================
+function loadData() {
+  const saved = localStorage.getItem('copaCostaoData');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      data = { ...defaultData, ...parsed };
+      // Garantir que todos os arrays existam
+      if (!data.players) data.players = [];
+      if (!data.events) data.events = [];
+      if (!data.stickers) data.stickers = defaultData.stickers;
+      if (!data.rewards) data.rewards = defaultData.rewards;
+    } catch(e) {
+      console.error('Erro ao carregar dados:', e);
+    }
+  }
+}
+
+function saveData() {
+  localStorage.setItem('copaCostaoData', JSON.stringify(data));
+}
+
+// ==================== TOAST ====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ==================== NAVEGAÇÃO ====================
+function showView(view) {
+  document.getElementById('homeView').style.display = view === 'home' ? 'block' : 'none';
+  document.getElementById('albumView').style.display = view === 'album' ? 'block' : 'none';
+  document.getElementById('managerView').style.display = view === 'manager' ? 'block' : 'none';
+  document.getElementById('rankingView').style.display = view === 'ranking' ? 'block' : 'none';
+
+  const backBtn = document.getElementById('backBtn');
+  backBtn.classList.toggle('visible', view !== 'home');
+
+  currentView = view;
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  if (currentView === 'album' || currentView === 'ranking') {
+    showView('home');
+  } else if (currentView === 'manager') {
+    showView('home');
+  }
+}
+
+// ==================== HOME - GRID DE JOGADORES ====================
+function renderHome() {
+  const grid = document.getElementById('grid');
+
+  if (data.players.length === 0) {
+    grid.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px;font-style:italic;">Nenhum jogador cadastrado.<br>Use o painel do gerente para adicionar.</div>';
+    return;
+  }
+
+  grid.innerHTML = data.players.map(p => {
+    const totalGols = p.golsHoje + p.golsSemana + p.golsMes;
+    return `
+      <div class="player-card" onclick="openAlbum(${p.id})">
+        <div class="player-photo" style="background-image:url('${p.foto || 'https://via.placeholder.com/150/0a2005/FFD700?text='+encodeURIComponent(p.name)}')"></div>
+        <div class="player-name">${p.name}</div>
+        <div class="player-gols">${totalGols} gols</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ==================== ÁLBUM DO JOGADOR ====================
+function openAlbum(playerId) {
+  selectedPlayer = data.players.find(p => p.id === playerId);
+  if (!selectedPlayer) return;
+
+  const totalGols = selectedPlayer.golsHoje + selectedPlayer.golsSemana + selectedPlayer.golsMes;
+  const playerStickers = selectedPlayer.stickers || [];
+
+  let html = `
+    <div id="albumView" style="padding:14px">
+      <div class="album-top">
+        <div class="album-foto" style="background-image:url('${selectedPlayer.foto || 'https://via.placeholder.com/150/0a2005/FFD700?text='+encodeURIComponent(selectedPlayer.name)}')"></div>
+        <div>
+          <div class="album-nome">${selectedPlayer.name}</div>
+          <div class="album-badge">&#9917; ${totalGols} Gols</div>
+        </div>
+      </div>
+
+      <div class="sec-title">&#127941; Recompensas</div>
+      <div class="coringas-grid">
+  `;
+
+  data.rewards.forEach(r => {
+    const earned = totalGols >= r.gols;
+    html += `
+      <div class="coringa-card ${earned ? 'earned' : ''}">
+        <div class="coringa-gols">${r.gols} gols</div>
+        <div class="coringa-lock">${earned ? r.emoji : '&#128274;'}</div>
+        <div class="coringa-premio ${earned ? '' : 'locked-text'}">${r.name}</div>
+      </div>
+    `;
+  });
+
+  html += `</div>
+      <div class="sec-title">&#127912; Figurinhas Coletadas</div>
+      <div class="stickers-grid">
+  `;
+
+  if (playerStickers.length === 0) {
+    html += '<div class="no-stickers">Nenhuma figurinha coletada ainda</div>';
+  } else {
+    playerStickers.forEach(s => {
+      const stickerDef = data.stickers.find(st => st.id === s.id) || { name: 'Desconhecida', color: '#666' };
+      html += `
+        <div class="sticker-card" style="border-color:${stickerDef.color}">
+          <div class="sticker-qty">${s.qty}x</div>
+          <div class="sticker-nome">${stickerDef.name}</div>
+          <div class="sticker-gols">${stickerDef.gols} gols</div>
+        </div>
+      `;
+    });
+  }
+
+  html += '</div>';
+
+  // Punições
+  const playerPunishments = data.events.filter(e => e.playerId === playerId && e.type === 'punishment');
+  if (playerPunishments.length > 0) {
+    html += `
+      <div class="sec-title">&#128683; Punições</div>
+      <div class="punicoes-list">
+        ${playerPunishments.map(p => `
+          <div class="pu-item">
+            <div class="pu-emoji">${p.emoji}</div>
+            <div class="pu-desc">${p.desc}</div>
+            <div class="pu-gols">${p.gols} gols</div>
+            <div class="pu-date">${p.date}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // Histórico
+  const playerEvents = data.events.filter(e => e.playerId === playerId);
+  if (playerEvents.length > 0) {
+    html += `
+      <div class="sec-title">&#128220; Histórico</div>
+      <div class="events-list">
+        ${playerEvents.slice().reverse().map(e => `
+          <div class="ev-item">
+            <div class="ev-dot" style="background:${e.gols > 0 ? 'var(--green)' : e.gols < 0 ? 'var(--red)' : 'var(--gold)'})"></div>
+            <div class="ev-desc">${e.desc}</div>
+            <div class="ev-gols ${e.gols > 0 ? 'plus' : e.gols < 0 ? 'minus' : ''}">${e.gols > 0 ? '+' : ''}${e.gols}</div>
+            <div class="ev-date">${e.date}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  html += '</div>';
+
+  document.getElementById('albumView').innerHTML = html;
+  showView('album');
+}
+
+// ==================== RANKING ====================
+function openRanking() {
+  renderRanking('hoje');
+  showView('ranking');
+}
+
+function renderRanking(period) {
+  const container = document.getElementById('rankingView');
+
+  let sorted = [...data.players];
+  if (period === 'hoje') sorted.sort((a,b) => b.golsHoje - a.golsHoje);
+  else if (period === 'semana') sorted.sort((a,b) => b.golsSemana - a.golsSemana);
+  else if (period === 'mes') sorted.sort((a,b) => b.golsMes - a.golsMes);
+
+  let html = `
+    <div class="rank-head">
+      <h2>&#127942; Ranking Goleadores</h2>
+      <p>Copa Costão 2026</p>
+    </div>
+    <div class="rank-tabs">
+      <button class="rank-tab ${period === 'hoje' ? 'active' : ''}" onclick="renderRanking('hoje')">Hoje</button>
+      <button class="rank-tab ${period === 'semana' ? 'active' : ''}" onclick="renderRanking('semana')">Semana</button>
+      <button class="rank-tab ${period === 'mes' ? 'active' : ''}" onclick="renderRanking('mes')">Mês</button>
+    </div>
+    <div class="rank-list">
+  `;
+
+  if (sorted.length === 0) {
+    html += '<div class="rank-zero">Nenhum jogador cadastrado</div>';
+  } else {
+    sorted.forEach((p, i) => {
+      const gols = period === 'hoje' ? p.golsHoje : period === 'semana' ? p.golsSemana : p.golsMes;
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}º`;
+      html += `
+        <div class="rank-row ${i < 3 ? 'top'+(i+1) : ''}" onclick="openAlbum(${p.id})">
+          <div class="rank-medal">${medal}</div>
+          <div class="rank-avatar" style="background-image:url('${p.foto || 'https://via.placeholder.com/150/0a2005/FFD700?text='+encodeURIComponent(p.name)}')"></div>
+          <div class="rank-info">
+            <div class="rank-info-nome">${p.name}</div>
+            <div class="rank-info-sub">${p.time || 'Sem time'}</div>
+          </div>
+          <div class="rank-score">${gols}</div>
+        </div>
+      `;
+    });
+  }
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+// ==================== PAINEL DO GERENTE ====================
+function openManager() {
+  document.getElementById('pwModal').classList.add('open');
+  document.getElementById('pwInput').value = '';
+  document.getElementById('pwInput').focus();
+}
+
+function closePw() {
+  document.getElementById('pwModal').classList.remove('open');
+}
+
+function checkPass() {
+  const input = document.getElementById('pwInput').value;
+  if (input === ADMIN_PASSWORD) {
+    closePw();
+    showManagerPanel();
+  } else {
+    showToast('Senha incorreta!');
+    document.getElementById('pwInput').value = '';
+  }
+}
+
+function showManagerPanel() {
+  renderManager();
+  showView('manager');
+}
+
+function renderManager() {
+  const container = document.getElementById('managerView');
+
+  container.innerHTML = `
+    <div class="mgr-head">
+      <h2>&#9881; Painel do Gerente</h2>
+      <div class="mgr-sub">Copa Costão - Administração</div>
+    </div>
+
+    <div class="mgr-tabs">
+      <button class="mgr-tab ${managerTab === 'dashboard' ? 'active' : ''}" onclick="setManagerTab('dashboard')">&#128202; Dashboard</button>
+      <button class="mgr-tab ${managerTab === 'players' ? 'active' : ''}" onclick="setManagerTab('players')">&#128100; Jogadores</button>
+      <button class="mgr-tab ${managerTab === 'goals' ? 'active' : ''}" onclick="setManagerTab('goals')">&#9917; Lançar Gols</button>
+      <button class="mgr-tab ${managerTab === 'stickers' ? 'active' : ''}" onclick="setManagerTab('stickers')">&#127912; Liberar Figurinha</button>
+      <button class="mgr-tab ${managerTab === 'punish' ? 'active' : ''}" onclick="setManagerTab('punish')">&#128683; Punição</button>
+      <button class="mgr-tab ${managerTab === 'correct' ? 'active' : ''}" onclick="setManagerTab('correct')">&#10060; Corrigir</button>
+      <button class="mgr-tab ${managerTab === 'rewards' ? 'active' : ''}" onclick="setManagerTab('rewards')">&#127941; Recompensas</button>
+      <button class="mgr-tab ${managerTab === 'backup' ? 'active' : ''}" onclick="setManagerTab('backup')">&#128190; Backup</button>
+    </div>
+
+    <div id="mgr-panel-dashboard" class="mgr-panel ${managerTab === 'dashboard' ? 'active' : ''}">
+      ${renderDashboard()}
+    </div>
+    <div id="mgr-panel-players" class="mgr-panel ${managerTab === 'players' ? 'active' : ''}">
+      ${renderPlayersPanel()}
+    </div>
+    <div id="mgr-panel-goals" class="mgr-panel ${managerTab === 'goals' ? 'active' : ''}">
+      ${renderGoalsPanel()}
+    </div>
+    <div id="mgr-panel-stickers" class="mgr-panel ${managerTab === 'stickers' ? 'active' : ''}">
+      ${renderStickersPanel()}
+    </div>
+    <div id="mgr-panel-punish" class="mgr-panel ${managerTab === 'punish' ? 'active' : ''}">
+      ${renderPunishPanel()}
+    </div>
+    <div id="mgr-panel-correct" class="mgr-panel ${managerTab === 'correct' ? 'active' : ''}">
+      ${renderCorrectPanel()}
+    </div>
+    <div id="mgr-panel-rewards" class="mgr-panel ${managerTab === 'rewards' ? 'active' : ''}">
+      ${renderRewardsPanel()}
+    </div>
+    <div id="mgr-panel-backup" class="mgr-panel ${managerTab === 'backup' ? 'active' : ''}">
+      ${renderBackupPanel()}
+    </div>
+
+    <button class="btn-out" onclick="showView('home')">&#128281; Sair do Painel</button>
+  `;
+}
+
+function setManagerTab(tab) {
+  managerTab = tab;
+  renderManager();
+}
+
+// DASHBOARD
+function renderDashboard() {
+  const totalPlayers = data.players.length;
+  const totalGols = data.players.reduce((sum, p) => sum + p.golsHoje + p.golsSemana + p.golsMes, 0);
+  const topPlayer = data.players.length > 0 ? data.players.reduce((max, p) => {
+    const total = p.golsHoje + p.golsSemana + p.golsMes;
+    return total > (max.golsHoje + max.golsSemana + max.golsMes) ? p : max;
+  }) : null;
+
+  return `
+    <div class="mgr-card">
+      <h3>&#128202; Estatísticas</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--bg2);padding:12px;border-radius:10px;text-align:center">
+          <div style="font-size:24px;font-weight:bold;color:var(--gold)">${totalPlayers}</div>
+          <div style="font-size:12px;color:var(--muted)">Jogadores</div>
+        </div>
+        <div style="background:var(--bg2);padding:12px;border-radius:10px;text-align:center">
+          <div style="font-size:24px;font-weight:bold;color:var(--gold)">${totalGols}</div>
+          <div style="font-size:12px;color:var(--muted)">Total de Gols</div>
+        </div>
+      </div>
+    </div>
+
+    ${topPlayer ? `
+    <div class="mgr-card">
+      <h3>&#127942; Artilheiro</h3>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:60px;height:60px;border-radius:50%;background-size:cover;background-position:center;background-color:#0a2005;border:2px solid var(--gold)" 
+             style="background-image:url('${topPlayer.foto || ''}')"></div>
+        <div>
+          <div style="font-size:16px;font-weight:bold">${topPlayer.name}</div>
+          <div style="font-size:14px;color:var(--gold)">${topPlayer.golsHoje + topPlayer.golsSemana + topPlayer.golsMes} gols</div>
+        </div>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="mgr-card">
+      <h3>&#127941; Ranking Geral</h3>
+      <div style="max-height:300px;overflow-y:auto">
+        ${data.players.length === 0 ? '<div style="color:var(--muted);text-align:center;padding:20px">Nenhum jogador</div>' : 
+          data.players.slice().sort((a,b) => (b.golsHoje+b.golsSemana+b.golsMes) - (a.golsHoje+a.golsSemana+a.golsMes)).map((p, i) => `
+          <div class="rank-item">
+            <div class="rank-pos">${i+1}º</div>
+            <div class="rank-nome">${p.name}</div>
+            <div class="rank-gols">${p.golsHoje+p.golsSemana+p.golsMes}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// PLAYERS PANEL
+function renderPlayersPanel() {
+  return `
+    <div class="mgr-card">
+      <h3>&#128100; Cadastrar Jogador</h3>
+      <div class="player-form">
+        <input type="text" id="newPlayerName" placeholder="Nome do jogador">
+        <input type="text" id="newPlayerTime" placeholder="Time / Cor (opcional)">
+        <input type="text" id="newPlayerFoto" placeholder="URL da foto (opcional)">
+        <button class="btn-p" onclick="addPlayer()">&#128100; Adicionar Jogador</button>
+      </div>
+    </div>
+
+    <div class="mgr-card">
+      <h3>&#128203; Lista de Jogadores</h3>
+      <div style="max-height:300px;overflow-y:auto">
+        ${data.players.length === 0 ? '<div style="color:var(--muted);text-align:center;padding:20px">Nenhum jogador cadastrado</div>' : 
+          data.players.map(p => `
+          <div class="rank-item" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:36px;height:36px;border-radius:50%;background-size:cover;background-position:center;background-color:#0a2005" 
+                   style="background-image:url('${p.foto || ''}')"></div>
+              <div>
+                <div style="font-weight:bold">${p.name}</div>
+                <div style="font-size:11px;color:var(--muted)">${p.time || 'Sem time'}</div>
+              </div>
+            </div>
+            <button onclick="removePlayer(${p.id})" style="background:#3a0000;border:1px solid #7a0000;color:#ff6b6b;width:28px;height:28px;border-radius:6px;cursor:pointer">&#10005;</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function addPlayer() {
+  const name = document.getElementById('newPlayerName').value.trim();
+  const time = document.getElementById('newPlayerTime').value.trim();
+  const foto = document.getElementById('newPlayerFoto').value.trim();
+
+  if (!name) {
+    showToast('Digite o nome do jogador!');
+    return;
+  }
+
+  const newId = data.players.length > 0 ? Math.max(...data.players.map(p => p.id)) + 1 : 1;
+  data.players.push({
+    id: newId,
+    name,
+    time: time || '',
+    foto: foto || '',
+    golsHoje: 0,
+    golsSemana: 0,
+    golsMes: 0,
+    stickers: []
+  });
+
+  saveData();
+  showToast('Jogador adicionado!');
+  renderManager();
+  renderHome();
+}
+
+function removePlayer(id) {
+  if (!confirm('Tem certeza que deseja remover este jogador?')) return;
+  data.players = data.players.filter(p => p.id !== id);
+  data.events = data.events.filter(e => e.playerId !== id);
+  saveData();
+  showToast('Jogador removido!');
+  renderManager();
+  renderHome();
+}
+
+// GOALS PANEL
+function renderGoalsPanel() {
+  return `
+    <div class="mgr-card">
+      <h3>&#9917; Lançar Gols</h3>
+      <select id="goalPeriod">
+        <option value="hoje">Hoje</option>
+        <option value="semana">Semana</option>
+        <option value="mes">Mês</option>
+      </select>
+      <div style="max-height:400px;overflow-y:auto;margin-bottom:10px">
+        ${data.players.length === 0 ? '<div style="color:var(--muted);text-align:center;padding:20px">Nenhum jogador cadastrado</div>' : 
+          data.players.map(p => `
+          <div class="goal-row">
+            <div class="goal-name">${p.name}</div>
+            <div class="goal-controls">
+              <button class="goal-btn" onclick="adjustGoal(${p.id}, -1)">&#8722;</button>
+              <div class="goal-value" id="goal-${p.id}">0</div>
+              <button class="goal-btn" onclick="adjustGoal(${p.id}, 1)">+</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn-p" onclick="saveGoals()">&#128190; Salvar Pontuações</button>
+    </div>
+  `;
+}
+
+const goalAdjustments = {};
+
+function adjustGoal(playerId, delta) {
+  if (!goalAdjustments[playerId]) goalAdjustments[playerId] = 0;
+  goalAdjustments[playerId] += delta;
+  if (goalAdjustments[playerId] < 0) goalAdjustments[playerId] = 0;
+  const el = document.getElementById(`goal-${playerId}`);
+  if (el) el.textContent = goalAdjustments[playerId];
+}
+
+function saveGoals() {
+  const period = document.getElementById('goalPeriod').value;
+  let totalAdded = 0;
+
+  Object.keys(goalAdjustments).forEach(playerId => {
+    const amount = goalAdjustments[playerId];
+    if (amount > 0) {
+      const player = data.players.find(p => p.id === parseInt(playerId));
+      if (player) {
+        if (period === 'hoje') player.golsHoje += amount;
+        else if (period === 'semana') player.golsSemana += amount;
+        else if (period === 'mes') player.golsMes += amount;
+
+        data.events.push({
+          playerId: player.id,
+          type: 'goal',
+          desc: `+${amount} gols (${period})`,
+          gols: amount,
+          date: new Date().toLocaleDateString('pt-BR'),
+          timestamp: Date.now()
+        });
+        totalAdded += amount;
+      }
+    }
+  });
+
+  // Limpar ajustamentos
+  Object.keys(goalAdjustments).forEach(k => delete goalAdjustments[k]);
+
+  saveData();
+  showToast(totalAdded > 0 ? `${totalAdded} gols lançados!` : 'Nenhuma alteração');
+  renderManager();
+  renderHome();
+}
+
+// STICKERS PANEL
+let selectedStickerPlayers = [];
+let selectedStickerId = null;
+
+function renderStickersPanel() {
+  return `
+    <div class="mgr-card">
+      <h3>&#127912; Liberar Figurinha</h3>
+      <div class="collab-sel-hint">Selecione os jogadores:</div>
+      <div class="collab-picker" id="stickerPlayerPicker">
+        ${data.players.map(p => `
+          <div class="collab-chip" onclick="toggleStickerPlayer(${p.id}, this)" data-id="${p.id}">${p.name}</div>
+        `).join('')}
+      </div>
+
+      <div class="collab-sel-hint">Selecione a figurinha:</div>
+      <div class="carta-picker">
+        ${data.stickers.map(s => `
+          <div class="carta-pick" onclick="selectSticker('${s.id}', this)" data-id="${s.id}">
+            <div class="carta-pick-fallback" style="background:${s.color}">${s.name}</div>
+            <div class="carta-pick-nome">${s.name}</div>
+            <div class="carta-pick-gols">${s.gols} gols</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn-p" onclick="liberarFigurinha()">&#9989; Liberar Figurinha</button>
+    </div>
+  `;
+}
+
+function toggleStickerPlayer(playerId, el) {
+  const idx = selectedStickerPlayers.indexOf(playerId);
+  if (idx > -1) {
+    selectedStickerPlayers.splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    selectedStickerPlayers.push(playerId);
+    el.classList.add('selected');
+  }
+}
+
+function selectSticker(stickerId, el) {
+  selectedStickerId = stickerId;
+  document.querySelectorAll('.carta-pick').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function liberarFigurinha() {
+  if (selectedStickerPlayers.length === 0) {
+    showToast('Selecione pelo menos um jogador!');
+    return;
+  }
+  if (!selectedStickerId) {
+    showToast('Selecione uma figurinha!');
+    return;
+  }
+
+  const sticker = data.stickers.find(s => s.id === selectedStickerId);
+  if (!sticker) return;
+
+  selectedStickerPlayers.forEach(playerId => {
+    const player = data.players.find(p => p.id === playerId);
+    if (player) {
+      if (!player.stickers) player.stickers = [];
+      const existing = player.stickers.find(s => s.id === selectedStickerId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        player.stickers.push({ id: selectedStickerId, qty: 1 });
+      }
+
+      data.events.push({
+        playerId: player.id,
+        type: 'sticker',
+        desc: `Figurinha ${sticker.name}`,
+        gols: sticker.gols,
+        date: new Date().toLocaleDateString('pt-BR'),
+        timestamp: Date.now()
+      });
+    }
+  });
+
+  saveData();
+  showToast(`Figurinha liberada para ${selectedStickerPlayers.length} jogador(es)!`);
+  selectedStickerPlayers = [];
+  selectedStickerId = null;
+  renderManager();
+}
+
+// PUNISH PANEL
+let selectedPunishPlayer = null;
+let selectedPunishType = null;
+
+function renderPunishPanel() {
+  return `
+    <div class="mgr-card">
+      <h3>&#128683; Aplicar Punição</h3>
+      <select id="punishPlayer" onchange="selectedPunishPlayer = parseInt(this.value)">
+        <option value="">Selecione o jogador</option>
+        ${data.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+      </select>
+
+      <div class="punish-types">
+        ${data.punishments.map(p => `
+          <div class="punish-type" onclick="selectPunishType('${p.id}', this)">
+            <div class="punish-emoji">${p.emoji}</div>
+            <div class="punish-name">${p.name}</div>
+            <div class="punish-gols">${p.gols} gols</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn-d" onclick="aplicarPunicao()">&#128680; Aplicar Punição</button>
+    </div>
+  `;
+}
+
+function selectPunishType(typeId, el) {
+  selectedPunishType = typeId;
+  document.querySelectorAll('.punish-type').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function aplicarPunicao() {
+  if (!selectedPunishPlayer) {
+    showToast('Selecione um jogador!');
+    return;
+  }
+  if (!selectedPunishType) {
+    showToast('Selecione o tipo de punição!');
+    return;
+  }
+
+  const player = data.players.find(p => p.id === selectedPunishPlayer);
+  const punishType = data.punishments.find(p => p.id === selectedPunishType);
+  if (!player || !punishType) return;
+
+  // Aplicar punição (subtrair gols)
+  const golsToRemove = Math.abs(punishType.gols);
+  let removed = 0;
+
+  // Remover primeiro do mês, depois semana, depois hoje
+  if (player.golsMes > 0) {
+    const remove = Math.min(golsToRemove - removed, player.golsMes);
+    player.golsMes -= remove;
+    removed += remove;
+  }
+  if (removed < golsToRemove && player.golsSemana > 0) {
+    const remove = Math.min(golsToRemove - removed, player.golsSemana);
+    player.golsSemana -= remove;
+    removed += remove;
+  }
+  if (removed < golsToRemove && player.golsHoje > 0) {
+    const remove = Math.min(golsToRemove - removed, player.golsHoje);
+    player.golsHoje -= remove;
+    removed += remove;
+  }
+
+  data.events.push({
+    playerId: player.id,
+    type: 'punishment',
+    desc: punishType.name,
+    gols: punishType.gols,
+    emoji: punishType.emoji,
+    date: new Date().toLocaleDateString('pt-BR'),
+    timestamp: Date.now()
+  });
+
+  saveData();
+  showToast(`Punição aplicada: ${punishType.name} (${punishType.gols} gols)`);
+  selectedPunishPlayer = null;
+  selectedPunishType = null;
+  renderManager();
+  renderHome();
+}
+
+// CORRECT PANEL
+function renderCorrectPanel() {
+  return `
+    <div class="mgr-card mgr-card-danger">
+      <h3>&#10060; Corrigir Erro</h3>
+      <div class="corr-hint">Selecione um jogador para ver e remover lançamentos incorretos.</div>
+      <select id="correctPlayer" onchange="showPlayerEvents(parseInt(this.value))">
+        <option value="">Selecione o jogador</option>
+        ${data.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+      </select>
+      <div id="correctEvents" class="corr-list"></div>
+    </div>
+  `;
+}
+
+function showPlayerEvents(playerId) {
+  const container = document.getElementById('correctEvents');
+  if (!playerId) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const player = data.players.find(p => p.id === playerId);
+  if (!player) return;
+
+  const events = data.events.filter(e => e.playerId === playerId).sort((a,b) => b.timestamp - a.timestamp);
+
+  if (events.length === 0) {
+    container.innerHTML = '<div class="corr-empty">Nenhum lançamento para este jogador</div>';
+    return;
+  }
+
+  container.innerHTML = events.map(e => `
+    <div class="corr-item ${e.type === 'punishment' ? 'corr-item-pun' : ''}">
+      <div class="corr-dot" style="background:${e.gols > 0 ? 'var(--green)' : e.gols < 0 ? 'var(--red)' : 'var(--gold)'}"></div>
+      <div class="corr-info">
+        <div class="corr-label">${e.desc}</div>
+        <div class="corr-date">${e.date}</div>
+      </div>
+      <div class="corr-gols ${e.gols > 0 ? 'plus' : e.gols < 0 ? 'minus' : ''}">${e.gols > 0 ? '+' : ''}${e.gols}</div>
+      <button class="corr-del" onclick="removeEvent(${e.timestamp}, ${playerId})">&#10005;</button>
+    </div>
+  `).join('');
+}
+
+function removeEvent(timestamp, playerId) {
+  if (!confirm('Tem certeza que deseja remover este lançamento?')) return;
+
+  const event = data.events.find(e => e.timestamp === timestamp && e.playerId === playerId);
+  if (!event) return;
+
+  const player = data.players.find(p => p.id === playerId);
+  if (!player) return;
+
+  // Reverter o efeito do evento
+  if (event.type === 'goal') {
+    // Não podemos saber exatamente de qual período, então subtrair proporcionalmente
+    const total = player.golsHoje + player.golsSemana + player.golsMes;
+    if (total > 0) {
+      // Simplificação: subtrair do mês primeiro
+      const remove = Math.min(event.gols, player.golsMes);
+      player.golsMes -= remove;
+      let remaining = event.gols - remove;
+      if (remaining > 0) {
+        const remove2 = Math.min(remaining, player.golsSemana);
+        player.golsSemana -= remove2;
+        remaining -= remove2;
+      }
+      if (remaining > 0) {
+        player.golsHoje = Math.max(0, player.golsHoje - remaining);
+      }
+    }
+  } else if (event.type === 'punishment') {
+    // Devolver gols (adicionar ao mês)
+    player.golsMes += Math.abs(event.gols);
+  } else if (event.type === 'sticker') {
+    // Remover figurinha
+    const sticker = player.stickers.find(s => s.id === event.stickerId || data.stickers.find(st => st.name === event.desc.replace('Figurinha ', ''))?.id === s.id);
+    if (sticker) {
+      sticker.qty = Math.max(0, sticker.qty - 1);
+      if (sticker.qty === 0) {
+        player.stickers = player.stickers.filter(s => s.id !== sticker.id);
+      }
+    }
+  }
+
+  data.events = data.events.filter(e => !(e.timestamp === timestamp && e.playerId === playerId));
+
+  saveData();
+  showToast('Lançamento removido!');
+  showPlayerEvents(playerId);
+  renderHome();
+}
+
+// REWARDS PANEL
+function renderRewardsPanel() {
+  return `
+    <div class="mgr-card">
+      <h3>&#127941; Gerenciar Recompensas</h3>
+      <div class="coringas-grid">
+        ${data.rewards.map(r => `
+          <div class="coringa-card ${r.unlocked ? 'earned' : ''}" style="cursor:pointer" onclick="toggleReward(${r.id})">
+            <div class="coringa-gols">${r.gols} gols</div>
+            <div class="coringa-lock">${r.unlocked ? r.emoji : '&#128274;'}</div>
+            <div class="coringa-premio ${r.unlocked ? '' : 'locked-text'}">${r.name}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function toggleReward(rewardId) {
+  const reward = data.rewards.find(r => r.id === rewardId);
+  if (reward) {
+    reward.unlocked = !reward.unlocked;
+    saveData();
+    showToast(reward.unlocked ? 'Recompensa desbloqueada!' : 'Recompensa bloqueada');
+    renderManager();
+  }
+}
+
+// BACKUP PANEL
+function renderBackupPanel() {
+  return `
+    <div class="mgr-card">
+      <h3>&#128190; Backup de Dados</h3>
+      <div class="corr-hint">Copie os dados abaixo para salvar em um arquivo de texto. Para restaurar, cole os dados no campo abaixo e clique em "Restaurar".</div>
+      <textarea class="backup-area" id="backupData" readonly>${JSON.stringify(data, null, 2)}</textarea>
+      <button class="btn-p" onclick="copyBackup()">&#128203; Copiar Dados</button>
+      <button class="btn-p" onclick="downloadBackup()" style="margin-top:8px">&#11015; Baixar Backup</button>
+    </div>
+
+    <div class="mgr-card">
+      <h3>&#128228; Restaurar Dados</h3>
+      <textarea class="backup-area" id="restoreData" placeholder="Cole aqui o backup anterior..."></textarea>
+      <button class="btn-p" onclick="restoreBackup()">&#128229; Restaurar</button>
+    </div>
+
+    <div class="mgr-card mgr-card-danger">
+      <h3>&#9888; Zona de Perigo</h3>
+      <button class="btn-d" onclick="resetAll()">&#128465; Resetar Tudo</button>
+    </div>
+  `;
+}
+
+function copyBackup() {
+  const el = document.getElementById('backupData');
+  el.select();
+  document.execCommand('copy');
+  showToast('Dados copiados!');
+}
+
+function downloadBackup() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'copa-costao-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup baixado!');
+}
+
+function restoreBackup() {
+  const text = document.getElementById('restoreData').value.trim();
+  if (!text) {
+    showToast('Cole os dados primeiro!');
+    return;
+  }
+
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed.players && parsed.stickers) {
+      data = parsed;
+      saveData();
+      showToast('Dados restaurados!');
+      renderManager();
+      renderHome();
+    } else {
+      showToast('Dados inválidos!');
+    }
+  } catch(e) {
+    showToast('Erro ao restaurar: JSON inválido');
+  }
+}
+
+function resetAll() {
+  if (!confirm('&#9888; ATENÇÃO! Isso apagará TODOS os dados. Tem certeza?')) return;
+  if (!confirm('&#9888; CONFIRMAÇÃO FINAL: Todos os jogadores, gols e eventos serão perdidos. Continuar?')) return;
+
+  data = JSON.parse(JSON.stringify(defaultData));
+  saveData();
+  showToast('Todos os dados foram resetados!');
+  renderManager();
+  renderHome();
+}
+
+// ==================== INICIALIZAÇÃO ====================
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
+  renderHome();
+
+  // Enter no modal de senha
+  document.getElementById('pwInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') checkPass();
+  });
+});
+</script>
+</body>
+</html>
