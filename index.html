@@ -7,28 +7,28 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <style>
-:root{--green:#4CAF50;--red:#f44336;--gold:#FFD700;--dark:#071a02;--card:#112a08;--text:#e8f5e9;--muted:#7a9c7a;}
+:root{--green:#4CAF50;--red:#f44336;--gold:#FFD700;--dark:#071a02;--card:#112a08;--text:#e8f5e9;--muted:#7a9c7a;--turq:#1DBCB8;--petrol:#0B4F6C;}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif;}
 body{background:var(--dark);color:var(--text);min-height:100vh;}
-header{display:flex;align-items:center;justify-content:center;gap:12px;padding:16px;background:linear-gradient(180deg,#0d2a05 0%,var(--dark) 100%);border-bottom:2px solid var(--gold);position:relative;}
-#headerLogo{height:48px;width:auto;}
-header h1{font-size:1.4rem;color:var(--gold);text-shadow:0 2px 4px rgba(0,0,0,0.5);}
-#mgrBtn{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:transparent;border:2px solid var(--gold);color:var(--gold);width:40px;height:40px;border-radius:50%;font-size:1.2rem;cursor:pointer;transition:all .2s;}
-#mgrBtn:hover{background:var(--gold);color:var(--dark);}
-#backBtn{position:absolute;left:16px;top:50%;transform:translateY(-50%);background:transparent;border:2px solid var(--gold);color:var(--gold);padding:6px 14px;border-radius:20px;font-size:.85rem;cursor:pointer;transition:all .2s;display:none;}
+header{display:flex;align-items:center;justify-content:center;gap:12px;padding:16px;background:linear-gradient(180deg,#0d2a05 0%,var(--dark) 100%);border-bottom:2px solid var(--turq);position:relative;}
+#headerLogo{height:56px;width:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+header h1{font-size:1.3rem;color:var(--gold);text-shadow:0 2px 4px rgba(0,0,0,0.5);}
+#mgrBtn{position:absolute;right:16px;top:50%;transform:translateY(-50%);background:transparent;border:2px solid var(--turq);color:var(--turq);width:40px;height:40px;border-radius:50%;font-size:1.2rem;cursor:pointer;transition:all .2s;}
+#mgrBtn:hover{background:var(--turq);color:var(--dark);}
+#backBtn{position:absolute;left:16px;top:50%;transform:translateY(-50%);background:transparent;border:2px solid var(--turq);color:var(--turq);padding:6px 14px;border-radius:20px;font-size:.85rem;cursor:pointer;transition:all .2s;display:none;}
 #backBtn.visible{display:block;}
-#backBtn:hover{background:var(--gold);color:var(--dark);}
+#backBtn:hover{background:var(--turq);color:var(--dark);}
 .container{max-width:900px;margin:0 auto;padding:16px;}
 
 /* Home */
 #homeView{display:block;}
 .action-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
 .action-bar button{flex:1;min-width:140px;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;}
-.btn-rank{background:linear-gradient(135deg,var(--gold),#b8860b);color:var(--dark);}
-.btn-rank:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,215,0,.3);}
+.btn-rank{background:linear-gradient(135deg,var(--turq),var(--petrol));color:#fff;}
+.btn-rank:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(29,188,184,.3);}
 #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px;}
 .player-card{background:var(--card);border:2px solid #1a3a10;border-radius:16px;padding:12px;text-align:center;cursor:pointer;transition:transform .2s,border-color .2s;position:relative;overflow:hidden;}
-.player-card:hover{transform:translateY(-4px);border-color:var(--gold);}
+.player-card:hover{transform:translateY(-4px);border-color:var(--turq);}
 .player-photo{width:100%;aspect-ratio:1;border-radius:12px;background:#0a1f05;background-size:cover;background-position:center;margin-bottom:8px;border:2px solid #1a3a10;}
 .player-name{font-weight:700;font-size:.95rem;color:var(--text);margin-bottom:4px;}
 .player-gols{color:var(--gold);font-weight:700;font-size:1.1rem;}
@@ -37,12 +37,14 @@ header h1{font-size:1.4rem;color:var(--gold);text-shadow:0 2px 4px rgba(0,0,0,0.
 
 /* Album */
 #albumView{display:none;}
-.album-top{display:flex;align-items:center;gap:16px;padding:20px;background:linear-gradient(135deg,#0d2a05,#1a3a10);border-radius:16px;margin-bottom:20px;border:2px solid var(--gold);}
-.album-foto{width:100px;height:100px;border-radius:50%;background:#0a1f05;background-size:cover;background-position:center;border:3px solid var(--gold);flex-shrink:0;}
+.album-top{display:flex;align-items:center;gap:16px;padding:20px;background:linear-gradient(135deg,#0d2a05,#1a3a10);border-radius:16px;margin-bottom:20px;border:2px solid var(--turq);}
+.album-foto{width:100px;height:100px;border-radius:50%;background:#0a1f05;background-size:cover;background-position:center;border:3px solid var(--turq);flex-shrink:0;}
 .album-info{flex:1;}
 .album-nome{font-size:1.4rem;font-weight:800;color:var(--gold);margin-bottom:4px;}
 .album-time{font-size:.9rem;color:var(--muted);margin-bottom:8px;}
-.album-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,215,0,.15);border:1px solid var(--gold);padding:6px 14px;border-radius:20px;font-weight:700;color:var(--gold);}
+.album-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(29,188,184,.15);border:1px solid var(--turq);padding:6px 14px;border-radius:20px;font-weight:700;color:var(--turq);}
+.album-breakdown{font-size:.85rem;color:var(--muted);margin-top:6px;}
+.album-breakdown span{display:inline-block;margin-right:12px;}
 .sec-title{font-size:1.1rem;font-weight:700;color:var(--gold);margin:24px 0 12px;padding-bottom:8px;border-bottom:2px solid #1a3a10;}
 .coringa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;}
 .coringa-card{background:var(--card);border:2px solid #1a3a10;border-radius:12px;padding:12px;text-align:center;transition:border-color .2s;}
@@ -84,7 +86,7 @@ header h1{font-size:1.4rem;color:var(--gold);text-shadow:0 2px 4px rgba(0,0,0,0.
 #rankingView{display:none;}
 .rank-tabs{display:flex;gap:8px;margin-bottom:16px;}
 .rank-tab{flex:1;padding:10px;border:none;border-radius:10px;background:#1a3a10;color:var(--muted);font-weight:700;cursor:pointer;transition:all .2s;}
-.rank-tab.active{background:var(--gold);color:var(--dark);}
+.rank-tab.active{background:var(--turq);color:#fff;}
 .rank-list{background:var(--card);border-radius:16px;padding:12px;border:2px solid #1a3a10;}
 .rank-item{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid #1a3a10;}
 .rank-item:last-child{border-bottom:none;}
@@ -100,27 +102,27 @@ header h1{font-size:1.4rem;color:var(--gold);text-shadow:0 2px 4px rgba(0,0,0,0.
 
 /* Manager */
 #managerView{display:none;}
-.mgr-login{background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:24px;max-width:400px;margin:0 auto;text-align:center;}
+.mgr-login{background:var(--card);border:2px solid var(--turq);border-radius:16px;padding:24px;max-width:400px;margin:0 auto;text-align:center;}
 .mgr-login h2{color:var(--gold);margin-bottom:16px;}
 .mgr-login input{width:100%;padding:12px;border:2px solid #1a3a10;border-radius:10px;background:#0a1f05;color:var(--text);font-size:1rem;margin-bottom:12px;text-align:center;}
-.mgr-login input:focus{outline:none;border-color:var(--gold);}
-.mgr-login button{padding:12px 24px;border:none;border-radius:10px;background:var(--gold);color:var(--dark);font-weight:700;cursor:pointer;margin:4px;}
+.mgr-login input:focus{outline:none;border-color:var(--turq);}
+.mgr-login button{padding:12px 24px;border:none;border-radius:10px;background:var(--turq);color:#fff;font-weight:700;cursor:pointer;margin:4px;}
 .mgr-login button.secondary{background:transparent;border:2px solid var(--muted);color:var(--muted);}
 .mgr-panel{display:none;}
 .mgr-tabs{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;}
 .mgr-tab{padding:10px 14px;border:none;border-radius:10px;background:#1a3a10;color:var(--muted);font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;}
-.mgr-tab.active{background:var(--gold);color:var(--dark);}
+.mgr-tab.active{background:var(--turq);color:#fff;}
 .mgr-section{display:none;background:var(--card);border:2px solid #1a3a10;border-radius:16px;padding:20px;margin-bottom:16px;}
 .mgr-section.active{display:block;}
 .mgr-section h3{color:var(--gold);margin-bottom:12px;font-size:1.1rem;}
 .mgr-section input,.mgr-section select{width:100%;padding:10px;border:2px solid #1a3a10;border-radius:8px;background:#0a1f05;color:var(--text);margin-bottom:10px;font-size:.95rem;}
-.mgr-section input:focus,.mgr-section select:focus{outline:none;border-color:var(--gold);}
+.mgr-section input:focus,.mgr-section select:focus{outline:none;border-color:var(--turq);}
 .mgr-section button{padding:10px 18px;border:none;border-radius:8px;background:var(--green);color:#fff;font-weight:700;cursor:pointer;margin-right:6px;margin-bottom:6px;}
 .mgr-section button.danger{background:var(--red);}
 .mgr-section button.secondary{background:#1a3a10;color:var(--text);}
 .mgr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:10px;}
 .mgr-player-item{background:#0a1f05;border:2px solid #1a3a10;border-radius:10px;padding:10px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color .2s;}
-.mgr-player-item:hover{border-color:var(--gold);}
+.mgr-player-item:hover{border-color:var(--turq);}
 .mgr-player-item.selected{border-color:var(--green);background:rgba(76,175,80,.1);}
 .mgr-player-foto{width:36px;height:36px;border-radius:50%;background:#112a08;background-size:cover;}
 .mgr-player-name{flex:1;font-size:.9rem;font-weight:600;}
@@ -134,16 +136,16 @@ header h1{font-size:1.4rem;color:var(--gold);text-shadow:0 2px 4px rgba(0,0,0,0.
 .sync-status{position:fixed;bottom:16px;right:16px;padding:8px 14px;border-radius:20px;font-size:.8rem;font-weight:700;z-index:1000;transition:all .3s;}
 .sync-status.online{background:rgba(76,175,80,.2);color:var(--green);border:1px solid var(--green);}
 .sync-status.offline{background:rgba(244,67,54,.2);color:var(--red);border:1px solid var(--red);}
-.sync-status.syncing{background:rgba(255,215,0,.2);color:var(--gold);border:1px solid var(--gold);}
+.sync-status.syncing{background:rgba(29,188,184,.2);color:var(--turq);border:1px solid var(--turq);}
 
 /* Toast */
-#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.9);color:#fff;padding:12px 24px;border-radius:24px;font-size:.9rem;opacity:0;pointer-events:none;transition:all .3s;z-index:2000;border:1px solid var(--gold);}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.9);color:#fff;padding:12px 24px;border-radius:24px;font-size:.9rem;opacity:0;pointer-events:none;transition:all .3s;z-index:2000;border:1px solid var(--turq);}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:3000;padding:20px;}
 .modal-overlay.active{display:flex;}
-.modal-content{background:var(--card);border:2px solid var(--gold);border-radius:20px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;}
+.modal-content{background:var(--card);border:2px solid var(--turq);border-radius:20px;padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;}
 .modal-content h3{color:var(--gold);margin-bottom:12px;}
 .modal-content p{margin-bottom:16px;color:var(--muted);}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
@@ -307,10 +309,45 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // ============================================================
+// LOGO COPA COSTÃO (inspirado no Costão Estaleirinho)
+// ============================================================
+const LOGO_SVG = `data:image/svg+xml,` + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 80">
+  <defs>
+    <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1DBCB8"/>
+      <stop offset="100%" style="stop-color:#0B4F6C"/>
+    </linearGradient>
+  </defs>
+  <!-- Ícone estilizado concha/ondas (Costão Estaleirinho) -->
+  <g transform="translate(8,8) scale(0.55)">
+    <!-- Ondas superiores -->
+    <path d="M30 5 Q55 -5 80 5 Q105 15 130 5" stroke="#1DBCB8" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M20 22 Q55 8 90 22 Q125 36 160 22" stroke="#1DBCB8" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- Forma central concha -->
+    <path d="M10 40 Q30 20 80 40 Q130 60 160 40 Q130 75 80 75 Q30 75 10 40" stroke="url(#tg)" stroke-width="7" fill="none" stroke-linecap="round"/>
+    <path d="M25 40 Q55 28 80 40 Q105 52 135 40" stroke="#0B4F6C" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <!-- Ondas inferiores -->
+    <path d="M20 58 Q55 72 90 58 Q125 44 160 58" stroke="#1DBCB8" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path d="M30 75 Q55 88 80 75 Q105 62 130 75" stroke="#1DBCB8" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- Bola de futebol estilizada no centro -->
+    <circle cx="80" cy="48" r="10" fill="#FFD700" opacity="0.9"/>
+    <path d="M75 44 L80 40 L85 44 L83 50 L77 50 Z" fill="#0B4F6C" opacity="0.6"/>
+  </g>
+  <!-- Texto COPA -->
+  <text x="85" y="32" font-family="Arial Black,Impact,sans-serif" font-size="22" font-weight="900" fill="#1DBCB8" letter-spacing="2">COPA</text>
+  <!-- Texto COSTÃO -->
+  <text x="85" y="58" font-family="Arial Black,Impact,sans-serif" font-size="26" font-weight="900" fill="#FFD700" letter-spacing="1">COSTÃO</text>
+  <!-- Linha decorativa -->
+  <line x1="85" y1="64" x2="265" y2="64" stroke="#1DBCB8" stroke-width="2" opacity="0.5"/>
+  <!-- Ano -->
+  <text x="265" y="76" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#7a9c7a" text-anchor="end">2026</text>
+</svg>`);
+
+// ============================================================
 // CONFIGURAÇÃO - DADOS INICIAIS
 // ============================================================
 const IMGS = {
-  "logo": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect fill='%23071a02' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFD700' font-size='24' font-weight='bold'%3ECOPA COSTÃO%3C/text%3E%3C/svg%3E",
+  "logo": LOGO_SVG,
   "coringa": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 280'%3E%3Crect fill='%23112a08' width='200' height='280'/%3E%3Crect x='10' y='10' width='180' height='260' fill='none' stroke='%23FFD700' stroke-width='3'/%3E%3Ctext x='50%25' y='40%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFD700' font-size='18' font-weight='bold'%3ECARTA%3C/text%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%23FFD700' font-size='18' font-weight='bold'%3ECORINGA%3C/text%3E%3Ctext x='50%25' y='75%25' dominant-baseline='middle' text-anchor='middle' fill='%237a9c7a' font-size='12'%3ECopa Costão 2026%3C/text%3E%3C/svg%3E"
 };
 
@@ -365,9 +402,43 @@ function fmtDate(d){
   const x = new Date(d);
   return x.toLocaleDateString('pt-BR', {day:'2-digit', month:'short'});
 }
-function totalGols(col){
+
+// ============================================================
+// CÁLCULO DE GOLS (CORRIGIDO - inclui figurinhas e punições)
+// ============================================================
+function totalGolsBase(col){
+  // Gols brutos lançados pelo gerente (hoje/semana/mês)
   if(!col || !col.gols) return 0;
   return (col.gols.h||0) + (col.gols.s||0) + (col.gols.m||0);
+}
+function totalGolsFigurinhas(col){
+  // Soma dos gols das figurinhas coletadas
+  if(!col || !col.fig || col.fig.length === 0) return 0;
+  let sum = 0;
+  for(const f of col.fig){
+    const st = STICKERS.find(s => s.id === f.sid);
+    if(st) sum += st.gols;
+  }
+  return sum;
+}
+function totalGolsPunicoes(sid){
+  // Soma dos gols das punições (valores negativos)
+  let sum = 0;
+  for(const p of PUNICOES){
+    if(p.sid === sid) sum += (p.gols || 0);
+  }
+  return sum;
+}
+function totalGolsReal(colOrId){
+  // TOTAL REAL = base + figurinhas + punições
+  let col;
+  if(typeof colOrId === 'string'){
+    col = getCol(colOrId);
+  } else {
+    col = colOrId;
+  }
+  if(!col) return 0;
+  return totalGolsBase(col) + totalGolsFigurinhas(col) + totalGolsPunicoes(col.sid);
 }
 function earned(gols){
   return MILESTONES.filter(m => gols >= m.gols);
@@ -415,7 +486,6 @@ function loadFromFirebase(){
     if(doc.exists && doc.data().data) PUNICOES = doc.data().data;
   }).catch(() => {});
 
-  // Setup real-time listeners
   if(_unsubscribe) _unsubscribe.forEach(u => u());
   _unsubscribe = [];
 
@@ -486,23 +556,19 @@ function saveToFirebase(){
 function initFirebaseData(){
   db.collection('appData').doc('seeds').get().then(doc => {
     if(!doc.exists){
-      // Seed inicial com dados de teste
       SEEDS = [
         {id:"cyriaco", nome:"Cyriaco", fk:"", time:"Time A"},
         {id:"davi", nome:"Davi", fk:"", time:"Time B"}
       ];
       COLLS = [
-        {sid:"cyriaco", gols:{h:0,s:0,m:8}, fig:[{sid:"gb",data:new Date().toISOString()}], hist:[{desc:"Figurinha Chuteira de Ouro", gols:10, data:new Date().toISOString()}]},
-        {sid:"davi", gols:{h:0,s:0,m:3}, fig:[{sid:"gp",data:new Date().toISOString()}], hist:[{desc:"Figurinha Gol de Placa", gols:3, data:new Date().toISOString()}]}
+        {sid:"cyriaco", gols:{h:0,s:0,m:0}, fig:[{sid:"gb",data:new Date().toISOString()}], hist:[{desc:"Figurinha Gol de Bicicleta", gols:5, data:new Date().toISOString()}]},
+        {sid:"davi", gols:{h:0,s:0,m:0}, fig:[{sid:"gp",data:new Date().toISOString()}], hist:[{desc:"Figurinha Gol de Placa", gols:3, data:new Date().toISOString()}]}
       ];
       EVENTS = [
-        {sid:"cyriaco", desc:"Cartão Amarelo", gols:-2, data:new Date().toISOString()},
-        {sid:"cyriaco", desc:"Figurinha Chuteira de Ouro", gols:10, data:new Date().toISOString()},
+        {sid:"cyriaco", desc:"Figurinha Gol de Bicicleta", gols:5, data:new Date().toISOString()},
         {sid:"davi", desc:"Figurinha Gol de Placa", gols:3, data:new Date().toISOString()}
       ];
-      PUNICOES = [
-        {sid:"cyriaco", tipo:"amarelo", desc:"Cartão Amarelo", gols:-2, data:new Date().toISOString()}
-      ];
+      PUNICOES = [];
       saveToFirebase();
     } else {
       loadFromFirebase();
@@ -537,7 +603,7 @@ function renderHome(){
   grid.innerHTML = '';
   for(const sd of SEEDS){
     const col = getCol(sd.id);
-    const gols = totalGols(col);
+    const gols = totalGolsReal(col);
     const card = document.createElement('div');
     card.className = 'player-card';
     card.onclick = () => openAlbum(sd.id);
@@ -559,14 +625,17 @@ function openAlbum(colId){
   _curAlbumId = colId;
   const sd = getSeed(colId);
   const col = getCol(colId);
-  const gols = totalGols(col);
+  const golsBase = totalGolsBase(col);
+  const golsFig = totalGolsFigurinhas(col);
+  const golsPun = totalGolsPunicoes(colId);
+  const golsTotal = totalGolsReal(col);
   const foto = IMGS[sd.fk] || '';
-  const earnedList = earned(gols);
+  const earnedList = earned(golsTotal);
 
   // Coringas
   let cgHtml = '<div class="coringa-grid">';
   for(const m of MILESTONES){
-    const ok = gols >= m.gols;
+    const ok = golsTotal >= m.gols;
     cgHtml += `<div class="coringa-card${ok ? ' earned' : ''}">`;
     cgHtml += `<div class="coringa-gols">${m.gols} gols</div>`;
     if(ok){
@@ -646,13 +715,24 @@ function openAlbum(colId){
     punHtml += '</div></div>';
   }
 
+  // Breakdown de gols
+  let breakdown = '';
+  if(golsBase > 0 || golsFig > 0 || golsPun !== 0){
+    breakdown = `<div class="album-breakdown">`;
+    if(golsBase > 0) breakdown += `<span>⚽ Base: ${golsBase}</span>`;
+    if(golsFig > 0) breakdown += `<span>🎴 Figurinhas: +${golsFig}</span>`;
+    if(golsPun < 0) breakdown += `<span>🚨 Punições: ${golsPun}</span>`;
+    breakdown += `</div>`;
+  }
+
   $('albumView').innerHTML =
     `<div class="album-top">` +
     `<div class="album-foto" style="background-image:url('${foto}')"></div>` +
     `<div class="album-info">` +
     `<div class="album-nome">${sd.nome}</div>` +
     `<div class="album-time">${sd.time || ''}</div>` +
-    `<div class="album-badge"><span>⚽</span><span>${gols} gols</span></div>` +
+    `<div class="album-badge"><span>⚽</span><span>${golsTotal} gols</span></div>` +
+    `${breakdown}` +
     `</div></div>` +
     `<div class="sec-title">🃏 Figurinhas Coringa</div>${cgHtml}` +
     `<div class="sec-title">📚 Figurinhas Coletadas</div>${stHtml}` +
@@ -680,7 +760,13 @@ function renderRanking(){
 
   const lista = SEEDS.map(sd => {
     const col = getCol(sd.id);
-    const gols = key ? (col.gols[key] || 0) : totalGols(col);
+    let gols;
+    if(key){
+      // Ranking por período: base do período + figurinhas + punições
+      gols = (col.gols[key] || 0) + totalGolsFigurinhas(col) + totalGolsPunicoes(sd.id);
+    } else {
+      gols = totalGolsReal(col);
+    }
     return {sd, gols};
   }).sort((a,b) => b.gols - a.gols);
 
@@ -736,7 +822,6 @@ function switchMgrTab(tab){
 function renderManager(){
   if(!_mgrPass) return;
 
-  // Atualiza selects
   const players = SEEDS.map(s => `<option value="${s.id}">${s.nome}</option>`).join('');
   ['golPlayer','punPlayer','remPlayerSelect','corrPlayer'].forEach(id => {
     const el = $(id);
@@ -746,7 +831,6 @@ function renderManager(){
     el.value = val;
   });
 
-  // Sticker select
   const stSel = $('stickerSelect');
   if(stSel){
     const val = stSel.value;
@@ -755,7 +839,6 @@ function renderManager(){
     stSel.value = val;
   }
 
-  // Sticker player grid
   const spg = $('stickerPlayerGrid');
   if(spg){
     spg.innerHTML = '';
@@ -778,22 +861,21 @@ function renderManager(){
     }
   }
 
-  // Dashboard
-  const totalG = COLLS.reduce((sum,c) => sum + totalGols(c), 0);
-  const totalF = COLLS.reduce((sum,c) => sum + (c.fig ? c.fig.length : 0), 0);
+  // Dashboard com total REAL de gols
+  const totalG = SEEDS.reduce((sum, sd) => sum + totalGolsReal(sd.id), 0);
+  const totalF = COLLS.reduce((sum, c) => sum + (c.fig ? c.fig.length : 0), 0);
   $('statJogadores').textContent = SEEDS.length;
   $('statGols').textContent = totalG;
   $('statFigurinhas').textContent = totalF;
 
-  const art = [...SEEDS].sort((a,b) => totalGols(getCol(b.id)) - totalGols(getCol(a.id)))[0];
+  const art = [...SEEDS].sort((a,b) => totalGolsReal(b.id) - totalGolsReal(a.id))[0];
   if(art){
-    const g = totalGols(getCol(art.id));
+    const g = totalGolsReal(art.id);
     $('artilheiroDash').innerHTML = `<span style="color:var(--gold);font-weight:700;font-size:1.2rem;">${art.nome}</span> <span style="color:var(--muted);">com ${g} gols ⚽</span>`;
   } else {
     $('artilheiroDash').textContent = 'Nenhum dado ainda';
   }
 
-  // Correção
   const corrPlayer = $('corrPlayer');
   if(corrPlayer && corrPlayer.value){
     const cid = corrPlayer.value;
@@ -814,12 +896,11 @@ function renderManager(){
     $('corrEvents').innerHTML = '<div style="color:var(--muted);font-size:.9rem;">Selecione um jogador</div>';
   }
 
-  // Recompensas
   const rw = $('rewardsList');
   if(rw){
     let h = '<div class="coringa-grid">';
     for(const m of MILESTONES){
-      const count = COLLS.filter(c => totalGols(c) >= m.gols).length;
+      const count = SEEDS.filter(sd => totalGolsReal(sd.id) >= m.gols).length;
       h += `<div class="coringa-card${count > 0 ? ' earned' : ''}">`;
       h += `<div class="coringa-gols">${m.gols} gols</div>`;
       h += `<div style="font-size:2rem;margin:8px 0;">${m.emoji}</div>`;
@@ -872,7 +953,6 @@ function lancarGol(){
   col.hist = col.hist || [];
   col.hist.push(ev);
   EVENTS.push(ev);
-  // Atualiza COLLS
   const idx = COLLS.findIndex(c => c.sid === id);
   if(idx >= 0) COLLS[idx] = col;
   saveToFirebase();
@@ -927,7 +1007,6 @@ function removerEvento(sid, idx, desc, gols){
     const cidx = COLLS.findIndex(c => c.sid === sid);
     if(cidx >= 0) COLLS[cidx] = col;
   }
-  // Remove de EVENTS também
   const eidx = EVENTS.findIndex(e => e.sid === sid && e.desc === desc && e.gols === gols);
   if(eidx >= 0) EVENTS.splice(eidx, 1);
   saveToFirebase();
@@ -1016,7 +1095,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 3000);
 });
 
-// Monitora conexão
 window.addEventListener('online', () => { updateSyncStatus('online'); loadFromFirebase(); });
 window.addEventListener('offline', () => updateSyncStatus('offline'));
 </script>
