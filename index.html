@@ -111,7 +111,7 @@
             .desktop-tabs { display: none; }
             .player-card .photo-area { width: 100px; height: 100px; }
             .celebration-photo-container img { max-height: 350px; }
-            .logo-img-main { max-height: 70px; }
+            .logo-img-main { max-height: 85px; }
             .multi-select-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -939,112 +939,66 @@
             }
 
             const rewardsGrid = document.getElementById('album-rewards-grid');
-            const achievements = [
-                { id: 'premio-dia', name: 'Prêmio do Dia', img: 'premio-dia.png', min: 12, period: 'day', color: '#1DBCB8' },
-                { id: 'premio-semana', name: 'Prêmio da Semana', img: 'premio-semana.png', min: 20, period: 'week', color: '#FFD700' },
-                { id: 'premio-mes-30', name: 'Prêmio do Mês 30', img: 'premio-mes-30.png', min: 30, period: 'month', color: '#a855f7' },
-                { id: 'premio-mes-45', name: 'Prêmio do Mês 45', img: 'premio-mes-45.png', min: 45, period: 'month', color: '#f97316' },
-                { id: 'premio-mes-60', name: 'Prêmio do Mês 60', img: 'premio-mes-60.png', min: 60, period: 'month', color: '#ef4444' },
-                { id: 'premio-mes-80', name: 'Prêmio do Mês 80', img: 'premio-mes-80.png', min: 80, period: 'month', color: '#ec4899' }
+
+            function calcConquistas(pid) {
+                const pe = events.filter(e => e.jogadorId === pid && e.tipo === 'gol');
+                const days = {}, weeks = {}, monthTotal = 0;
+                const now = new Date();
+                pe.forEach(e => {
+                    const d = getBRDate(e.data);
+                    const dk = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+                    const wk = getWeekRange(d);
+                    const wkKey = wk.monday.getFullYear() + '-' + wk.monday.getMonth() + '-' + wk.monday.getDate();
+                    days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
+                    weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
+                    if (isSameMonth(d, now)) monthTotal += (Number(e.valor) || 1);
+                });
+                return {
+                    diaCount: Object.values(days).filter(g => g >= 12).length,
+                    semanaCount: Object.values(weeks).filter(g => g >= 20).length,
+                    monthTotal: monthTotal
+                };
+            }
+            const conq = calcConquistas(playerId);
+
+            const CONQUISTAS = [
+                { id: 'premio-dia', name: 'Prêmio do Dia', rule: '12+ gols em um dia', goals: 12, period: 'day', repeatable: true, img: 'premio-dia.png', current: conq.diaCount },
+                { id: 'premio-semana', name: 'Prêmio da Semana', rule: '20+ gols em uma semana', goals: 20, period: 'week', repeatable: true, img: 'premio-semana.png', current: conq.semanaCount },
+                { id: 'premio-mes-30', name: 'Prêmio do Mês 30', rule: '30+ gols no mês', goals: 30, period: 'month', repeatable: false, img: 'premio-mes-30.png', current: conq.monthTotal },
+                { id: 'premio-mes-45', name: 'Prêmio do Mês 45', rule: '45+ gols no mês', goals: 45, period: 'month', repeatable: false, img: 'premio-mes-45.png', current: conq.monthTotal },
+                { id: 'premio-mes-60', name: 'Prêmio do Mês 60', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: 'premio-mes-60.png', current: conq.monthTotal },
+                { id: 'premio-mes-80', name: 'Prêmio do Mês 80', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: 'premio-mes-80.png', current: conq.monthTotal }
             ];
 
-            // Count how many times each achievement was earned
-            const playerEvents = events.filter(e => e.jogadorId === playerId);
+            rewardsGrid.innerHTML = CONQUISTAS.map(c => {
+                const unlocked = c.repeatable ? c.current > 0 : c.current >= c.goals;
+                const count = c.repeatable ? c.current : (unlocked ? 1 : 0);
+                const progress = c.repeatable ? 0 : Math.min(100, (c.current / c.goals) * 100);
+                const imgUrl = REPO_BASE + c.img;
+                const color = c.period === 'day' ? '#1DBCB8' : c.period === 'week' ? '#FFD700' : '#a855f7';
 
-            // Group events by day and sum gols per day
-            const dayTotals = {};
-            const weekTotals = {};
-            playerEvents.forEach(e => {
-                if (e.tipo !== 'gol' && e.tipo !== 'figurinha') return;
-                const evDate = getBRDate(e.data);
-                const val = Number(e.valor) || 0;
+                let progressHtml = '';
+                if (!c.repeatable && !unlocked) {
+                    progressHtml = '<div class="w-full bg-gray-700 rounded-full h-2 mb-1 mt-2"><div class="h-2 rounded-full transition-all" style="width: ' + progress + '%; background: ' + color + '"></div></div><p class="text-xs text-gray-500">' + c.current + '/' + c.goals + ' gols</p>';
+                }
 
-                // Day key: YYYY-MM-DD
-                const dayKey = e.data;
-                if (!dayTotals[dayKey]) dayTotals[dayKey] = 0;
-                dayTotals[dayKey] += val;
-
-                // Week key: Monday of that week
-                const w = getWeekRange(evDate);
-                const weekKey = `${w.monday.getFullYear()}-${String(w.monday.getMonth()+1).padStart(2,'0')}-${String(w.monday.getDate()).padStart(2,'0')}`;
-                if (!weekTotals[weekKey]) weekTotals[weekKey] = 0;
-                weekTotals[weekKey] += val;
-            });
-
-            // Count earned achievements
-            const earnedDay = Object.values(dayTotals).filter(g => g >= 12).length;
-            const earnedWeek = Object.values(weekTotals).filter(g => g >= 20).length;
-            const earnedMonth30 = stats.totalMonth >= 30 ? 1 : 0;
-            const earnedMonth45 = stats.totalMonth >= 45 ? 1 : 0;
-            const earnedMonth60 = stats.totalMonth >= 60 ? 1 : 0;
-            const earnedMonth80 = stats.totalMonth >= 80 ? 1 : 0;
-
-            const earnedMap = {
-                'premio-dia': earnedDay,
-                'premio-semana': earnedWeek,
-                'premio-mes-30': earnedMonth30,
-                'premio-mes-45': earnedMonth45,
-                'premio-mes-60': earnedMonth60,
-                'premio-mes-80': earnedMonth80
-            };
-
-            // Current period totals for progress bar
-            const periodTotals = {
-                day: stats.totalDay,
-                week: stats.totalWeek,
-                month: stats.totalMonth
-            };
-
-            rewardsGrid.innerHTML = achievements.map(a => {
-                const earned = earnedMap[a.id] || 0;
-                const current = periodTotals[a.period] || 0;
-                const progress = Math.min((current / a.min) * 100, 100);
-                const isUnlocked = earned > 0;
-                const periodLabel = a.period === 'day' ? 'no Dia' : a.period === 'week' ? 'na Semana' : 'no Mês';
-                const imgUrl = REPO_BASE + a.img;
-
-                return `
-                    <div class="${isUnlocked ? 'reward-unlocked' : 'reward-locked'} rounded-xl p-3 text-center transition-all relative overflow-hidden">
-                        ${isUnlocked ? '<div class="absolute top-2 right-2 text-green-400"><i class="fas fa-check-circle"></i></div>' : '<div class="absolute top-2 right-2 text-gray-600"><i class="fas fa-lock"></i></div>'}
-                        <div class="w-16 h-16 mx-auto mb-2 rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center relative">
-                            <span class="text-3xl absolute">🏆</span>
-                            <img src="${imgUrl}" alt="${a.name}" class="w-full h-full object-contain relative z-10" onerror="this.style.display='none';">
-                        </div>
-                        <p class="font-bold text-sm" style="color: ${isUnlocked ? a.color : 'inherit'}">${a.name}</p>
-                        <p class="text-xs text-gray-400 mb-2">${a.min}+ gols ${periodLabel}</p>
-                        <div class="w-full bg-gray-700 rounded-full h-2 mb-1">
-                            <div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: ${a.color}"></div>
-                        </div>
-                        <p class="text-xs ${isUnlocked ? 'font-bold' : 'text-gray-500'}" style="color: ${isUnlocked ? a.color : ''}">
-                            ${isUnlocked ? `CONQUISTADO! (${earned}x)` : `${current}/${a.min} gols`}
-                        </p>
-                    </div>
-                `;
+                return '<div class="' + (unlocked ? 'reward-unlocked' : 'reward-locked') + ' rounded-xl p-3 text-center transition-all"><div style="width:60px;height:60px;margin:0 auto 8px;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;"><span style="font-size:28px;position:absolute;z-index:1;">🏆</span><img src="' + imgUrl + '" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" onerror="this.style.display='none'" alt="' + c.name + '"></div><p class="font-bold text-sm">' + c.name + '</p><p class="text-xs text-gray-400 mb-1">' + c.rule + '</p>' + progressHtml + '<p class="text-xs ' + (unlocked ? 'text-yellow-400 font-bold' : 'text-gray-500') + ' mt-1">' + (unlocked ? 'CONQUISTADO!' + (count > 1 ? ' (' + count + 'x)' : '') : 'Bloqueado') + '</p>' + (unlocked ? '<i class="fas fa-check-circle text-green-400 mt-1"></i>' : '<i class="fas fa-lock text-gray-500 mt-1"></i>') + '</div>';
             }).join('');
 
             const stickersDiv = document.getElementById('album-stickers');
             const stickerEvents = playerEvents.filter(e => e.tipo === 'figurinha');
-            const stickerMap = {
-                'master-verao': { img: 'master-verao.png' },
-                'master-inverno': { img: 'master-inverno.png' },
-                'luxo-verao': { img: 'luxo-verao.png' },
-                'luxo-inverno': { img: 'luxo-inverno.png' },
-                'luxo-salta': { img: 'luxo-salta.png' },
-                'luxo-alta': { img: 'luxo-alta.png' },
-                'luxo-media': { img: 'luxo-media.png' },
-                '125k': { img: '125k.png' },
-                '100k': { img: '100k.png' },
-                '75k': { img: '75k.png' },
-                '60k': { img: '60k.png' },
-                '42k': { img: '42k.png' },
-                '15k': { img: '15k.png' },
-                'c+': { img: 'c+.png' }
-            };
             const stickerTypes = {};
+            const STICKER_IMG_MAP = {
+                'master-verao': 'master-verao.png', 'master-inverno': 'master-inverno.png',
+                'luxo-verao': 'luxo-verao.png', 'luxo-inverno': 'luxo-inverno.png',
+                'luxo-salta': 'luxo-salta.png', 'luxo-alta': 'luxo-alta.png',
+                'luxo-media': 'luxo-media.png', '125k': '125k.png',
+                '100k': '100k.png', '75k': '75k.png', '60k': '60k.png',
+                '42k': '42k.png', '15k': '15k.png', 'c+': 'c+.png'
+            };
             stickerEvents.forEach(e => {
                 const key = e.subtipo || 'figurinha';
-                const imgFile = e.img || (stickerMap[key] ? stickerMap[key].img : '');
-                if (!stickerTypes[key]) stickerTypes[key] = { count: 0, total: 0, label: e.subtipoLabel || key, img: imgFile };
+                if (!stickerTypes[key]) stickerTypes[key] = { count: 0, total: 0, label: e.subtipoLabel || key, img: e.subtipoImg || STICKER_IMG_MAP[key] || '' };
                 stickerTypes[key].count++;
                 stickerTypes[key].total += Number(e.valor) || 0;
             });
@@ -1054,22 +1008,8 @@
             } else {
                 stickersDiv.innerHTML = Object.entries(stickerTypes).map(([key, data]) => {
                     const imgUrl = data.img ? REPO_BASE + data.img : '';
-                    const hasImg = imgUrl && imgUrl.length > 0;
-                    return `
-                    <div class="sticker-card rounded-xl p-3 flex items-center gap-4">
-                        <div class="w-[140px] h-[140px] shrink-0 rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center">
-                            ${hasImg ? `<img src="${imgUrl}" alt="${data.label}" class="w-full h-full object-contain" onerror="this.style.visibility='hidden'; this.nextElementSibling.style.display='flex';">` : ''}
-                            <span class="text-3xl ${hasImg ? 'hidden' : ''}">🎴</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-bold text-sm text-yellow-400 truncate">${data.label}</p>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <p class="text-sm font-bold text-white">${data.count}x</p>
-                            <p class="text-xs text-gray-400">+${data.total} gols</p>
-                        </div>
-                    </div>
-                `}).join('');
+                    return '<div class="sticker-card rounded-xl p-3 flex items-center gap-3"><div style="width:140px;height:140px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;"><span style="font-size:48px;position:absolute;z-index:1;">🎴</span><img src="' + imgUrl + '" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" onerror="this.style.display='none'" alt="' + data.label + '"></div><div style="flex:1;min-width:0;"><p class="font-bold text-sm text-yellow-400">' + data.label + '</p><p class="text-xs text-gray-400">+' + data.total + ' gols totais</p></div><div style="text-align:right;flex-shrink:0;"><p style="font-size:24px;font-weight:800;color:#f59e0b;">' + data.count + 'x</p></div></div>';
+                }).join('');
             }
 
             const eventsDiv = document.getElementById('album-events');
@@ -1077,48 +1017,17 @@
                 eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento registrado</p>';
             } else {
                 eventsDiv.innerHTML = playerEvents.map(e => {
-                    let iconHtml = '', color = '', sign = '';
-                    if (e.tipo === 'gol') { 
-                        iconHtml = '<span class="text-lg">⚽</span>'; 
-                        color = 'text-white'; 
-                        sign = '+'; 
-                    }
-                    else if (e.tipo === 'figurinha') { 
-                        const figImg = e.img ? REPO_BASE + e.img : '';
-                        const figMap = {
-                            'master-verao': 'master-verao.png', 'master-inverno': 'master-inverno.png',
-                            'luxo-verao': 'luxo-verao.png', 'luxo-inverno': 'luxo-inverno.png',
-                            'luxo-salta': 'luxo-salta.png', 'luxo-alta': 'luxo-alta.png',
-                            'luxo-media': 'luxo-media.png', '125k': '125k.png',
-                            '100k': '100k.png', '75k': '75k.png', '60k': '60k.png',
-                            '42k': '42k.png', '15k': '15k.png', 'c+': 'c+.png'
-                        };
-                        const imgFile = e.img || figMap[e.subtipo] || '';
+                    let icon = '', color = '', sign = '';
+                    if (e.tipo === 'gol') { icon = '⚽'; color = 'text-white'; sign = '+'; }
+                    else if (e.tipo === 'figurinha') {
+                        const imgFile = e.subtipoImg || STICKER_IMG_MAP[e.subtipo] || '';
                         const imgUrl = imgFile ? REPO_BASE + imgFile : '';
-                        iconHtml = imgUrl 
-                            ? '<img src="' + imgUrl + '" class="w-8 h-8 object-contain rounded">'
-                            : '<span class="text-lg">🎴</span>';
-                        color = 'text-yellow-400'; 
-                        sign = '+'; 
+                        icon = imgUrl ? '<img src="' + imgUrl + '" style="width:32px;height:32px;object-fit:contain;border-radius:4px;" onerror="this.outerHTML='🎴'">' : '🎴';
+                        color = 'text-yellow-400'; sign = '+';
                     }
-                    else if (e.tipo === 'punicao') { 
-                        iconHtml = '<span class="text-lg">🚨</span>'; 
-                        color = 'text-red-400'; 
-                        sign = '-'; 
-                    }
+                    else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
 
-                    return `
-                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
-                            <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-8 h-8">` + iconHtml + `</span>
-                                <div>
-                                    <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
-                                    <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
-                                </div>
-                            </div>
-                            <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
-                        </div>
-                    `;
+                    return '<div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30"><div class="flex items-center gap-3"><span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + icon + '</span><div><p class="text-sm font-semibold ' + color + '">' + (e.subtipoLabel || e.tipo) + '</p><p class="text-xs text-gray-500">' + formatDate(e.data) + (e.observacao ? ' · ' + e.observacao : '') + '</p></div></div><span class="font-bold ' + color + '">' + sign + Math.abs(e.valor) + '</span></div>';
                 }).join('');
             }
 
@@ -1368,7 +1277,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                     promises.push(
                         window.addDoc(window.collection(window.db, 'eventos'), {
                             jogadorId, tipo: 'figurinha', subtipo: tipo, subtipoLabel: map[tipo].label,
-                            valor: map[tipo].val, data,
+                            subtipoImg: map[tipo].img, valor: map[tipo].val, data,
                             createdAt: new Date().toISOString()
                         })
                     );
