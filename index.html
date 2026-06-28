@@ -364,6 +364,13 @@
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogador para Excluir</label>
                                 <select id="del-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-red-500 focus:outline-none">
                                     <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div id="del-preview" class="hidden mb-4 p-4 rounded-xl bg-red-900/10 border border-red-500/20">
@@ -390,6 +397,13 @@
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
                                 <select id="gols-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -430,6 +444,7 @@
                                     <option value="luxo-salta">Luxo S. Alta (+4)</option>
                                     <option value="luxo-alta">Luxo Alta (+3)</option>
                                     <option value="luxo-media">Luxo Média (+3)</option>
+                                    <option value="virada">Virada Épica (+3)</option>
                                     <option value="125k">125.000 pt (+3)</option>
                                     <option value="100k">100.000 pt (+3)</option>
                                     <option value="75k">75.000 pt (+2)</option>
@@ -457,6 +472,13 @@
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
                                 <select id="pun-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -468,6 +490,13 @@
                                     <option value="atraso">Atraso (-1)</option>
                                     <option value="falta-treino">Falta no Treino (-1)</option>
                                     <option value="custom">Personalizado</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -492,6 +521,13 @@
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogador</label>
                                 <select id="corr-jogador" onchange="carregarCorrecao()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div id="corr-info" class="player-select-info rounded-xl p-4 mb-4 hidden">
@@ -942,7 +978,8 @@
 
             function calcConquistas(pid) {
                 const pe = events.filter(e => e.jogadorId === pid && e.tipo === 'gol');
-                const days = {}, weeks = {}, monthTotal = 0;
+                const days = {}, weeks = {};
+                let monthTotal = 0;
                 const now = new Date();
                 pe.forEach(e => {
                     const d = getBRDate(e.data);
@@ -979,13 +1016,25 @@
 
                 let progressHtml = '';
                 if (!c.repeatable && !unlocked) {
-                    progressHtml = '<div class="w-full bg-gray-700 rounded-full h-2 mb-1 mt-2"><div class="h-2 rounded-full transition-all" style="width: ' + progress + '%; background: ' + color + '"></div></div><p class="text-xs text-gray-500">' + c.current + '/' + c.goals + ' gols</p>';
+                    progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mb-1 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: ${color}"></div></div><p class="text-xs text-gray-500">${c.current}/${c.goals} gols</p>`;
                 }
 
-                return '<div class="' + (unlocked ? 'reward-unlocked' : 'reward-locked') + ' rounded-xl p-3 text-center transition-all"><div style="width:60px;height:60px;margin:0 auto 8px;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;"><span style="font-size:28px;position:absolute;z-index:1;">🏆</span><img src="' + imgUrl + '" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" onerror="this.style.display='none'" alt="' + c.name + '"></div><p class="font-bold text-sm">' + c.name + '</p><p class="text-xs text-gray-400 mb-1">' + c.rule + '</p>' + progressHtml + '<p class="text-xs ' + (unlocked ? 'text-yellow-400 font-bold' : 'text-gray-500') + ' mt-1">' + (unlocked ? 'CONQUISTADO!' + (count > 1 ? ' (' + count + 'x)' : '') : 'Bloqueado') + '</p>' + (unlocked ? '<i class="fas fa-check-circle text-green-400 mt-1"></i>' : '<i class="fas fa-lock text-gray-500 mt-1"></i>') + '</div>';
-            }).join('');
-
-            const stickersDiv = document.getElementById('album-stickers');
+                return `
+                    <div class="${unlocked ? 'reward-unlocked' : 'reward-locked'} rounded-xl p-3 text-center transition-all">
+                        <div style="width:60px;height:60px;margin:0 auto 8px;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
+                            <span style="font-size:28px;position:absolute;z-index:1;">🏆</span>
+                            <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}">
+                        </div>
+                        <p class="font-bold text-sm">${c.name}</p>
+                        <p class="text-xs text-gray-400 mb-1">${c.rule}</p>
+                        ${progressHtml}
+                        <p class="text-xs ${unlocked ? 'text-yellow-400 font-bold' : 'text-gray-500'} mt-1">
+                            ${unlocked ? 'CONQUISTADO!' + (count > 1 ? ' (' + count + 'x)' : '') : 'Bloqueado'}
+                        </p>
+                        ${unlocked ? '<i class="fas fa-check-circle text-green-400 mt-1"></i>' : '<i class="fas fa-lock text-gray-500 mt-1"></i>'}
+                    </div>
+                `;
+            }).join('');const stickersDiv = document.getElementById('album-stickers');
             const stickerEvents = playerEvents.filter(e => e.tipo === 'figurinha');
             const stickerTypes = {};
             const STICKER_IMG_MAP = {
@@ -1008,11 +1057,23 @@
             } else {
                 stickersDiv.innerHTML = Object.entries(stickerTypes).map(([key, data]) => {
                     const imgUrl = data.img ? REPO_BASE + data.img : '';
-                    return '<div class="sticker-card rounded-xl p-3 flex items-center gap-3"><div style="width:140px;height:140px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;"><span style="font-size:48px;position:absolute;z-index:1;">🎴</span><img src="' + imgUrl + '" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" onerror="this.style.display='none'" alt="' + data.label + '"></div><div style="flex:1;min-width:0;"><p class="font-bold text-sm text-yellow-400">' + data.label + '</p><p class="text-xs text-gray-400">+' + data.total + ' gols totais</p></div><div style="text-align:right;flex-shrink:0;"><p style="font-size:24px;font-weight:800;color:#f59e0b;">' + data.count + 'x</p></div></div>';
+                    return `
+                    <div class="sticker-card rounded-xl p-3 flex items-center gap-3">
+                        <div style="width:140px;height:140px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
+                            <span style="font-size:48px;position:absolute;z-index:1;">🎴</span>
+                            <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${data.label}">
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <p class="font-bold text-sm text-yellow-400">${data.label}</p>
+                            <p class="text-xs text-gray-400">+${data.total} gols totais</p>
+                        </div>
+                        <div style="text-align:right;flex-shrink:0;">
+                            <p style="font-size:24px;font-weight:800;color:#f59e0b;">${data.count}x</p>
+                        </div>
+                    </div>
+                `;
                 }).join('');
-            }
-
-            const eventsDiv = document.getElementById('album-events');
+            }const eventsDiv = document.getElementById('album-events');
             if (playerEvents.length === 0) {
                 eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento registrado</p>';
             } else {
@@ -1022,16 +1083,25 @@
                     else if (e.tipo === 'figurinha') {
                         const imgFile = e.subtipoImg || STICKER_IMG_MAP[e.subtipo] || '';
                         const imgUrl = imgFile ? REPO_BASE + imgFile : '';
-                        icon = imgUrl ? '<img src="' + imgUrl + '" style="width:32px;height:32px;object-fit:contain;border-radius:4px;" onerror="this.outerHTML='🎴'">' : '🎴';
+                        icon = imgUrl ? `<img src="${imgUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:4px;">` : '🎴';
                         color = 'text-yellow-400'; sign = '+';
                     }
                     else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
 
-                    return '<div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30"><div class="flex items-center gap-3"><span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + icon + '</span><div><p class="text-sm font-semibold ' + color + '">' + (e.subtipoLabel || e.tipo) + '</p><p class="text-xs text-gray-500">' + formatDate(e.data) + (e.observacao ? ' · ' + e.observacao : '') + '</p></div></div><span class="font-bold ' + color + '">' + sign + Math.abs(e.valor) + '</span></div>';
+                    return `
+                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${icon}</span>
+                                <div>
+                                    <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
+                                    <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
+                                </div>
+                            </div>
+                            <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
+                        </div>
+                    `;
                 }).join('');
-            }
-
-            showSection('album');
+            }showSection('album');
         }
 
         function formatDate(dateStr) {
