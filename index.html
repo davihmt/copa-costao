@@ -191,7 +191,7 @@
                         <i class="fas fa-calendar-alt mr-1"></i> Mês
                     </button>
                     <button onclick="setRankingPeriod('total')" id="filter-total" class="filter-btn active px-4 py-2 rounded-lg font-semibold text-sm">
-                        <i class="fas fa-infinity mr-1"></i> Total
+                        <i class="fas fa-infinity mr-1"></i> Gols Válidos
                     </button>
                 </div>
             </div>
@@ -237,7 +237,7 @@
                             <p id="album-player-team" class="text-[#1DBCB8] font-semibold mb-4"></p>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between px-3 py-2 rounded-lg bg-gray-800/50">
-                                    <span class="text-gray-400">⚽ Base</span>
+                                    <span class="text-gray-400">⚽ Gols</span>
                                     <span id="album-base-goals" class="font-bold">0</span>
                                 </div>
                                 <div class="flex justify-between px-3 py-2 rounded-lg bg-yellow-900/20">
@@ -245,11 +245,11 @@
                                     <span id="album-sticker-goals" class="font-bold text-yellow-400">+0</span>
                                 </div>
                                 <div class="flex justify-between px-3 py-2 rounded-lg bg-red-900/20">
-                                    <span class="text-red-400">🚨 Penalidades</span>
+                                    <span class="text-red-400">📺 VAR</span>
                                     <span id="album-punishment-goals" class="font-bold text-red-400">-0</span>
                                 </div>
                                 <div class="flex justify-between px-3 py-2 rounded-lg bg-gradient-to-r from-[#1DBCB8]/20 to-[#0B4F6C]/20 border border-[#1DBCB8]/30">
-                                    <span class="font-bold">TOTAL REAL</span>
+                                    <span class="font-bold">GOLS VÁLIDOS</span>
                                     <span id="album-total-real" class="font-black text-lg">0</span>
                                 </div>
                             </div>
@@ -275,7 +275,7 @@
                             <div id="album-stickers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                         </div>
                         <div class="player-card">
-                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-history mr-2 text-[#1DBCB8]"></i>Histórico</h3>
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-history mr-2 text-[#1DBCB8]"></i>Histórico de Eventos</h3>
                             <div id="album-events" class="space-y-2 max-h-64 overflow-y-auto"></div>
                         </div>
                     </div>
@@ -318,7 +318,7 @@
                         <i class="fas fa-stamp mr-2"></i>Figurinhas
                     </button>
                     <button onclick="showAdminTab('punicoes')" id="admin-tab-punicoes" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
-                        <i class="fas fa-exclamation-triangle mr-2"></i>Penalidades
+                        <i class="fas fa-tv mr-2"></i>VAR
                     </button>
                     <button onclick="showAdminTab('corrigir')" id="admin-tab-corrigir" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-edit mr-2"></i>Corrigir
@@ -473,24 +473,39 @@
                         </div>
                     </div>
 
-                    <!-- Penalidades -->
+                    <!-- VAR -->
                     <div id="admin-panel-punicoes" class="admin-panel hidden">
-                        <h3 class="text-2xl font-bold mb-6">Aplicar Penalidade</h3>
+                        <h3 class="text-2xl font-bold mb-6">Aplicar Punição</h3>
                         <div class="glass rounded-2xl p-6 max-w-2xl">
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
                                 <select id="pun-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-400 mb-2">Tipo de Penalidade</label>
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Tipo de Punição</label>
                                 <select id="pun-tipo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
-                                    <option value="chegar-atrasado">Chegar Atrasado (-1)</option>
-                                    <option value="quebra-processos">Quebra de Processos (-1)</option>
-                                    <option value="cancelamento">Cancelamento (-3)</option>
-                                    <option value="falta-justificativa">Falta s/ Justificativa (-5)</option>
-                                    <option value="custom">Outros (personalizado)</option>
+                                    <option value="cartao-amarelo">Cartão Amarelo (-1)</option>
+                                    <option value="cartao-vermelho">Cartão Vermelho (-2)</option>
+                                    <option value="falta-grave">Falta Grave (-1)</option>
+                                    <option value="atraso">Atraso (-1)</option>
+                                    <option value="falta-treino">Falta no Treino (-1)</option>
+                                    <option value="custom">Personalizado</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -502,7 +517,7 @@
                                 <input type="date" id="pun-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                             </div>
                             <button onclick="lancarPunicao()" class="w-full py-3 rounded-xl btn-danger text-white font-bold text-lg">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>Aplicar Penalidade
+                                <i class="fas fa-exclamation-triangle mr-2"></i>Aplicar Punição
                             </button>
                         </div>
                     </div>
@@ -542,11 +557,11 @@
                                         <p id="corr-fig" class="font-bold text-yellow-400">0</p>
                                     </div>
                                     <div class="bg-red-900/20 rounded-lg p-2">
-                                        <p class="text-xs text-red-400">Penalidades</p>
+                                        <p class="text-xs text-red-400">VAR</p>
                                         <p id="corr-pun" class="font-bold text-red-400">0</p>
                                     </div>
                                     <div class="bg-gradient-to-r from-[#1DBCB8]/20 to-[#0B4F6C]/20 rounded-lg p-2 border border-[#1DBCB8]/30">
-                                        <p class="text-xs font-bold">Total</p>
+                                        <p class="text-xs font-bold">Gols Válidos</p>
                                         <p id="corr-total" class="font-black">0</p>
                                     </div>
                                 </div>
@@ -726,26 +741,26 @@
             const today = new Date();
             today.setHours(12, 0, 0, 0);
 
-            let baseTotal = 0, baseDay = 0, baseWeek = 0, baseMonth = 0;
-            let stickersTotal = 0, stickersDay = 0, stickersWeek = 0, stickersMonth = 0;
-            let punishTotal = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
+            let baseGols Válidos = 0, baseDay = 0, baseWeek = 0, baseMonth = 0;
+            let stickersGols Válidos = 0, stickersDay = 0, stickersWeek = 0, stickersMonth = 0;
+            let punishGols Válidos = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
 
             playerEvents.forEach(ev => {
                 const evDate = getBRDate(ev.data);
                 const val = Number(ev.valor) || 0;
 
                 if (ev.tipo === 'gol') {
-                    baseTotal += val;
+                    baseGols Válidos += val;
                     if (isSameDay(evDate, today)) baseDay += val;
                     if (isSameWeek(evDate, today)) baseWeek += val;
                     if (isSameMonth(evDate, today)) baseMonth += val;
                 } else if (ev.tipo === 'figurinha') {
-                    stickersTotal += val;
+                    stickersGols Válidos += val;
                     if (isSameDay(evDate, today)) stickersDay += val;
                     if (isSameWeek(evDate, today)) stickersWeek += val;
                     if (isSameMonth(evDate, today)) stickersMonth += val;
                 } else if (ev.tipo === 'punicao') {
-                    punishTotal += Math.abs(val);
+                    punishGols Válidos += Math.abs(val);
                     if (isSameDay(evDate, today)) punishDay += Math.abs(val);
                     if (isSameWeek(evDate, today)) punishWeek += Math.abs(val);
                     if (isSameMonth(evDate, today)) punishMonth += Math.abs(val);
@@ -753,17 +768,17 @@
             });
 
             return {
-                baseTotal, baseDay, baseWeek, baseMonth,
-                stickersTotal, stickersDay, stickersWeek, stickersMonth,
-                punishTotal, punishDay, punishWeek, punishMonth,
-                totalReal: baseTotal + stickersTotal - punishTotal,
+                baseGols Válidos, baseDay, baseWeek, baseMonth,
+                stickersGols Válidos, stickersDay, stickersWeek, stickersMonth,
+                punishGols Válidos, punishDay, punishWeek, punishMonth,
+                totalReal: baseGols Válidos + stickersGols Válidos - punishGols Válidos,
                 totalDay: baseDay + stickersDay - punishDay,
                 totalWeek: baseWeek + stickersWeek - punishWeek,
                 totalMonth: baseMonth + stickersMonth - punishMonth
             };
         }
 
-        function getPeriodTotal(stats) {
+        function getPeriodGols Válidos(stats) {
             if (rankingPeriod === 'day') return stats.totalDay;
             if (rankingPeriod === 'week') return stats.totalWeek;
             if (rankingPeriod === 'month') return stats.totalMonth;
@@ -835,12 +850,12 @@
             const sorted = [...players].sort((a, b) => {
                 const sa = getPlayerStats(a.id);
                 const sb = getPlayerStats(b.id);
-                return getPeriodTotal(sb) - getPeriodTotal(sa);
+                return getPeriodGols Válidos(sb) - getPeriodGols Válidos(sa);
             });
 
             geral.innerHTML = sorted.map((p, idx) => {
                 const stats = getPlayerStats(p.id);
-                const total = getPeriodTotal(stats);
+                const total = getPeriodGols Válidos(stats);
                 const rank = idx + 1;
                 let medal = '';
                 if (rank === 1) medal = '🥇';
@@ -876,15 +891,15 @@
 
             porTime.innerHTML = `<h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-8 bg-gradient-to-b from-[#1DBCB8] to-[#0B4F6C] rounded-full"></span>Por Time / Função — ${periodLabel}</h3>` +
                 Object.entries(teams).sort((a, b) => {
-                    const totalA = a[1].reduce((s, p) => s + getPeriodTotal(getPlayerStats(p.id)), 0);
-                    const totalB = b[1].reduce((s, p) => s + getPeriodTotal(getPlayerStats(p.id)), 0);
+                    const totalA = a[1].reduce((s, p) => s + getPeriodGols Válidos(getPlayerStats(p.id)), 0);
+                    const totalB = b[1].reduce((s, p) => s + getPeriodGols Válidos(getPlayerStats(p.id)), 0);
                     return totalB - totalA;
                 }).map(([team, members]) => {
-                    const teamTotal = members.reduce((s, p) => s + getPeriodTotal(getPlayerStats(p.id)), 0);
+                    const teamGols Válidos = members.reduce((s, p) => s + getPeriodGols Válidos(getPlayerStats(p.id)), 0);
                     const sortedMembers = [...members].sort((a, b) => {
                         const sa = getPlayerStats(a.id);
                         const sb = getPlayerStats(b.id);
-                        return getPeriodTotal(sb) - getPeriodTotal(sa);
+                        return getPeriodGols Válidos(sb) - getPeriodGols Válidos(sa);
                     });
 
                     return `
@@ -893,13 +908,13 @@
                                 <i class="fas fa-shield-alt text-[#1DBCB8] text-xl"></i>
                                 <div class="flex-1">
                                     <h4 class="font-bold">${team}</h4>
-                                    <p class="text-xs text-gray-400">${members.length} jogadores · ${teamTotal} gols</p>
+                                    <p class="text-xs text-gray-400">${members.length} jogadores · ${teamGols Válidos} gols</p>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 ${sortedMembers.map(p => {
                                     const stats = getPlayerStats(p.id);
-                                    const total = getPeriodTotal(stats);
+                                    const total = getPeriodGols Válidos(stats);
                                     const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
                                     return `
                                         <div class="player-card cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="window.showAlbum('${p.id}')">
@@ -940,9 +955,9 @@
             document.getElementById('album-player-name2').textContent = `${player.nome} ${player.sobrenome || ''}`;
             document.getElementById('album-player-team').textContent = player.time || 'Sem time';
             document.getElementById('album-player-total').textContent = `${stats.totalReal} gols`;
-            document.getElementById('album-base-goals').textContent = stats.baseTotal;
-            document.getElementById('album-sticker-goals').textContent = `+${stats.stickersTotal}`;
-            document.getElementById('album-punishment-goals').textContent = `-${stats.punishTotal}`;
+            document.getElementById('album-base-goals').textContent = stats.baseGols Válidos;
+            document.getElementById('album-sticker-goals').textContent = `+${stats.stickersGols Válidos}`;
+            document.getElementById('album-punishment-goals').textContent = `-${stats.punishGols Válidos}`;
             document.getElementById('album-total-real').textContent = stats.totalReal;
 
             const profilePhoto = document.getElementById('album-player-photo');
@@ -973,7 +988,7 @@
             function calcConquistas(pid) {
                 const pe = events.filter(e => e.jogadorId === pid && (e.tipo === 'gol' || e.tipo === 'figurinha'));
                 const days = {}, weeks = {};
-                let monthTotal = 0;
+                let monthGols Válidos = 0;
                 const now = new Date();
                 const currentYear = now.getFullYear();
                 const currentMonth = now.getMonth();
@@ -984,12 +999,12 @@
                     const wkKey = wk.monday.getFullYear() + '-' + wk.monday.getMonth() + '-' + wk.monday.getDate();
                     days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
                     weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
-                    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
+                    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) monthGols Válidos += (Number(e.valor) || 1);
                 });
                 return {
                     diaCount: Object.values(days).filter(g => g >= 12).length,
                     semanaCount: Object.values(weeks).filter(g => g >= 20).length,
-                    monthTotal: monthTotal
+                    monthGols Válidos: monthGols Válidos
                 };
             }
             const conq = calcConquistas(playerId);
@@ -997,11 +1012,11 @@
             const CONQUISTAS = [
                 { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '12+ gols em um dia', goals: 12, period: 'day', repeatable: true, img: '+12.png', current: conq.diaCount },
                 { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '20+ gols em uma semana', goals: 20, period: 'week', repeatable: true, img: '+20.png', current: conq.semanaCount },
-                { id: 'premio-mes-30', name: 'CRAQUE!', rule: '30+ gols no mês', goals: 30, period: 'month', repeatable: false, img: '+30.png', current: conq.monthTotal },
-                { id: 'premio-mes-40', name: 'MONSTRO!', rule: '40+ gols no mês', goals: 40, period: 'month', repeatable: false, img: '+40.png', current: conq.monthTotal },
-                { id: 'premio-mes-50', name: 'ARTILHEIRO!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conq.monthTotal },
-                { id: 'premio-mes-80', name: 'MÁQUINAAA!!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conq.monthTotal },
-                { id: 'premio-mes-100', name: 'FENÔMENO!!!', rule: '100+ gols no mês', goals: 100, period: 'month', repeatable: false, img: '+100.png', current: conq.monthTotal }
+                { id: 'premio-mes-30', name: 'CRAQUE!', rule: '30+ gols no mês', goals: 30, period: 'month', repeatable: false, img: '+30.png', current: conq.monthGols Válidos },
+                { id: 'premio-mes-40', name: 'MONSTRO!', rule: '40+ gols no mês', goals: 40, period: 'month', repeatable: false, img: '+40.png', current: conq.monthGols Válidos },
+                { id: 'premio-mes-50', name: 'ARTILHEIRO!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conq.monthGols Válidos },
+                { id: 'premio-mes-80', name: 'MÁQUINAAA!!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conq.monthGols Válidos },
+                { id: 'premio-mes-100', name: 'FENÔMENO!!!', rule: '100+ gols no mês', goals: 100, period: 'month', repeatable: false, img: '+100.png', current: conq.monthGols Válidos }
             ];
 
             let rewardsHtml = '';
@@ -1012,45 +1027,48 @@
                 const borderColor = isUnlocked ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255,255,255,0.1)';
                 const bgColor = isUnlocked ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.03)';
                 const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-lock text-gray-500 text-xl"></i>';
-                const statusColor = isUnlocked ? 'text-green-400' : 'text-gray-500';
 
                 let progressHtml = '';
                 if (!c.repeatable && !isUnlocked) {
-                    progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1">${c.current}/${c.goals} gols</p>`;
+                    progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${c.current}/${c.goals} gols</p>`;
+                } else if (!c.repeatable && isUnlocked) {
+                    progressHtml = '';
                 }
 
                 if (isUnlocked) {
                     const numCards = c.repeatable ? c.current : 1;
                     for (let i = 0; i < numCards; i++) {
                         rewardsHtml += `
-                        <div class="rounded-xl p-4 transition-all flex items-center gap-4" style="background: ${bgColor}; border: 1px solid ${borderColor};">
-                            <div style="width:100px;height:100px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
-                                <span style="font-size:48px;position:absolute;z-index:1;">🏆</span>
-                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
-                            </div>
-                            <div class="flex-1 min-w-0">
+                        <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${bgColor}; border: 1px solid ${borderColor};">
+                            <div class="text-center mb-2 w-full">
                                 <h4 class="font-bold text-lg ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}">${c.name}</h4>
-                                <p class="text-sm text-gray-400">${c.rule}</p>
+                            </div>
+                            <div style="width:100%;aspect-ratio:1;max-width:220px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
+                                <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
+                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
+                            </div>
+                            <div class="w-full">
                                 ${progressHtml}
                             </div>
-                            <div class="flex-shrink-0">
+                            <div class="mt-2">
                                 ${statusIcon}
                             </div>
                         </div>`;
                     }
                 } else {
                     rewardsHtml += `
-                    <div class="rounded-xl p-4 transition-all flex items-center gap-4" style="background: ${bgColor}; border: 1px solid ${borderColor};">
-                        <div style="width:100px;height:100px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
-                            <span style="font-size:48px;position:absolute;z-index:1;">🏆</span>
-                            <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
-                        </div>
-                        <div class="flex-1 min-w-0">
+                    <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${bgColor}; border: 1px solid ${borderColor};">
+                        <div class="text-center mb-2 w-full">
                             <h4 class="font-bold text-lg text-gray-500">${c.name}</h4>
-                            <p class="text-sm text-gray-500">${c.rule}</p>
+                        </div>
+                        <div style="width:100%;aspect-ratio:1;max-width:220px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
+                            <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
+                            <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
+                        </div>
+                        <div class="w-full">
                             ${progressHtml}
                         </div>
-                        <div class="flex-shrink-0">
+                        <div class="mt-2">
                             ${statusIcon}
                         </div>
                     </div>`;
@@ -1394,11 +1412,12 @@ Isso também excluirá todos os seus eventos!`)) return;
             if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
 
             const map = {
-                'chegar-atrasado': { label: 'Chegar Atrasado', val: -1 },
-                'quebra-processos': { label: 'Quebra de Processos', val: -1 },
-                'cancelamento': { label: 'Cancelamento', val: -3 },
-                'falta-justificativa': { label: 'Falta s/ Justificativa', val: -5 },
-                'custom': { label: 'Outros', val: 0 }
+                'cartao-amarelo': { label: 'Cartão Amarelo', val: -1 },
+                'cartao-vermelho': { label: 'Cartão Vermelho', val: -2 },
+                'falta-grave': { label: 'Falta Grave', val: -1 },
+                'atraso': { label: 'Atraso', val: -1 },
+                'falta-treino': { label: 'Falta no Treino', val: -1 },
+                'custom': { label: 'Punição Personalizada', val: 0 }
             };
 
             let valor = map[tipo].val;
@@ -1417,7 +1436,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                 document.getElementById('pun-qtd').value = '';
             } catch (e) {
                 console.error(e);
-                showToast('Erro ao aplicar penalidade', 'error');
+                showToast('Erro ao aplicar punição', 'error');
             }
         }
 
@@ -1444,9 +1463,9 @@ Isso também excluirá todos os seus eventos!`)) return;
             document.getElementById('corr-nome').textContent = `${player.nome} ${player.sobrenome || ''}`;
             document.getElementById('corr-time').textContent = player.time || 'Sem time';
             document.getElementById('corr-foto').src = player.fotoPerfil ? REPO_BASE + player.fotoPerfil : '';
-            document.getElementById('corr-base').textContent = stats.baseTotal;
-            document.getElementById('corr-fig').textContent = stats.stickersTotal;
-            document.getElementById('corr-pun').textContent = stats.punishTotal;
+            document.getElementById('corr-base').textContent = stats.baseGols Válidos;
+            document.getElementById('corr-fig').textContent = stats.stickersGols Válidos;
+            document.getElementById('corr-pun').textContent = stats.punishGols Válidos;
             document.getElementById('corr-total').textContent = stats.totalReal;
 
             if (playerEvents.length === 0) {
