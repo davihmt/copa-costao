@@ -116,9 +116,9 @@
             .logo-img-main { max-height: 60px; width: auto; }
             header { padding-top: 6px; padding-bottom: 6px; }
             header .max-w-7xl { padding-left: 8px; padding-right: 8px; }
-            header .flex { align-items: center !important; flex-wrap: nowrap; }
-            header nav { gap: 4px; flex-shrink: 0; }
-            header nav button { padding: 7px 9px; font-size: 11px; }
+            header .flex { align-items: center !important; flex-wrap: wrap; }
+            header nav { gap: 4px; flex-wrap: wrap; justify-content: center; }
+            header nav button { padding: 6px 8px; font-size: 10px; flex: 1 1 auto; min-width: 65px; max-width: 100px; }
             header nav button i { margin-right: 2px !important; font-size: 10px; }
         }
             header { padding-top: 8px; padding-bottom: 8px; }
@@ -141,22 +141,19 @@
 
     <!-- Header -->
     <header class="glass sticky top-0 z-50 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <div class="flex items-center">
-                <!-- Logo removido do header -->
-            </div>
-            <nav class="flex gap-2">
-                <button onclick="showSection('home')" id="nav-home" class="px-4 py-2.5 rounded-lg font-semibold tab-active transition-all text-sm">
-                    <i class="fas fa-home mr-1.5"></i> Home
+        <div class="max-w-7xl mx-auto flex items-center justify-center">
+            <nav class="flex gap-2 flex-wrap justify-center w-full">
+                <button onclick="showSection('home')" id="nav-home" class="px-3 py-2 rounded-lg font-semibold tab-active transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-home mr-1"></i> Home
                 </button>
-                <button onclick="showSection('ranking')" id="nav-ranking" class="px-4 py-2.5 rounded-lg font-semibold tab-inactive transition-all text-sm">
-                    <i class="fas fa-trophy mr-1.5"></i> Ranking
+                <button onclick="showSection('ranking')" id="nav-ranking" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-trophy mr-1"></i> Ranking
                 </button>
-                <button onclick="showSection('album')" id="nav-album" class="px-4 py-2.5 rounded-lg font-semibold tab-inactive transition-all text-sm">
-                    <i class="fas fa-images mr-1.5"></i> Álbum
+                <button onclick="showSection('album')" id="nav-album" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-images mr-1"></i> Álbum
                 </button>
-                <button onclick="showAdminLogin()" class="px-4 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-lg transition-all text-sm">
-                    <i class="fas fa-lock mr-1.5"></i> Admin
+                <button onclick="showAdminLogin()" class="px-3 py-2 rounded-lg font-semibold bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-lg transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-lock mr-1"></i> Admin
                 </button>
             </nav>
         </div>
@@ -171,7 +168,7 @@
         <!-- HOME SECTION -->
         <section id="section-home" class="fade-in">
             <div class="mb-6 text-center">
-                <img src="https://davihmt.github.io/copa-costao/Logo.png" alt="Costão Estaleirinho" class="mx-auto mb-4" style="max-height: 200px; width: auto; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));">
+                <img src="https://davihmt.github.io/copa-costao/Logo.png" alt="Costão Estaleirinho" class="mx-auto mb-4" style="max-height: 160px; width: auto; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));">
             </div>
             <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             </div>
