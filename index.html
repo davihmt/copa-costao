@@ -112,6 +112,13 @@
             .player-card .photo-area { width: 100px; height: 100px; }
             .celebration-photo-container img { max-height: 350px; }
             .logo-img-main { max-height: 85px; }
+        @media (max-width: 768px) {
+            .logo-img-main { max-height: 65px; }
+            header .max-w-7xl { padding-left: 8px; padding-right: 8px; }
+            header nav { gap: 4px; }
+            header nav button { padding: 6px 10px; font-size: 12px; }
+            header nav button i { margin-right: 2px !important; }
+        }
             .multi-select-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -977,10 +984,12 @@
             const rewardsGrid = document.getElementById('album-rewards-grid');
 
             function calcConquistas(pid) {
-                const pe = events.filter(e => e.jogadorId === pid && e.tipo === 'gol');
+                const pe = events.filter(e => e.jogadorId === pid && (e.tipo === 'gol' || e.tipo === 'figurinha'));
                 const days = {}, weeks = {};
                 let monthTotal = 0;
                 const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth();
                 pe.forEach(e => {
                     const d = getBRDate(e.data);
                     const dk = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
@@ -988,7 +997,7 @@
                     const wkKey = wk.monday.getFullYear() + '-' + wk.monday.getMonth() + '-' + wk.monday.getDate();
                     days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
                     weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
-                    if (isSameMonth(d, now)) monthTotal += (Number(e.valor) || 1);
+                    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
                 });
                 return {
                     diaCount: Object.values(days).filter(g => g >= 12).length,
@@ -999,42 +1008,60 @@
             const conq = calcConquistas(playerId);
 
             const CONQUISTAS = [
-                { id: 'premio-dia', name: 'Prêmio do Dia', rule: '12+ gols em um dia', goals: 12, period: 'day', repeatable: true, img: 'premio-dia.png', current: conq.diaCount },
-                { id: 'premio-semana', name: 'Prêmio da Semana', rule: '20+ gols em uma semana', goals: 20, period: 'week', repeatable: true, img: 'premio-semana.png', current: conq.semanaCount },
-                { id: 'premio-mes-30', name: 'Prêmio do Mês 30', rule: '30+ gols no mês', goals: 30, period: 'month', repeatable: false, img: 'premio-mes-30.png', current: conq.monthTotal },
-                { id: 'premio-mes-45', name: 'Prêmio do Mês 45', rule: '45+ gols no mês', goals: 45, period: 'month', repeatable: false, img: 'premio-mes-45.png', current: conq.monthTotal },
-                { id: 'premio-mes-60', name: 'Prêmio do Mês 60', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: 'premio-mes-60.png', current: conq.monthTotal },
-                { id: 'premio-mes-80', name: 'Prêmio do Mês 80', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: 'premio-mes-80.png', current: conq.monthTotal }
+                { id: 'premio-dia', name: 'Prêmio do Dia', rule: '12+ gols em um dia', goals: 12, period: 'day', repeatable: true, img: '+12.png', current: conq.diaCount },
+                { id: 'premio-semana', name: 'Prêmio da Semana', rule: '20+ gols em uma semana', goals: 20, period: 'week', repeatable: true, img: '+20.png', current: conq.semanaCount },
+                { id: 'premio-mes-30', name: 'Prêmio do Mês 30', rule: '30+ gols no mês', goals: 30, period: 'month', repeatable: false, img: '+30.png', current: conq.monthTotal },
+                { id: 'premio-mes-40', name: 'Prêmio do Mês 40', rule: '40+ gols no mês', goals: 40, period: 'month', repeatable: false, img: '+40.png', current: conq.monthTotal },
+                { id: 'premio-mes-50', name: 'Prêmio do Mês 50', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conq.monthTotal },
+                { id: 'premio-mes-80', name: 'Prêmio do Mês 80', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conq.monthTotal },
+                { id: 'premio-mes-100', name: 'Prêmio do Mês 100', rule: '100+ gols no mês', goals: 100, period: 'month', repeatable: false, img: '+100.png', current: conq.monthTotal }
             ];
 
-            rewardsGrid.innerHTML = CONQUISTAS.map(c => {
-                const unlocked = c.repeatable ? c.current > 0 : c.current >= c.goals;
-                const count = c.repeatable ? c.current : (unlocked ? 1 : 0);
+            let rewardsHtml = '';
+            CONQUISTAS.forEach(c => {
+                const isUnlocked = c.repeatable ? c.current > 0 : c.current >= c.goals;
                 const progress = c.repeatable ? 0 : Math.min(100, (c.current / c.goals) * 100);
                 const imgUrl = REPO_BASE + c.img;
                 const color = c.period === 'day' ? '#1DBCB8' : c.period === 'week' ? '#FFD700' : '#a855f7';
 
                 let progressHtml = '';
-                if (!c.repeatable && !unlocked) {
+                if (!c.repeatable && !isUnlocked) {
                     progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mb-1 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: ${color}"></div></div><p class="text-xs text-gray-500">${c.current}/${c.goals} gols</p>`;
                 }
 
-                return `
-                    <div class="${unlocked ? 'reward-unlocked' : 'reward-locked'} rounded-xl p-3 text-center transition-all">
-                        <div style="width:60px;height:60px;margin:0 auto 8px;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
-                            <span style="font-size:28px;position:absolute;z-index:1;">🏆</span>
+                if (isUnlocked) {
+                    // Conquistado: mostrar card(s)
+                    const numCards = c.repeatable ? c.current : 1;
+                    for (let i = 0; i < numCards; i++) {
+                        rewardsHtml += `
+                        <div class="reward-unlocked rounded-xl p-3 text-center transition-all">
+                            <div style="width:80px;height:80px;margin:0 auto 8px;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
+                                <span style="font-size:36px;position:absolute;z-index:1;">🏆</span>
+                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}">
+                            </div>
+                            <p class="font-bold text-sm">${c.name}</p>
+                            <p class="text-xs text-gray-400 mb-1">${c.rule}</p>
+                            <p class="text-xs text-yellow-400 font-bold mt-1">CONQUISTADO!</p>
+                            <i class="fas fa-check-circle text-green-400 mt-1"></i>
+                        </div>`;
+                    }
+                } else {
+                    // Não conquistado: mostrar card bloqueado
+                    rewardsHtml += `
+                    <div class="reward-locked rounded-xl p-3 text-center transition-all">
+                        <div style="width:80px;height:80px;margin:0 auto 8px;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
+                            <span style="font-size:36px;position:absolute;z-index:1;">🏆</span>
                             <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}">
                         </div>
                         <p class="font-bold text-sm">${c.name}</p>
                         <p class="text-xs text-gray-400 mb-1">${c.rule}</p>
                         ${progressHtml}
-                        <p class="text-xs ${unlocked ? 'text-yellow-400 font-bold' : 'text-gray-500'} mt-1">
-                            ${unlocked ? 'CONQUISTADO!' + (count > 1 ? ' (' + count + 'x)' : '') : 'Bloqueado'}
-                        </p>
-                        ${unlocked ? '<i class="fas fa-check-circle text-green-400 mt-1"></i>' : '<i class="fas fa-lock text-gray-500 mt-1"></i>'}
-                    </div>
-                `;
-            }).join('');const stickersDiv = document.getElementById('album-stickers');
+                        <p class="text-xs text-gray-500 mt-1">Bloqueado</p>
+                        <i class="fas fa-lock text-gray-500 mt-1"></i>
+                    </div>`;
+                }
+            });
+            rewardsGrid.innerHTML = rewardsHtml;const stickersDiv = document.getElementById('album-stickers');
             const stickerEvents = playerEvents.filter(e => e.tipo === 'figurinha');
             const stickerTypes = {};
             const STICKER_IMG_MAP = {
