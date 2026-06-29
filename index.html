@@ -1,0 +1,1550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copa Costão 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, updateDoc, addDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBXS2YaByLTEugKUmUUlllJOonXY02qdbs",
+            authDomain: "copa-costao.firebaseapp.com",
+            projectId: "copa-costao",
+            storageBucket: "copa-costao.firebasestorage.app",
+            messagingSenderId: "690012989754",
+            appId: "1:690012989754:web:1b484c5fa6e235a4d00803",
+            measurementId: "G-4THHYKGC1G"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.collection = collection;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.getDocs = getDocs;
+        window.deleteDoc = deleteDoc;
+        window.onSnapshot = onSnapshot;
+        window.query = query;
+        window.orderBy = orderBy;
+        window.updateDoc = updateDoc;
+        window.addDoc = addDoc;
+        window.deleteField = deleteField;
+    </script>
+    <style>
+        * { font-family: 'Montserrat', sans-serif; }
+        body { background: #0f172a; color: white; }
+        .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .gradient-text { background: linear-gradient(135deg, #1DBCB8, #0B4F6C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card-hover { transition: all 0.3s ease; cursor: pointer; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(29, 188, 184, 0.3); }
+        .admin-sidebar { background: linear-gradient(180deg, #0B4F6C, #0f172a); }
+        .tab-active { background: linear-gradient(135deg, #1DBCB8, #0B4F6C); color: white; }
+        .tab-inactive { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); }
+        .tab-inactive:hover { background: rgba(255,255,255,0.1); color: white; }
+        .btn-primary { background: linear-gradient(135deg, #1DBCB8, #0B4F6C); transition: all 0.3s; }
+        .btn-primary:hover { transform: scale(1.02); box-shadow: 0 8px 25px rgba(29, 188, 184, 0.4); }
+        .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .player-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(29, 188, 184, 0.2); border-radius: 16px; padding: 16px; text-align: center; position: relative; }
+        .player-card .photo-area { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 3px solid #1DBCB8; margin: 0 auto 12px auto; background: linear-gradient(135deg, #1DBCB8, #0B4F6C); display: flex; align-items: center; justify-content: center; cursor: zoom-in; }
+        .player-card .photo-area img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: block; }
+        .player-card .photo-area .fallback { font-size: 40px; font-weight: 800; color: white; }
+        .sticker-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(255, 215, 0, 0.3); }
+        .stat-box { background: rgba(29, 188, 184, 0.1); border: 1px solid rgba(29, 188, 184, 0.3); }
+        .punishment-box { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .reward-box { background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.3); }
+        .reward-locked { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); opacity: 0.5; }
+        .reward-unlocked { background: rgba(255, 215, 0, 0.15); border: 1px solid rgba(255, 215, 0, 0.5); box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
+        .toast { animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .rank-1 { border-color: #FFD700; box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+        .rank-2 { border-color: #C0C0C0; box-shadow: 0 0 15px rgba(192, 192, 192, 0.2); }
+        .rank-3 { border-color: #CD7F32; box-shadow: 0 0 10px rgba(205, 127, 50, 0.2); }
+        .logo-img-main { max-height: 110px; width: auto; filter: drop-shadow(0 6px 16px rgba(0,0,0,0.5)); transition: transform 0.3s ease; }
+        .logo-img-main:hover { transform: scale(1.05); }
+        .admin-content { max-height: calc(100vh - 200px); overflow-y: auto; }
+        .admin-content::-webkit-scrollbar { width: 6px; }
+        .admin-content::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .admin-content::-webkit-scrollbar-thumb { background: rgba(29, 188, 184, 0.5); border-radius: 3px; }
+        .player-select-info { background: rgba(29, 188, 184, 0.1); border-left: 4px solid #1DBCB8; }
+        .event-row { transition: all 0.2s; }
+        .event-row:hover { background: rgba(255,255,255,0.05); }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .mobile-menu { display: none; }
+        .celebration-photo-container { width: 100%; border-radius: 16px; overflow: hidden; position: relative; background: linear-gradient(145deg, #1e293b, #0f172a); display: flex; align-items: center; justify-content: center; }
+        .celebration-photo-container img { width: 100%; height: auto; max-height: 500px; object-fit: contain; object-position: center; }
+        .team-section { margin-bottom: 2rem; }
+        .team-header { background: linear-gradient(135deg, rgba(29,188,184,0.2), rgba(11,79,108,0.2)); border: 1px solid rgba(29,188,184,0.3); border-radius: 12px; padding: 12px 20px; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
+        .team-ranking-card { background: linear-gradient(145deg, #1e293b, #0f172a); border: 1px solid rgba(29, 188, 184, 0.2); border-radius: 16px; padding: 1.5rem; }
+        .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+        .lightbox img { max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 12px; box-shadow: 0 0 40px rgba(0,0,0,0.5); }
+        .lightbox-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; cursor: pointer; z-index: 101; }
+        .period-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+        .period-day { background: rgba(29,188,184,0.2); color: #1DBCB8; border: 1px solid rgba(29,188,184,0.3); }
+        .period-week { background: rgba(255,215,0,0.2); color: #FFD700; border: 1px solid rgba(255,215,0,0.3); }
+        .period-month { background: rgba(168,85,247,0.2); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+        .filter-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); transition: all 0.3s; }
+        .filter-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .filter-btn.active { background: linear-gradient(135deg, #1DBCB8, #0B4F6C); color: white; border-color: transparent; }
+        .multi-select-player { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: all 0.2s; }
+        .multi-select-player:hover { background: rgba(255,255,255,0.07); }
+        .multi-select-player.selected { background: rgba(29,188,184,0.15); border-color: rgba(29,188,184,0.4); }
+        .multi-select-player.selected .check-circle { background: linear-gradient(135deg, #1DBCB8, #0B4F6C); border-color: transparent; }
+        .check-circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .check-circle i { font-size: 10px; color: white; opacity: 0; transition: opacity 0.2s; }
+        .multi-select-player.selected .check-circle i { opacity: 1; }
+        .multi-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+        @media (max-width: 768px) {
+            .desktop-layout { flex-direction: column !important; }
+            .admin-sidebar { width: 100% !important; min-height: auto !important; }
+            .mobile-menu { display: flex; overflow-x: auto; gap: 8px; padding: 10px; }
+            .desktop-tabs { display: none; }
+            .player-card .photo-area { width: 100px; height: 100px; }
+            .celebration-photo-container img { max-height: 350px; }
+            .logo-img-main { max-height: 85px; }
+        @media (max-width: 768px) {
+            .logo-img-main { max-height: 60px; width: auto; }
+            header { padding-top: 6px; padding-bottom: 6px; }
+            header .max-w-7xl { padding-left: 8px; padding-right: 8px; }
+            header .flex { align-items: center !important; flex-wrap: wrap; }
+            header nav { gap: 4px; flex-wrap: wrap; justify-content: center; }
+            header nav button { padding: 6px 8px; font-size: 10px; flex: 1 1 auto; min-width: 65px; max-width: 100px; }
+            header nav button i { margin-right: 2px !important; font-size: 10px; }
+        }
+            header { padding-top: 8px; padding-bottom: 8px; }
+            header .max-w-7xl { padding-left: 8px; padding-right: 8px; }
+            header .flex { align-items: center !important; }
+            header nav { gap: 4px; }
+            header nav button { padding: 7px 10px; font-size: 11px; }
+            header nav button i { margin-right: 2px !important; }
+        }
+            .multi-select-grid { grid-template-columns: 1fr; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
+        <div class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()"><i class="fas fa-times"></i></div>
+        <img id="lightbox-img" src="" alt="">
+    </div>
+
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-center">
+            <nav class="flex gap-2 flex-wrap justify-center w-full">
+                <button onclick="showSection('home')" id="nav-home" class="px-3 py-2 rounded-lg font-semibold tab-active transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-home mr-1"></i> Home
+                </button>
+                <button onclick="showSection('ranking')" id="nav-ranking" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-trophy mr-1"></i> Ranking
+                </button>
+                <button onclick="showSection('album')" id="nav-album" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-images mr-1"></i> Álbum
+                </button>
+                <button onclick="showAdminLogin()" class="px-3 py-2 rounded-lg font-semibold bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-lg transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-lock mr-1"></i> Admin
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 space-y-2"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- HOME SECTION -->
+        <section id="section-home" class="fade-in">
+            <div class="mb-6 text-center">
+                <img src="https://davihmt.github.io/copa-costao/Logo.png" alt="Costão Estaleirinho" class="mx-auto mb-4" style="max-height: 160px; width: auto; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));">
+            </div>
+            <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            </div>
+        </section>
+
+        <!-- RANKING SECTION -->
+        <section id="section-ranking" class="hidden fade-in">
+            <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold mb-2"><i class="fas fa-trophy text-yellow-400 mr-2"></i>Ranking</h2>
+                    <p class="text-gray-400">Ranking geral e por time/função</p>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="setRankingPeriod('day')" id="filter-day" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
+                        <i class="fas fa-calendar-day mr-1"></i> Dia
+                    </button>
+                    <button onclick="setRankingPeriod('week')" id="filter-week" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
+                        <i class="fas fa-calendar-week mr-1"></i> Semana
+                    </button>
+                    <button onclick="setRankingPeriod('month')" id="filter-month" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
+                        <i class="fas fa-calendar-alt mr-1"></i> Mês
+                    </button>
+                    <button onclick="setRankingPeriod('total')" id="filter-total" class="filter-btn active px-4 py-2 rounded-lg font-semibold text-sm">
+                        <i class="fas fa-infinity mr-1"></i> Total
+                    </button>
+                </div>
+            </div>
+            <div class="mb-8">
+                <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <span class="w-2 h-8 bg-gradient-to-b from-[#1DBCB8] to-[#0B4F6C] rounded-full"></span>
+                    Geral
+                </h3>
+                <div id="ranking-geral" class="space-y-3"></div>
+            </div>
+            <div id="ranking-por-time"></div>
+        </section>
+
+        <!-- ALBUM SECTION -->
+        <section id="section-album" class="hidden fade-in">
+            <div id="album-empty" class="text-center py-20">
+                <i class="fas fa-user-circle text-6xl text-gray-600 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-400">Selecione um jogador na Home para ver o álbum</h3>
+                <button onclick="showSection('home')" class="mt-4 px-6 py-2 btn-primary rounded-lg text-white font-semibold">
+                    Ver Jogadores
+                </button>
+            </div>
+            <div id="album-content" class="hidden">
+                <div class="flex items-center gap-4 mb-6">
+                    <button onclick="showSection('home')" class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-all">
+                        <i class="fas fa-arrow-left mr-1"></i> Voltar
+                    </button>
+                    <h2 id="album-player-name" class="text-3xl font-bold"></h2>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1">
+                        <div class="player-card">
+                            <div class="relative mb-4">
+                                <div class="photo-area mx-auto" id="album-profile-photo-area" onclick="openLightboxFromAlbum()">
+                                    <img id="album-player-photo" src="" alt="" onerror="this.style.display='none'; document.getElementById('album-fallback').style.display='flex';">
+                                    <div id="album-fallback" class="fallback" style="display:none"></div>
+                                </div>
+                                <div id="album-player-total" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black px-4 py-1 rounded-full text-lg whitespace-nowrap">
+                                    0 gols
+                                </div>
+                            </div>
+                            <h3 id="album-player-name2" class="text-xl font-bold mb-1"></h3>
+                            <p id="album-player-team" class="text-[#1DBCB8] font-semibold mb-4"></p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between px-3 py-2 rounded-lg bg-gray-800/50">
+                                    <span class="text-gray-400">⚽ Gols</span>
+                                    <span id="album-total-goals" class="font-bold">0</span>
+                                </div>
+                                <div class="flex justify-between px-3 py-2 rounded-lg bg-red-900/20">
+                                    <span class="text-red-400">📺 VAR</span>
+                                    <span id="album-punishment-goals" class="font-bold text-red-400">-0</span>
+                                </div>
+                                <div class="flex justify-between px-3 py-2 rounded-lg bg-purple-900/20">
+                                    <span class="text-purple-400">🏆 Conquistas</span>
+                                    <span id="album-conquistas-count" class="font-bold text-purple-400">0</span>
+                                </div>
+                                <div class="flex justify-between px-3 py-2 rounded-lg bg-gradient-to-r from-[#1DBCB8]/20 to-[#0B4F6C]/20 border border-[#1DBCB8]/30">
+                                    <span class="font-bold">GOLS VALIDOS</span>
+                                    <span id="album-total-real" class="font-black text-lg">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 space-y-4">
+                        <div class="player-card">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-trophy mr-2 text-yellow-400"></i>ARTILHEIRO!!!</h3>
+                            <div id="album-celebration-wrapper" class="celebration-photo-container">
+                                <img id="album-celebration-photo" src="" alt="" onerror="this.style.display='none'; document.getElementById('album-celebration-placeholder').style.display='flex';">
+                                <div id="album-celebration-placeholder" class="flex flex-col items-center justify-center text-gray-600 py-12" style="display:none">
+                                    <i class="fas fa-camera text-4xl mb-2"></i>
+                                    <p>Sem foto de comemoração</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="album-rewards-mural" class="player-card">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-medal mr-2 text-yellow-400"></i>Mural de Conquistas</h3>
+                            <div id="album-rewards-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                        </div>
+                        <div class="player-card">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-stamp mr-2 text-[#1DBCB8]"></i>Figurinhas</h3>
+                            <div id="album-stickers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                        </div>
+                        <div class="player-card">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-history mr-2 text-[#1DBCB8]"></i>Histórico de Eventos</h3>
+                            <div id="album-events" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADMIN LOGIN MODAL -->
+        <div id="admin-login-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="glass rounded-2xl p-8 max-w-md w-full text-center">
+                <i class="fas fa-shield-alt text-5xl text-[#1DBCB8] mb-4"></i>
+                <h3 class="text-2xl font-bold mb-2">Área do Gerente</h3>
+                <p class="text-gray-400 mb-6">Digite a senha de administrador</p>
+                <input type="password" id="admin-password" placeholder="Senha" 
+                       class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white text-center text-lg mb-4 focus:border-[#1DBCB8] focus:outline-none">
+                <div class="flex gap-3">
+                    <button onclick="closeAdminLogin()" class="flex-1 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-all font-semibold">
+                        Cancelar
+                    </button>
+                    <button onclick="checkAdminPassword()" class="flex-1 py-3 rounded-xl btn-primary text-white font-semibold">
+                        Entrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <section id="section-admin" class="hidden fade-in">
+            <div class="desktop-layout flex gap-6 min-h-screen">
+                <!-- Sidebar -->
+                <aside class="admin-sidebar w-64 rounded-2xl p-4 flex flex-col gap-2 shrink-0">
+                    <h3 class="text-xl font-bold mb-4 text-center"><i class="fas fa-cog mr-2"></i>Admin</h3>
+                    <button onclick="showAdminTab('cadastrar')" id="admin-tab-cadastrar" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all bg-white/10 text-white">
+                        <i class="fas fa-user-plus mr-2"></i>Cadastrar Jogador
+                    </button>
+                    <button onclick="showAdminTab('gols')" id="admin-tab-gols" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-futbol mr-2"></i>Lançar Gols
+                    </button>
+                    <button onclick="showAdminTab('figurinhas')" id="admin-tab-figurinhas" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-stamp mr-2"></i>Figurinhas
+                    </button>
+                    <button onclick="showAdminTab('punicoes')" id="admin-tab-punicoes" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>VAR
+                    </button>
+                    <button onclick="showAdminTab('corrigir')" id="admin-tab-corrigir" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-edit mr-2"></i>Corrigir
+                    </button>
+                    <div class="mt-auto pt-4 border-t border-white/10">
+                        <button onclick="logoutAdmin()" class="w-full px-4 py-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all font-semibold">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Sair
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- Admin Content -->
+                <div class="flex-1 admin-content">
+                    <!-- Cadastrar + Excluir -->
+                    <div id="admin-panel-cadastrar" class="admin-panel">
+                        <h3 class="text-2xl font-bold mb-6">Cadastrar Jogador</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Nome</label>
+                                    <input type="text" id="cad-nome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Nome do jogador">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Sobrenome</label>
+                                    <input type="text" id="cad-sobrenome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Sobrenome">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Time / Função</label>
+                                <input type="text" id="cad-time" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: Vendas, Operações, Recepção">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Foto de Perfil</label>
+                                    <input type="text" id="cad-foto-perfil" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="gabriel-perfil.png">
+                                    <p class="text-xs text-gray-500 mt-1">Nome do arquivo na raiz do repo</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Foto de Comemoração</label>
+                                    <input type="text" id="cad-foto-comemoracao" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="gabriel-comemoracao.png">
+                                    <p class="text-xs text-gray-500 mt-1">Nome do arquivo na raiz do repo</p>
+                                </div>
+                            </div>
+                            <button onclick="cadastrarJogador()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-save mr-2"></i>Cadastrar
+                            </button>
+                        </div>
+
+                        <h3 class="text-2xl font-bold mb-6"><i class="fas fa-trash-alt mr-2 text-red-400"></i>Excluir Jogador</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogador para Excluir</label>
+                                <select id="del-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-red-500 focus:outline-none">
+                                    <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
+                                </select>
+                            </div>
+                            <div id="del-preview" class="hidden mb-4 p-4 rounded-xl bg-red-900/10 border border-red-500/20">
+                                <div class="flex items-center gap-4">
+                                    <img id="del-foto" src="" class="w-14 h-14 rounded-full object-cover border-2 border-red-400" onerror="this.style.display='none'">
+                                    <div>
+                                        <h4 id="del-nome" class="font-bold text-lg"></h4>
+                                        <p id="del-info" class="text-sm text-gray-400"></p>
+                                    </div>
+                                </div>
+                                <p class="text-red-400 text-sm mt-3"><i class="fas fa-exclamation-triangle mr-1"></i> Isso excluirá o jogador e TODOS os seus eventos permanentemente!</p>
+                            </div>
+                            <button onclick="excluirJogador()" class="w-full py-3 rounded-xl btn-danger text-white font-bold text-lg">
+                                <i class="fas fa-trash-alt mr-2"></i>Excluir Jogador Permanentemente
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Lançar Gols -->
+                    <div id="admin-panel-gols" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Lançar Gols</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
+                                <select id="gols-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Quantidade de Gols</label>
+                                <input type="number" id="gols-qtd" min="1" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="1">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Data</label>
+                                <input type="date" id="gols-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Observação (opcional)</label>
+                                <input type="text" id="gols-obs" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: Gol de placa, hat-trick...">
+                            </div>
+                            <button onclick="lancarGols()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-futbol mr-2"></i>Lançar Gols
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Figurinhas - SELEÇÃO MÚLTIPLA -->
+                    <div id="admin-panel-figurinhas" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Lançar Figurinhas</h3>
+                        <div class="glass rounded-2xl p-6 max-w-3xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogadores <span class="text-[#1DBCB8]" id="fig-selected-count">(0 selecionados)</span></label>
+                                <div id="fig-jogadores-grid" class="multi-select-grid mb-2">
+                                    <!-- Preenchido via JS -->
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Tipo de Figurinha</label>
+                                <select id="fig-tipo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="master-verao">Master Verão (+7)</option>
+                                    <option value="master-inverno">Master Inverno (+5)</option>
+                                    <option value="luxo-verao">Luxo Verão (+5)</option>
+                                    <option value="luxo-inverno">Luxo Inverno (+4)</option>
+                                    <option value="luxo-salta">Luxo S. Alta (+4)</option>
+                                    <option value="luxo-alta">Luxo Alta (+3)</option>
+                                    <option value="luxo-media">Luxo Média (+3)</option>
+                                    <option value="virada">Virada Épica (+3)</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Data</label>
+                                <input type="date" id="fig-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            </div>
+                            <button onclick="lancarFigurinha()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-stamp mr-2"></i>Lançar Figurinha para Jogadores Selecionados
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- VAR -->
+                    <div id="admin-panel-punicoes" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Aplicar VAR</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
+                                <select id="pun-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Tipo de VAR</label>
+                                <select id="pun-tipo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="chegar-atrasado">Chegar Atrasado (-1)</option>
+                                    <option value="quebra-processos">Quebra de Processos (-1)</option>
+                                    <option value="cancelamento">Cancelamento (-3)</option>
+                                    <option value="falta-justificativa">Falta s/ Justificativa (-5)</option>
+                                    <option value="custom">Outros (personalizado)</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Quantidade (se personalizado)</label>
+                                <input type="number" id="pun-qtd" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="-1">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Data</label>
+                                <input type="date" id="pun-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            </div>
+                            <button onclick="lancarPunicao()" class="w-full py-3 rounded-xl btn-danger text-white font-bold text-lg">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>Aplicar VAR
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Corrigir -->
+                    <div id="admin-panel-corrigir" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Corrigir / Excluir Eventos</h3>
+                        <div class="glass rounded-2xl p-6 max-w-3xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogador</label>
+                                <select id="corr-jogador" onchange="carregarCorrecao()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="">Selecione um jogador</option>
+                                    <option value="125k">125.000 pt (+3)</option>
+                                    <option value="100k">100.000 pt (+3)</option>
+                                    <option value="75k">75.000 pt (+2)</option>
+                                    <option value="60k">60.000 pt (+2)</option>
+                                    <option value="42k">42.000 pt (+2)</option>
+                                    <option value="15k">15.000 pt (+1)</option>
+                                    <option value="c+">C+ Diamante (+1)</option>
+                                </select>
+                            </div>
+                            <div id="corr-info" class="player-select-info rounded-xl p-4 mb-4 hidden">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <img id="corr-foto" src="" class="w-16 h-16 rounded-full object-cover border-2 border-[#1DBCB8]" onerror="this.style.display='none'">
+                                    <div>
+                                        <h4 id="corr-nome" class="font-bold text-lg"></h4>
+                                        <p id="corr-time" class="text-[#1DBCB8] text-sm"></p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 text-center">
+                                    <div class="bg-gray-800/50 rounded-lg p-2">
+                                        <p class="text-xs text-gray-400">Gols</p>
+                                        <p id="corr-base" class="font-bold">0</p>
+                                    </div>
+                                    <div class="bg-yellow-900/20 rounded-lg p-2">
+                                        <p class="text-xs text-yellow-400">Figurinhas</p>
+                                        <p id="corr-fig" class="font-bold text-yellow-400">0</p>
+                                    </div>
+                                    <div class="bg-red-900/20 rounded-lg p-2">
+                                        <p class="text-xs text-red-400">VAR</p>
+                                        <p id="corr-pun" class="font-bold text-red-400">0</p>
+                                    </div>
+                                    <div class="bg-gradient-to-r from-[#1DBCB8]/20 to-[#0B4F6C]/20 rounded-lg p-2 border border-[#1DBCB8]/30">
+                                        <p class="text-xs font-bold">Gols Validos</p>
+                                        <p id="corr-total" class="font-black">0</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="corr-eventos" class="space-y-2 max-h-96 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+
+        // ===== CONFIG =====
+        const ADMIN_PASSWORD = 'costao2026';
+        const REPO_BASE = 'https://davihmt.github.io/copa-costao/';
+
+        // ===== STATE =====
+        let players = [];
+        let events = [];
+        let currentAlbumPlayer = null;
+        let isAdmin = false;
+        let currentAdminTab = 'cadastrar';
+        let rankingPeriod = 'total';
+        let inAdmin = false;
+        let selectedFigPlayers = new Set(); // NOVO: jogadores selecionados para figurinhas
+
+        // ===== PERIOD HELPERS =====
+        function getBRDate(dateStr) {
+            if (!dateStr) return new Date();
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Date(y, m - 1, d, 12, 0, 0);
+        }
+
+        function isSameDay(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() && 
+                   d1.getMonth() === d2.getMonth() && 
+                   d1.getDate() === d2.getDate();
+        }
+
+        function getWeekRange(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(d.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23, 59, 59, 999);
+            return { monday, sunday };
+        }
+
+        function isSameWeek(d1, d2) {
+            const w1 = getWeekRange(d1);
+            const w2 = getWeekRange(d2);
+            return w1.monday.getTime() === w2.monday.getTime();
+        }
+
+        function isSameMonth(d1, d2) {
+            return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+        }
+
+        function getTodayStr() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+        }
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = getTodayStr();
+            ['gols-data', 'fig-data', 'pun-data'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = today;
+            });
+
+            loadPlayers();
+            loadEvents();
+        });
+
+        // ===== NAVIGATION =====
+        function showSection(section) {
+            inAdmin = (section === 'admin');
+            ['home', 'ranking', 'album', 'admin'].forEach(s => {
+                document.getElementById('section-' + s)?.classList.add('hidden');
+                document.getElementById('nav-' + s)?.classList.remove('tab-active');
+                document.getElementById('nav-' + s)?.classList.add('tab-inactive');
+            });
+            document.getElementById('section-' + section)?.classList.remove('hidden');
+            document.getElementById('nav-' + section)?.classList.remove('tab-inactive');
+            document.getElementById('nav-' + section)?.classList.add('tab-active');
+
+            if (section === 'ranking') renderRanking();
+            if (section === 'home') renderPlayers();
+            if (section === 'album' && !currentAlbumPlayer) {
+                document.getElementById('album-empty').classList.remove('hidden');
+                document.getElementById('album-content').classList.add('hidden');
+            }
+        }
+
+        // ===== RANKING FILTER =====
+        function setRankingPeriod(period) {
+            rankingPeriod = period;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('filter-' + period)?.classList.add('active');
+            renderRanking();
+        }
+
+        // ===== LIGHTBOX =====
+        function openLightbox(url) {
+            if (!url) return;
+            document.getElementById('lightbox-img').src = url;
+            document.getElementById('lightbox').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function openLightboxFromAlbum() {
+            const img = document.getElementById('album-player-photo');
+            if (img && img.src && img.style.display !== 'none') {
+                openLightbox(img.src);
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // ===== FIREBASE LOADERS =====
+        async function loadPlayers() {
+            try {
+                const q = window.query(window.collection(window.db, 'jogadores'), window.orderBy('nome'));
+                window.onSnapshot(q, (snapshot) => {
+                    players = [];
+                    snapshot.forEach(doc => {
+                        players.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderPlayers();
+                    renderRanking();
+                    updateAdminSelects();
+                    updateDeleteSelect();
+                    renderFigPlayersGrid(); // NOVO: atualizar grid de seleção múltipla
+                    if (inAdmin) {
+                        showAdminTab(currentAdminTab);
+                    }
+                });
+            } catch (e) {
+                console.error('Erro ao carregar jogadores:', e);
+            }
+        }
+
+        async function loadEvents() {
+            try {
+                const q = window.query(window.collection(window.db, 'eventos'), window.orderBy('data', 'desc'));
+                window.onSnapshot(q, (snapshot) => {
+                    events = [];
+                    snapshot.forEach(doc => {
+                        events.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderPlayers();
+                    renderRanking();
+                    if (!inAdmin && currentAlbumPlayer) {
+                        showAlbum(currentAlbumPlayer);
+                    }
+                    if (inAdmin && document.getElementById('corr-jogador').value) {
+                        carregarCorrecao();
+                    }
+                });
+            } catch (e) {
+                console.error('Erro ao carregar eventos:', e);
+            }
+        }
+
+        // ===== PLAYER STATS BY PERIOD =====
+        function getPlayerStats(playerId) {
+            const playerEvents = events.filter(e => e.jogadorId === playerId);
+            const today = new Date();
+            today.setHours(12, 0, 0, 0);
+
+            let baseTotal = 0, baseDay = 0, baseWeek = 0, baseMonth = 0;
+            let stickersTotal = 0, stickersDay = 0, stickersWeek = 0, stickersMonth = 0;
+            let punishTotal = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
+
+            playerEvents.forEach(ev => {
+                const evDate = getBRDate(ev.data);
+                const val = Number(ev.valor) || 0;
+
+                if (ev.tipo === 'gol') {
+                    baseTotal += val;
+                    if (isSameDay(evDate, today)) baseDay += val;
+                    if (isSameWeek(evDate, today)) baseWeek += val;
+                    if (isSameMonth(evDate, today)) baseMonth += val;
+                } else if (ev.tipo === 'figurinha') {
+                    stickersTotal += val;
+                    if (isSameDay(evDate, today)) stickersDay += val;
+                    if (isSameWeek(evDate, today)) stickersWeek += val;
+                    if (isSameMonth(evDate, today)) stickersMonth += val;
+                } else if (ev.tipo === 'punicao') {
+                    punishTotal += Math.abs(val);
+                    if (isSameDay(evDate, today)) punishDay += Math.abs(val);
+                    if (isSameWeek(evDate, today)) punishWeek += Math.abs(val);
+                    if (isSameMonth(evDate, today)) punishMonth += Math.abs(val);
+                }
+            });
+
+            return {
+                baseTotal, baseDay, baseWeek, baseMonth,
+                stickersTotal, stickersDay, stickersWeek, stickersMonth,
+                punishTotal, punishDay, punishWeek, punishMonth,
+                totalReal: baseTotal + stickersTotal - punishTotal,
+                totalDay: baseDay + stickersDay - punishDay,
+                totalWeek: baseWeek + stickersWeek - punishWeek,
+                totalMonth: baseMonth + stickersMonth - punishMonth
+            };
+        }
+
+        function getPeriodTotal(stats) {
+            if (rankingPeriod === 'day') return stats.totalDay;
+            if (rankingPeriod === 'week') return stats.totalWeek;
+            if (rankingPeriod === 'month') return stats.totalMonth;
+            return stats.totalReal;
+        }
+
+        // ===== RENDER PLAYERS (HOME) =====
+        function renderPlayers() {
+            const grid = document.getElementById('players-grid');
+            if (!grid) return;
+
+            if (players.length === 0) {
+                grid.innerHTML = '<p class="text-gray-400 col-span-full text-center py-10">Nenhum jogador cadastrado</p>';
+                return;
+            }
+
+            const sorted = [...players].sort((a, b) => {
+                const sa = getPlayerStats(a.id).totalReal;
+                const sb = getPlayerStats(b.id).totalReal;
+                return sb - sa;
+            });
+
+            grid.innerHTML = sorted.map((p, idx) => {
+                const stats = getPlayerStats(p.id);
+                const rank = idx + 1;
+                let rankClass = '';
+                if (rank === 1) rankClass = 'rank-1';
+                else if (rank === 2) rankClass = 'rank-2';
+                else if (rank === 3) rankClass = 'rank-3';
+
+                const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+
+                return `
+                    <div class="player-card card-hover ${rankClass}" onclick="window.showAlbum('${p.id}')">
+                        <div class="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black flex items-center justify-center text-sm shadow-lg">
+                            ${rank}
+                        </div>
+                        <div class="photo-area mx-auto">
+                            <img src="${photoUrl}" alt="${p.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="fallback" style="display:none">${initials}</div>
+                        </div>
+                        <h3 class="font-bold text-lg">${p.nome || ''}</h3>
+                        <p class="text-gray-400 text-sm mb-2">${p.sobrenome || ''}</p>
+                        <p class="text-[#1DBCB8] text-xs font-semibold mb-2">${p.time || 'Sem time'}</p>
+                        <div class="flex items-center justify-center gap-1 text-lg font-black">
+                            <span>⚽</span>
+                            <span>${stats.totalReal}</span>
+                        </div>
+                        <div class="flex justify-center gap-2 mt-2">
+                            <span class="period-badge period-day" title="Hoje">D ${stats.totalDay}</span>
+                            <span class="period-badge period-week" title="Semana">S ${stats.totalWeek}</span>
+                            <span class="period-badge period-month" title="Mês">M ${stats.totalMonth}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== RENDER RANKING =====
+        function renderRanking() {
+            const geral = document.getElementById('ranking-geral');
+            const porTime = document.getElementById('ranking-por-time');
+            if (!geral || !porTime) return;
+
+            const periodLabel = rankingPeriod === 'day' ? 'do Dia' : rankingPeriod === 'week' ? 'da Semana' : rankingPeriod === 'month' ? 'do Mês' : 'Geral';
+
+            // Geral
+            const sorted = [...players].sort((a, b) => {
+                const sa = getPlayerStats(a.id);
+                const sb = getPlayerStats(b.id);
+                return getPeriodTotal(sb) - getPeriodTotal(sa);
+            });
+
+            geral.innerHTML = sorted.map((p, idx) => {
+                const stats = getPlayerStats(p.id);
+                const total = getPeriodTotal(stats);
+                const rank = idx + 1;
+                let medal = '';
+                if (rank === 1) medal = '🥇';
+                else if (rank === 2) medal = '🥈';
+                else if (rank === 3) medal = '🥉';
+                else medal = `<span class="text-gray-500 font-bold">${rank}</span>`;
+
+                const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+
+                return `
+                    <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="window.showAlbum('${p.id}')">
+                        <div class="text-2xl w-10 text-center">${medal}</div>
+                        <img src="${photoUrl}" class="w-12 h-12 rounded-full object-cover border-2 border-[#1DBCB8]" onerror="this.style.display='none'">
+                        <div class="flex-1">
+                            <h4 class="font-bold">${p.nome} ${p.sobrenome || ''}</h4>
+                            <p class="text-[#1DBCB8] text-sm">${p.time || ''}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-black">${total}</p>
+                            <p class="text-xs text-gray-400">gols</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Por Time
+            const teams = {};
+            players.forEach(p => {
+                const team = p.time || 'Sem Time';
+                if (!teams[team]) teams[team] = [];
+                teams[team].push(p);
+            });
+
+            porTime.innerHTML = `<h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-8 bg-gradient-to-b from-[#1DBCB8] to-[#0B4F6C] rounded-full"></span>Por Time / Função — ${periodLabel}</h3>` +
+                Object.entries(teams).sort((a, b) => {
+                    const totalA = a[1].reduce((s, p) => s + getPeriodTotal(getPlayerStats(p.id)), 0);
+                    const totalB = b[1].reduce((s, p) => s + getPeriodTotal(getPlayerStats(p.id)), 0);
+                    return totalB - totalA;
+                }).map(([team, members]) => {
+                    const teamTotal = members.reduce((s, p) => s + getPeriodTotal(getPlayerStats(p.id)), 0);
+                    const sortedMembers = [...members].sort((a, b) => {
+                        const sa = getPlayerStats(a.id);
+                        const sb = getPlayerStats(b.id);
+                        return getPeriodTotal(sb) - getPeriodTotal(sa);
+                    });
+
+                    return `
+                        <div class="team-section">
+                            <div class="team-header">
+                                <i class="fas fa-shield-alt text-[#1DBCB8] text-xl"></i>
+                                <div class="flex-1">
+                                    <h4 class="font-bold">${team}</h4>
+                                    <p class="text-xs text-gray-400">${members.length} jogadores · ${teamTotal} gols</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                ${sortedMembers.map(p => {
+                                    const stats = getPlayerStats(p.id);
+                                    const total = getPeriodTotal(stats);
+                                    const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                                    return `
+                                        <div class="player-card cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="window.showAlbum('${p.id}')">
+                                            <div class="flex items-center gap-3">
+                                                <img src="${photoUrl}" class="w-10 h-10 rounded-full object-cover border border-[#1DBCB8]" onerror="this.style.display='none'">
+                                                <div class="flex-1 text-left">
+                                                    <h5 class="font-bold text-sm">${p.nome} ${p.sobrenome || ''}</h5>
+                                                    <p class="text-2xl font-black">${total}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+
+        // ===== ALBUM =====
+        function showAlbum(playerId) {
+            console.log('showAlbum chamado com:', playerId);
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+
+            currentAlbumPlayer = playerId;
+            const stats = getPlayerStats(playerId);
+            const playerEvents = events.filter(e => e.jogadorId === playerId).sort((a, b) => {
+                const da = getBRDate(a.data);
+                const db = getBRDate(b.data);
+                return db - da;
+            });
+
+            document.getElementById('album-empty').classList.add('hidden');
+            document.getElementById('album-content').classList.remove('hidden');
+
+            document.getElementById('album-player-name').textContent = `${player.nome} ${player.sobrenome || ''}`;
+            document.getElementById('album-player-name2').textContent = `${player.nome} ${player.sobrenome || ''}`;
+            document.getElementById('album-player-team').textContent = player.time || 'Sem time';
+            document.getElementById('album-player-total').textContent = `${stats.totalReal} gols`;
+            document.getElementById('album-total-goals').textContent = stats.baseTotal + stats.stickersTotal;
+            document.getElementById('album-punishment-goals').textContent = `-${stats.punishTotal}`;
+            document.getElementById('album-total-real').textContent = stats.totalReal;
+
+            // Calcular conquistas
+            const conq = calcConquistas(playerId);
+            let conquistasCount = conq.diaCount + conq.semanaCount;
+            // Contar conquistas mensais conquistadas
+            const CONQUISTAS_METAS = [30, 40, 50, 80, 100];
+            CONQUISTAS_METAS.forEach(meta => {
+                if (conq.monthTotal >= meta) conquistasCount++;
+            });
+            document.getElementById('album-conquistas-count').textContent = conquistasCount;
+
+            const profilePhoto = document.getElementById('album-player-photo');
+            const profileFallback = document.getElementById('album-fallback');
+            if (player.fotoPerfil) {
+                profilePhoto.src = REPO_BASE + player.fotoPerfil;
+                profilePhoto.style.display = 'block';
+                profileFallback.style.display = 'none';
+            } else {
+                profilePhoto.style.display = 'none';
+                profileFallback.style.display = 'flex';
+                profileFallback.textContent = (player.nome?.[0] || '') + (player.sobrenome?.[0] || '');
+            }
+
+            const celebPhoto = document.getElementById('album-celebration-photo');
+            const celebPlaceholder = document.getElementById('album-celebration-placeholder');
+            if (player.fotoComemoracao) {
+                celebPhoto.src = REPO_BASE + player.fotoComemoracao;
+                celebPhoto.style.display = 'block';
+                celebPlaceholder.style.display = 'none';
+            } else {
+                celebPhoto.style.display = 'none';
+                celebPlaceholder.style.display = 'flex';
+            }
+
+            const rewardsGrid = document.getElementById('album-rewards-grid');
+
+            function calcConquistas(pid) {
+                const pe = events.filter(e => e.jogadorId === pid && (e.tipo === 'gol' || e.tipo === 'figurinha'));
+                const days = {}, weeks = {};
+                let monthTotal = 0;
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth();
+                pe.forEach(e => {
+                    const d = getBRDate(e.data);
+                    const dk = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
+                    const wk = getWeekRange(d);
+                    const wkKey = wk.monday.getFullYear() + '-' + wk.monday.getMonth() + '-' + wk.monday.getDate();
+                    days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
+                    weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
+                    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
+                });
+                return {
+                    diaCount: Object.values(days).filter(g => g >= 12).length,
+                    semanaCount: Object.values(weeks).filter(g => g >= 20).length,
+                    monthTotal: monthTotal
+                };
+            }
+            const conqMural = calcConquistas(playerId);
+
+            const CONQUISTAS = [
+                { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '12+ gols em um dia', goals: 12, period: 'day', repeatable: true, img: '+12.png', current: conqMural.diaCount },
+                { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '20+ gols em uma semana', goals: 20, period: 'week', repeatable: true, img: '+20.png', current: conqMural.semanaCount },
+                { id: 'premio-mes-30', name: 'CRAQUE!', rule: '30+ gols no mês', goals: 30, period: 'month', repeatable: false, img: '+30.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-40', name: 'MONSTRO!', rule: '40+ gols no mês', goals: 40, period: 'month', repeatable: false, img: '+40.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-50', name: 'ARTILHEIRO!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-80', name: 'MÁQUINAAA!!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-100', name: 'FENÔMENO!!!', rule: '100+ gols no mês', goals: 100, period: 'month', repeatable: false, img: '+100.png', current: conqMural.monthTotal }
+            ];
+
+            let rewardsHtml = '';
+            CONQUISTAS.forEach(c => {
+                const isUnlocked = c.repeatable ? c.current > 0 : c.current >= c.goals;
+                const progress = c.repeatable ? 0 : Math.min(100, (c.current / c.goals) * 100);
+                const imgUrl = REPO_BASE + c.img;
+                const borderColor = isUnlocked ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255,255,255,0.1)';
+                const bgColor = isUnlocked ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.03)';
+                const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-lock text-gray-500 text-xl"></i>';
+
+                let progressHtml = '';
+                if (!c.repeatable && !isUnlocked) {
+                    progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${c.current}/${c.goals} gols</p>`;
+                }
+
+                if (isUnlocked) {
+                    const numCards = c.repeatable ? c.current : 1;
+                    for (let i = 0; i < numCards; i++) {
+                        rewardsHtml += `
+                        <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${bgColor}; border: 1px solid ${borderColor};">
+                            <div class="text-center mb-2 w-full">
+                                <h4 class="font-bold text-lg ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}">${c.name}</h4>
+                            </div>
+                            <div style="width:100%;aspect-ratio:1;max-width:260px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
+                                <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
+                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
+                            </div>
+                            <div class="w-full">
+                                ${progressHtml}
+                            </div>
+                            <div class="mt-2">
+                                ${statusIcon}
+                            </div>
+                        </div>`;
+                    }
+                } else {
+                    rewardsHtml += `
+                    <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${bgColor}; border: 1px solid ${borderColor};">
+                        <div class="text-center mb-2 w-full">
+                            <h4 class="font-bold text-lg text-gray-500">${c.name}</h4>
+                        </div>
+                        <div style="width:100%;aspect-ratio:1;max-width:260px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
+                            <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
+                            <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
+                        </div>
+                        <div class="w-full">
+                            ${progressHtml}
+                        </div>
+                        <div class="mt-2">
+                            ${statusIcon}
+                        </div>
+                    </div>`;
+                }
+            });
+            rewardsGrid.innerHTML = rewardsHtml;const stickersDiv = document.getElementById('album-stickers');
+            const stickerEvents = playerEvents.filter(e => e.tipo === 'figurinha');
+            const stickerTypes = {};
+            const STICKER_IMG_MAP = {
+                'master-verao': 'master-verao.png', 'master-inverno': 'master-inverno.png',
+                'luxo-verao': 'luxo-verao.png', 'luxo-inverno': 'luxo-inverno.png',
+                'luxo-salta': 'luxo-salta.png', 'luxo-alta': 'luxo-alta.png',
+                'luxo-media': 'luxo-media.png', '125k': '125k.png',
+                '100k': '100k.png', '75k': '75k.png', '60k': '60k.png',
+                '42k': '42k.png', '15k': '15k.png', 'c+': 'c+.png'
+            };
+            stickerEvents.forEach(e => {
+                const key = e.subtipo || 'figurinha';
+                if (!stickerTypes[key]) stickerTypes[key] = { count: 0, total: 0, label: e.subtipoLabel || key, img: e.subtipoImg || STICKER_IMG_MAP[key] || '' };
+                stickerTypes[key].count++;
+                stickerTypes[key].total += Number(e.valor) || 0;
+            });
+
+            if (Object.keys(stickerTypes).length === 0) {
+                stickersDiv.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center">Nenhuma figurinha ainda</p>';
+            } else {
+                stickersDiv.innerHTML = Object.entries(stickerTypes).map(([key, data]) => {
+                    const imgUrl = data.img ? REPO_BASE + data.img : '';
+                    return `
+                    <div class="sticker-card rounded-xl p-3 flex items-center gap-3">
+                        <div style="width:140px;height:140px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
+                            <span style="font-size:48px;position:absolute;z-index:1;">🎴</span>
+                            <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${data.label}">
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <p class="font-bold text-sm text-yellow-400">${data.label}</p>
+                            <p class="text-xs text-gray-400">+${data.total} gols totais</p>
+                        </div>
+                        <div style="text-align:right;flex-shrink:0;">
+                            <p style="font-size:24px;font-weight:800;color:#f59e0b;">${data.count}x</p>
+                        </div>
+                    </div>
+                `;
+                }).join('');
+            }const eventsDiv = document.getElementById('album-events');
+            if (playerEvents.length === 0) {
+                eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento registrado</p>';
+            } else {
+                eventsDiv.innerHTML = playerEvents.map(e => {
+                    let icon = '', color = '', sign = '';
+                    if (e.tipo === 'gol') { icon = '⚽'; color = 'text-white'; sign = '+'; }
+                    else if (e.tipo === 'figurinha') {
+                        const imgFile = e.subtipoImg || STICKER_IMG_MAP[e.subtipo] || '';
+                        const imgUrl = imgFile ? REPO_BASE + imgFile : '';
+                        icon = imgUrl ? `<img src="${imgUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:4px;">` : '🎴';
+                        color = 'text-yellow-400'; sign = '+';
+                    }
+                    else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
+
+                    return `
+                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${icon}</span>
+                                <div>
+                                    <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
+                                    <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
+                                </div>
+                            </div>
+                            <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
+                        </div>
+                    `;
+                }).join('');
+            }showSection('album');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}/${y}`;
+        }
+
+        // ===== ADMIN =====
+        function showAdminLogin() {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+        }
+
+        function closeAdminLogin() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+            document.getElementById('admin-password').value = '';
+        }
+
+        function checkAdminPassword() {
+            const input = document.getElementById('admin-password').value;
+            if (input === ADMIN_PASSWORD) {
+                isAdmin = true;
+                closeAdminLogin();
+                showSection('admin');
+                showAdminTab('cadastrar');
+                showToast('Bem-vindo, Gerente!', 'success');
+            } else {
+                showToast('Senha incorreta!', 'error');
+            }
+        }
+
+        function logoutAdmin() {
+            isAdmin = false;
+            inAdmin = false;
+            showSection('home');
+            showToast('Logout realizado', 'info');
+        }
+
+        function showAdminTab(tab) {
+            currentAdminTab = tab;
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById('admin-panel-' + tab)?.classList.remove('hidden');
+
+            document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white/10', 'text-white');
+                btn.classList.add('text-white/60');
+            });
+            document.getElementById('admin-tab-' + tab)?.classList.add('bg-white/10', 'text-white');
+            document.getElementById('admin-tab-' + tab)?.classList.remove('text-white/60');
+
+            if (tab !== 'cadastrar') updateAdminSelects();
+            if (tab === 'figurinhas') renderFigPlayersGrid();
+        }
+
+        function updateAdminSelects() {
+            const selects = ['gols-jogador', 'pun-jogador', 'corr-jogador'];
+            selects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="">Selecione um jogador</option>' +
+                    players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''}</option>`).join('');
+                sel.value = currentVal;
+            });
+        }
+
+        // ===== SELEÇÃO MÚLTIPLA DE JOGADORES PARA FIGURINHAS =====
+        function renderFigPlayersGrid() {
+            const grid = document.getElementById('fig-jogadores-grid');
+            if (!grid) return;
+
+            if (players.length === 0) {
+                grid.innerHTML = '<p class="text-gray-500 text-sm">Nenhum jogador cadastrado</p>';
+                return;
+            }
+
+            grid.innerHTML = players.map(p => {
+                const isSelected = selectedFigPlayers.has(p.id);
+                const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+
+                return `
+                    <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
+                        <div class="check-circle">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#1DBCB8]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
+                            <p class="text-xs text-gray-500">${p.time || 'Sem time'}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateFigSelectedCount();
+        }
+
+        function toggleFigPlayer(playerId) {
+            if (selectedFigPlayers.has(playerId)) {
+                selectedFigPlayers.delete(playerId);
+            } else {
+                selectedFigPlayers.add(playerId);
+            }
+            renderFigPlayersGrid();
+        }
+
+        function updateFigSelectedCount() {
+            const countEl = document.getElementById('fig-selected-count');
+            if (countEl) {
+                countEl.textContent = `(${selectedFigPlayers.size} selecionados)`;
+            }
+        }
+
+        // ===== EXCLUIR JOGADOR =====
+        function updateDeleteSelect() {
+            const sel = document.getElementById('del-jogador');
+            if (!sel) return;
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">Selecione um jogador</option>' +
+                players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''}</option>`).join('');
+            sel.value = currentVal;
+
+            sel.onchange = function() {
+                const preview = document.getElementById('del-preview');
+                const player = players.find(p => p.id === this.value);
+                if (!player) {
+                    preview.classList.add('hidden');
+                    return;
+                }
+                preview.classList.remove('hidden');
+                document.getElementById('del-foto').src = player.fotoPerfil ? REPO_BASE + player.fotoPerfil : '';
+                document.getElementById('del-nome').textContent = `${player.nome} ${player.sobrenome || ''}`;
+                const stats = getPlayerStats(player.id);
+                document.getElementById('del-info').textContent = `${player.time || 'Sem time'} · ${stats.totalReal} gols · ${events.filter(e => e.jogadorId === player.id).length} eventos`;
+            };
+        }
+
+        async function excluirJogador() {
+            const jogadorId = document.getElementById('del-jogador').value;
+            if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
+
+            const player = players.find(p => p.id === jogadorId);
+            if (!confirm(`Tem certeza que deseja excluir PERMANENTEMENTE ${player.nome} ${player.sobrenome || ''}?
+
+Isso também excluirá todos os seus eventos!`)) return;
+
+            try {
+                const playerEvents = events.filter(e => e.jogadorId === jogadorId);
+                for (const ev of playerEvents) {
+                    await window.deleteDoc(window.doc(window.db, 'eventos', ev.id));
+                }
+                await window.deleteDoc(window.doc(window.db, 'jogadores', jogadorId));
+
+                showToast(`${player.nome} excluído com sucesso!`, 'success');
+                document.getElementById('del-jogador').value = '';
+                document.getElementById('del-preview').classList.add('hidden');
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao excluir jogador', 'error');
+            }
+        }
+
+        // ===== ADMIN ACTIONS =====
+        async function cadastrarJogador() {
+            const nome = document.getElementById('cad-nome').value.trim();
+            const sobrenome = document.getElementById('cad-sobrenome').value.trim();
+            const time = document.getElementById('cad-time').value.trim();
+            const fotoPerfil = document.getElementById('cad-foto-perfil').value.trim();
+            const fotoComemoracao = document.getElementById('cad-foto-comemoracao').value.trim();
+
+            if (!nome) { showToast('Nome é obrigatório', 'error'); return; }
+
+            try {
+                const id = nome.toLowerCase().replace(/\s+/g, '-');
+                await window.setDoc(window.doc(window.db, 'jogadores', id), {
+                    nome, sobrenome, time, fotoPerfil, fotoComemoracao,
+                    createdAt: new Date().toISOString()
+                });
+                showToast('Jogador cadastrado!', 'success');
+                document.getElementById('cad-nome').value = '';
+                document.getElementById('cad-sobrenome').value = '';
+                document.getElementById('cad-time').value = '';
+                document.getElementById('cad-foto-perfil').value = '';
+                document.getElementById('cad-foto-comemoracao').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao cadastrar', 'error');
+            }
+        }
+
+        async function lancarGols() {
+            const jogadorId = document.getElementById('gols-jogador').value;
+            const qtd = parseInt(document.getElementById('gols-qtd').value) || 0;
+            const data = document.getElementById('gols-data').value;
+            const obs = document.getElementById('gols-obs').value.trim();
+
+            if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
+            if (qtd <= 0) { showToast('Quantidade inválida', 'error'); return; }
+
+            try {
+                await window.addDoc(window.collection(window.db, 'eventos'), {
+                    jogadorId, tipo: 'gol', subtipo: 'gol', subtipoLabel: 'Gol',
+                    valor: qtd, data, observacao: obs,
+                    createdAt: new Date().toISOString()
+                });
+                showToast(`${qtd} gol(s) lançado(s)!`, 'success');
+                document.getElementById('gols-qtd').value = '';
+                document.getElementById('gols-obs').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao lançar gols', 'error');
+            }
+        }
+
+        async function lancarFigurinha() {
+            const tipo = document.getElementById('fig-tipo').value;
+            const data = document.getElementById('fig-data').value;
+
+            if (selectedFigPlayers.size === 0) { showToast('Selecione pelo menos um jogador', 'error'); return; }
+
+            const map = {
+                'master-verao': { label: 'Master Verão', val: 7, img: 'master-verao.png' },
+                'master-inverno': { label: 'Master Inverno', val: 5, img: 'master-inverno.png' },
+                'luxo-verao': { label: 'Luxo Verão', val: 5, img: 'luxo-verao.png' },
+                'luxo-inverno': { label: 'Luxo Inverno', val: 4, img: 'luxo-inverno.png' },
+                'luxo-salta': { label: 'Luxo S. Alta', val: 4, img: 'luxo-salta.png' },
+                'luxo-alta': { label: 'Luxo Alta', val: 3, img: 'luxo-alta.png' },
+                'luxo-media': { label: 'Luxo Média', val: 3, img: 'luxo-media.png' },
+                '125k': { label: '125.000 pt', val: 3, img: '125k.png' },
+                '100k': { label: '100.000 pt', val: 3, img: '100k.png' },
+                '75k': { label: '75.000 pt', val: 2, img: '75k.png' },
+                '60k': { label: '60.000 pt', val: 2, img: '60k.png' },
+                '42k': { label: '42.000 pt', val: 2, img: '42k.png' },
+                '15k': { label: '15.000 pt', val: 1, img: '15k.png' },
+                'c+': { label: 'C+ Diamante', val: 1, img: 'c+.png' }
+            };
+
+            try {
+                const promises = [];
+                selectedFigPlayers.forEach(jogadorId => {
+                    promises.push(
+                        window.addDoc(window.collection(window.db, 'eventos'), {
+                            jogadorId, tipo: 'figurinha', subtipo: tipo, subtipoLabel: map[tipo].label,
+                            subtipoImg: map[tipo].img, valor: map[tipo].val, data,
+                            createdAt: new Date().toISOString()
+                        })
+                    );
+                });
+
+                await Promise.all(promises);
+                showToast(`${map[tipo].label} (+${map[tipo].val}) lançada para ${selectedFigPlayers.size} jogador(es)!`, 'success');
+                selectedFigPlayers.clear();
+                renderFigPlayersGrid();
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao lançar figurinha', 'error');
+            }
+        }
+
+        async function lancarPunicao() {
+            const jogadorId = document.getElementById('pun-jogador').value;
+            const tipo = document.getElementById('pun-tipo').value;
+            let qtd = parseInt(document.getElementById('pun-qtd').value) || 0;
+            const data = document.getElementById('pun-data').value;
+
+            if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
+
+            const map = {
+                'cartao-amarelo': { label: 'Cartão Amarelo', val: -1 },
+                'cartao-vermelho': { label: 'Cartão Vermelho', val: -2 },
+                'falta-grave': { label: 'Falta Grave', val: -1 },
+                'atraso': { label: 'Atraso', val: -1 },
+                'falta-treino': { label: 'Falta no Treino', val: -1 },
+                'custom': { label: 'Punição Personalizada', val: 0 }
+            };
+
+            let valor = map[tipo].val;
+            if (tipo === 'custom') {
+                if (qtd >= 0) qtd = -qtd;
+                valor = qtd;
+            }
+
+            try {
+                await window.addDoc(window.collection(window.db, 'eventos'), {
+                    jogadorId, tipo: 'punicao', subtipo: tipo, subtipoLabel: map[tipo].label,
+                    valor, data,
+                    createdAt: new Date().toISOString()
+                });
+                showToast(`${map[tipo].label} aplicada!`, 'success');
+                document.getElementById('pun-qtd').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao aplicar punição', 'error');
+            }
+        }
+
+        async function carregarCorrecao() {
+            const jogadorId = document.getElementById('corr-jogador').value;
+            const info = document.getElementById('corr-info');
+            const eventosDiv = document.getElementById('corr-eventos');
+
+            if (!jogadorId) {
+                info.classList.add('hidden');
+                eventosDiv.innerHTML = '';
+                return;
+            }
+
+            const player = players.find(p => p.id === jogadorId);
+            const stats = getPlayerStats(jogadorId);
+            const playerEvents = events.filter(e => e.jogadorId === jogadorId).sort((a, b) => {
+                const da = getBRDate(a.data);
+                const db = getBRDate(b.data);
+                return db - da;
+            });
+
+            info.classList.remove('hidden');
+            document.getElementById('corr-nome').textContent = `${player.nome} ${player.sobrenome || ''}`;
+            document.getElementById('corr-time').textContent = player.time || 'Sem time';
+            document.getElementById('corr-foto').src = player.fotoPerfil ? REPO_BASE + player.fotoPerfil : '';
+            document.getElementById('corr-base').textContent = stats.baseTotal;
+            document.getElementById('corr-fig').textContent = stats.stickersTotal;
+            document.getElementById('corr-pun').textContent = stats.punishTotal;
+            document.getElementById('corr-total').textContent = stats.totalReal;
+
+            if (playerEvents.length === 0) {
+                eventosDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum evento</p>';
+            } else {
+                eventosDiv.innerHTML = playerEvents.map(e => {
+                    let icon = '', color = '';
+                    if (e.tipo === 'gol') { icon = '⚽'; color = 'text-white'; }
+                    else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; }
+                    else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; }
+
+                    return `
+                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                            <div class="flex items-center gap-3">
+                                <span class="text-lg">${icon}</span>
+                                <div>
+                                    <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
+                                    <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold ${color}">${e.valor > 0 ? '+' : ''}${e.valor}</span>
+                                <button onclick="excluirEvento('${e.id}')" class="text-red-400 hover:text-red-300 transition-all">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        async function excluirEvento(eventId) {
+            if (!confirm('Tem certeza que deseja excluir este evento?')) return;
+            try {
+                await window.deleteDoc(window.doc(window.db, 'eventos', eventId));
+                showToast('Evento excluído!', 'success');
+                carregarCorrecao();
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao excluir', 'error');
+            }
+        }
+
+        // ===== TOAST =====
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                info: 'bg-blue-500'
+            };
+            toast.className = `toast ${colors[type] || colors.info} text-white px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-2`;
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-times' : 'fa-info-circle'}"></i> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Expose functions globally
+        window.showAlbum = showAlbum;
+        window.showSection = showSection;
+        window.setRankingPeriod = setRankingPeriod;
+        window.openLightbox = openLightbox;
+        window.openLightboxFromAlbum = openLightboxFromAlbum;
+        window.closeLightbox = closeLightbox;
+        window.showAdminLogin = showAdminLogin;
+        window.closeAdminLogin = closeAdminLogin;
+        window.checkAdminPassword = checkAdminPassword;
+        window.logoutAdmin = logoutAdmin;
+        window.showAdminTab = showAdminTab;
+        window.toggleFigPlayer = toggleFigPlayer;
+        window.cadastrarJogador = cadastrarJogador;
+        window.lancarGols = lancarGols;
+        window.lancarFigurinha = lancarFigurinha;
+        window.lancarPunicao = lancarPunicao;
+        window.carregarCorrecao = carregarCorrecao;
+        window.excluirEvento = excluirEvento;
+        window.excluirJogador = excluirJogador;
+    </script>
+</body>
+</html>
