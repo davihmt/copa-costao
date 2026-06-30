@@ -1440,6 +1440,40 @@
                 }).join('');
         }
 
+
+        // ===== MURAL PUBLIC =====
+        function renderMural() {
+            const container = document.getElementById('mural-elogios');
+            if (!container) return;
+
+            if (elogios.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>';
+                return;
+            }
+
+            container.innerHTML = elogios.map(e => {
+                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                return `
+                    <div class="glass rounded-xl p-4 max-w-2xl mx-auto">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ${e.deNome ? e.deNome.charAt(0) : '?'}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span>
+                                    <span class="text-gray-500 text-xs">→</span>
+                                    <span class="font-semibold text-yellow-400">${e.paraNome || '?'}</span>
+                                    <span class="text-gray-500 text-xs ml-auto">${data}</span>
+                                </div>
+                                <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // ===== ALBUM =====
         function showAlbum(playerId) {
             console.log('showAlbum chamado com:', playerId);
@@ -2562,33 +2596,6 @@ Isso também excluirá todos os seus eventos!`)) return;
             }
         }
 
-        function renderMuralFotosAlbum(jogadorId) {
-            const container = document.getElementById('album-mural-fotos');
-            const grid = document.getElementById('album-mural-fotos-grid');
-            if (!container || !grid) return;
-
-            const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
-
-            if (fotos.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-
-            container.classList.remove('hidden');
-            grid.innerHTML = fotos.map(f => {
-                const baseUrl = f.url ? FOTOS_BASE + f.url : '';
-                const data = f.data ? formatDate(f.data) : '';
-                return `
-                    <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${baseUrl}.jpeg')">
-                        <div style="aspect-ratio: 1; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
-                            <img src="${baseUrl}.jpeg" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
-                                onerror="tryNextExtension(this, '${baseUrl}')">
-                        </div>
-                        ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
-                    </div>
-                `;
-            }).join('');
-        }
 
         async function adicionarFotoMural() {
             const jogadorId = document.getElementById('mural-fotos-jogador').value;
