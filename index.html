@@ -299,6 +299,85 @@
             </div>
         </section>
 
+        <!-- ALBUM COMISSÃO TÉCNICA SECTION -->
+        <section id="section-album-comissao" class="hidden fade-in">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showSection('home')" class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-all">
+                    <i class="fas fa-arrow-left mr-1"></i> Voltar
+                </button>
+                <h2 id="album-comissao-nome" class="text-3xl font-bold"></h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1">
+                    <div class="player-card">
+                        <div class="relative mb-4">
+                            <div class="photo-area mx-auto" id="album-comissao-photo-area" onclick="openLightboxFromComissao()">
+                                <img id="album-comissao-photo" src="" alt="" onerror="this.style.display='none'; document.getElementById('album-comissao-fallback').style.display='flex';">
+                                <div id="album-comissao-fallback" class="fallback" style="display:none"></div>
+                            </div>
+                            <div id="album-comissao-reconhecimentos" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black px-4 py-1 rounded-full text-lg whitespace-nowrap">
+                                0 reconhecimentos
+                            </div>
+                        </div>
+                        <h3 id="album-comissao-nome2" class="text-xl font-bold mb-1"></h3>
+                        <p id="album-comissao-funcao" class="text-[#1DBCB8] font-semibold mb-2"></p>
+                        <p id="album-comissao-origem" class="text-gray-400 text-sm mb-4"></p>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between px-3 py-2 rounded-lg bg-yellow-900/20">
+                                <span class="text-yellow-400">⭐ Reconhecimentos</span>
+                                <span id="album-comissao-rec-count" class="font-bold text-yellow-400">0</span>
+                            </div>
+                            <div class="flex justify-between px-3 py-2 rounded-lg bg-purple-900/20">
+                                <span class="text-purple-400">🏆 Conquistas</span>
+                                <span id="album-comissao-conquistas" class="font-bold text-purple-400">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="player-card">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-comments mr-2 text-[#1DBCB8]"></i>Mural de Elogios Recebidos</h3>
+                        <div id="album-comissao-elogios" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                    </div>
+                    <div class="player-card">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-medal mr-2 text-yellow-400"></i>Conquistas da Comissão</h3>
+                        <div id="album-comissao-conquistas-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ALBUM CORPO TÉCNICO SECTION -->
+        <section id="section-album-corpo" class="hidden fade-in">
+            <div class="flex items-center gap-4 mb-6">
+                <button onclick="showSection('home')" class="px-4 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-all">
+                    <i class="fas fa-arrow-left mr-1"></i> Voltar
+                </button>
+                <h2 id="album-corpo-nome" class="text-3xl font-bold"></h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1">
+                    <div class="player-card">
+                        <div class="relative mb-4">
+                            <div class="photo-area mx-auto" id="album-corpo-photo-area" onclick="openLightboxFromCorpo()">
+                                <img id="album-corpo-photo" src="" alt="" onerror="this.style.display='none'; document.getElementById('album-corpo-fallback').style.display='flex';">
+                                <div id="album-corpo-fallback" class="fallback" style="display:none"></div>
+                            </div>
+                        </div>
+                        <h3 id="album-corpo-nome2" class="text-xl font-bold mb-1"></h3>
+                        <p id="album-corpo-funcao" class="text-gray-300 font-semibold mb-2"></p>
+                        <p id="album-corpo-origem" class="text-gray-400 text-sm"></p>
+                    </div>
+                </div>
+                <div class="lg:col-span-2">
+                    <div class="player-card">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-user-tie mr-2 text-gray-400"></i>Corpo Técnico</h3>
+                        <p class="text-gray-400">Liderança e gestão da equipe. Reconhecimento pela excelência em coordenação e direcionamento estratégico.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- MURAL DE ELOGIOS SECTION -->
         <section id="section-mural" class="hidden fade-in">
             <div class="mb-6">
@@ -309,19 +388,15 @@
             <!-- Formulário de Elogio -->
             <div class="glass rounded-2xl p-6 max-w-2xl mx-auto mb-8">
                 <h3 class="text-xl font-bold mb-4">Deixar um Elogio</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-400 mb-2">De (Vendedor)</label>
-                        <select id="elogio-de" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
-                            <option value="">Selecione quem elogia</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-400 mb-2">Para (Comissão Técnica)</label>
-                        <select id="elogio-para" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
-                            <option value="">Selecione quem recebe</option>
-                        </select>
-                    </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-400 mb-2">Seu Nome</label>
+                    <input type="text" id="elogio-de-nome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Digite seu nome">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-400 mb-2">Para</label>
+                    <select id="elogio-para" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                        <option value="">Selecione quem recebe o elogio</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-400 mb-2">Mensagem</label>
@@ -380,6 +455,9 @@
                     </button>
                     <button onclick="showAdminTab('corpo-tecnico')" id="admin-tab-corpo-tecnico" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-user-tie mr-2"></i>Corpo Técnico
+                    </button>
+                    <button onclick="showAdminTab('elogios-admin')" id="admin-tab-elogios-admin" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-comments mr-2"></i>Gerenciar Elogios
                     </button>
                     <button onclick="showAdminTab('corrigir')" id="admin-tab-corrigir" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-edit mr-2"></i>Corrigir
@@ -658,6 +736,16 @@
                             <button onclick="excluirCorpoTecnico()" class="w-full py-3 rounded-xl btn-danger text-white font-bold text-lg">
                                 <i class="fas fa-trash-alt mr-2"></i>Excluir Permanentemente
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- Gerenciar Elogios -->
+                    <div id="admin-panel-elogios-admin" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Gerenciar Elogios</h3>
+                        <div class="glass rounded-2xl p-6 max-w-3xl">
+                            <div id="elogios-admin-list" class="space-y-2 max-h-96 overflow-y-auto">
+                                <p class="text-gray-500 text-center py-4">Carregando elogios...</p>
+                            </div>
                         </div>
                     </div>
 
@@ -1027,7 +1115,7 @@
                     const initials = c.nome?.[0] || '?';
 
                     return `
-                        <div class="player-card" style="border-color: #6b7280; opacity: 0.9;">
+                        <div class="player-card cursor-pointer hover:opacity-80 transition-all" style="border-color: #6b7280; opacity: 0.9;" onclick="window.showAlbumCorpo('${c.id}')">
                             <div class="photo-area mx-auto" style="border-color: #6b7280;">
                                 <img src="${photoUrl}" alt="${c.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="fallback" style="display:none">${initials}</div>
@@ -1072,7 +1160,7 @@
                                        c.funcao === 'analista-operacional' || c.funcao === 'olheiro' ? '#22c55e' : '#3b82f6';
 
                     return `
-                        <div class="team-ranking-card flex items-center gap-4" style="border-color: ${borderColor};">
+                        <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:opacity-80 transition-all" style="border-color: ${borderColor};" onclick="window.showAlbumComissao('${c.id}')">
                             <div class="text-2xl w-10 text-center">${medal}</div>
                             <img src="${photoUrl}" class="w-12 h-12 rounded-full object-cover border-2" style="border-color: ${borderColor};" onerror="this.style.display='none'">
                             <div class="flex-1">
@@ -1188,6 +1276,13 @@
             if (!player) return;
 
             currentAlbumPlayer = playerId;
+
+            // Esconder álbuns de comissão e corpo técnico
+            const albumSections = ['album-comissao', 'album-corpo'];
+            albumSections.forEach(s => {
+                const el = document.getElementById('section-' + s);
+                if (el) el.classList.add('hidden');
+            });
             const stats = getPlayerStats(playerId);
             const playerEvents = events.filter(e => e.jogadorId === playerId).sort((a, b) => {
                 const da = getBRDate(a.data);
@@ -1450,6 +1545,7 @@
             if (tab === 'figurinhas') renderFigPlayersGrid();
             if (tab === 'comissao') updateDeleteComissaoSelect();
             if (tab === 'corpo-tecnico') updateDeleteCorpoSelect();
+            if (tab === 'elogios-admin') renderElogiosAdmin();
         }
 
         function updateAdminSelects() {
@@ -1535,6 +1631,174 @@
                 const stats = getPlayerStats(player.id);
                 document.getElementById('del-info').textContent = `${player.time || 'Sem time'} · ${stats.totalReal} gols · ${events.filter(e => e.jogadorId === player.id).length} eventos`;
             };
+        }
+
+        
+        function showAlbumComissao(comissaoId) {
+            currentAlbumPlayer = null; // Reset para não conflitar com album de jogador
+            const c = comissao.find(x => x.id === comissaoId);
+            if (!c) return;
+
+            // Esconder TODAS as seções primeiro (incluindo mural e album-corpo)
+            const allSections = ['home', 'ranking', 'mural', 'admin', 'album', 'album-corpo', 'album-comissao'];
+            allSections.forEach(s => {
+                const el = document.getElementById('section-' + s);
+                if (el) el.classList.add('hidden');
+            });
+
+            const elogiosComissao = elogios.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
+            const conquistasCount = calcConquistasComissao(c.reconhecimentos || 0);
+
+            const nomeEl = document.getElementById('album-comissao-nome');
+            const nome2El = document.getElementById('album-comissao-nome2');
+            const funcaoEl = document.getElementById('album-comissao-funcao');
+            const origemEl = document.getElementById('album-comissao-origem');
+            const recEl = document.getElementById('album-comissao-reconhecimentos');
+            const recCountEl = document.getElementById('album-comissao-rec-count');
+            const conquistasEl = document.getElementById('album-comissao-conquistas');
+
+            if (nomeEl) nomeEl.textContent = c.nome || '';
+            if (nome2El) nome2El.textContent = c.nome || '';
+            if (funcaoEl) funcaoEl.textContent = c.funcaoLabel || '';
+            if (origemEl) origemEl.textContent = c.origem || '';
+            if (recEl) recEl.textContent = (c.reconhecimentos || 0) + ' reconhecimentos';
+            if (recCountEl) recCountEl.textContent = c.reconhecimentos || 0;
+            if (conquistasEl) conquistasEl.textContent = conquistasCount;
+
+            const photo = document.getElementById('album-comissao-photo');
+            const fallback = document.getElementById('album-comissao-fallback');
+            if (photo && fallback) {
+                if (c.foto) {
+                    photo.src = REPO_BASE + c.foto;
+                    photo.style.display = 'block';
+                    fallback.style.display = 'none';
+                } else {
+                    photo.style.display = 'none';
+                    fallback.style.display = 'flex';
+                    fallback.textContent = c.nome?.[0] || '?';
+                }
+            }
+
+            // Elogios recebidos
+            const elogiosDiv = document.getElementById('album-comissao-elogios');
+            if (elogiosDiv) {
+                if (elogiosComissao.length === 0) {
+                    elogiosDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum elogio recebido ainda</p>';
+                } else {
+                    elogiosDiv.innerHTML = elogiosComissao.map(e => {
+                        const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                        return `
+                            <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/30">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                    ${e.deNome ? e.deNome.charAt(0) : '?'}
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-400">${data}</p>
+                                    <p class="text-white"><span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span></p>
+                                    <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Conquistas da comissão
+            const conquistasDiv = document.getElementById('album-comissao-conquistas-grid');
+            if (conquistasDiv) {
+                const CONQUISTAS_COMISSAO = [
+                    { id: 'heroi-bastidores', name: 'Herói dos Bastidores!', rule: '10+ reconhecimentos no mês', goals: 10, img: 'heroi.png' },
+                    { id: 'mvp-comissao', name: 'MVP da Comissão!', rule: '20+ reconhecimentos no mês', goals: 20, img: 'mvp.png' },
+                    { id: 'playmaker', name: 'Playmaker!', rule: '5+ elogios de vendedores diferentes', goals: 5, img: 'playmaker.png' },
+                    { id: 'craque-apoio', name: 'Craque do Apoio!', rule: '30+ reconhecimentos no total', goals: 30, img: 'craque-apoio.png' },
+                    { id: 'lenda-viva', name: 'Lenda Viva!', rule: '50+ reconhecimentos no total', goals: 50, img: 'lenda.png' }
+                ];
+
+                conquistasDiv.innerHTML = CONQUISTAS_COMISSAO.map(conq => {
+                    const isUnlocked = (c.reconhecimentos || 0) >= conq.goals;
+                    const imgUrl = REPO_BASE + conq.img;
+                    return `
+                        <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${isUnlocked ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isUnlocked ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255,255,255,0.1)'};">
+                            <div class="text-center mb-2 w-full">
+                                <h4 class="font-bold text-lg ${isUnlocked ? 'text-yellow-400' : 'text-gray-500'}">${conq.name}</h4>
+                            </div>
+                            <div style="width:100%;aspect-ratio:1;max-width:180px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
+                                <span style="font-size:64px;position:absolute;z-index:1;">🏆</span>
+                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:2;" alt="${conq.name}" onload="this.previousElementSibling.style.display='none'">
+                            </div>
+                            <p class="text-xs text-gray-400 text-center">${conq.rule}</p>
+                            <div class="mt-2">
+                                ${isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-lock text-gray-500 text-xl"></i>'}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Mostrar álbum comissão
+            const albumEl = document.getElementById('section-album-comissao');
+            if (albumEl) albumEl.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function calcConquistasComissao(reconhecimentos) {
+            let count = 0;
+            if (reconhecimentos >= 10) count++;
+            if (reconhecimentos >= 20) count++;
+            if (reconhecimentos >= 30) count++;
+            if (reconhecimentos >= 50) count++;
+            return count;
+        }
+
+        function openLightboxFromComissao() {
+            const img = document.getElementById('album-comissao-photo');
+            if (img && img.src && img.style.display !== 'none') {
+                openLightbox(img.src);
+            }
+        }
+
+        function showAlbumCorpo(corpoId) {
+            currentAlbumPlayer = null; // Reset para não conflitar
+            const c = corpoTecnico.find(x => x.id === corpoId);
+            if (!c) return;
+
+            // Esconder TODAS as seções primeiro
+            const allSections = ['home', 'ranking', 'mural', 'admin', 'album', 'album-corpo', 'album-comissao'];
+            allSections.forEach(s => {
+                const el = document.getElementById('section-' + s);
+                if (el) el.classList.add('hidden');
+            });
+
+            document.getElementById('album-corpo-nome').textContent = c.nome;
+            document.getElementById('album-corpo-nome2').textContent = c.nome;
+            document.getElementById('album-corpo-funcao').textContent = c.funcaoLabel || '';
+            document.getElementById('album-corpo-origem').textContent = c.origem || '';
+
+            const photo = document.getElementById('album-corpo-photo');
+            const fallback = document.getElementById('album-corpo-fallback');
+            if (c.foto) {
+                photo.src = REPO_BASE + c.foto;
+                photo.style.display = 'block';
+                fallback.style.display = 'none';
+            } else {
+                photo.style.display = 'none';
+                fallback.style.display = 'flex';
+                fallback.textContent = c.nome?.[0] || '?';
+            }
+
+            // Esconder outras seções e mostrar álbum corpo
+            ['home', 'ranking', 'mural', 'admin', 'album', 'album-comissao'].forEach(s => {
+                document.getElementById('section-' + s)?.classList.add('hidden');
+            });
+            document.getElementById('section-album-corpo')?.classList.remove('hidden');
+            window.scrollTo(0, 0);
+        }
+
+        function openLightboxFromCorpo() {
+            const img = document.getElementById('album-corpo-photo');
+            if (img && img.src && img.style.display !== 'none') {
+                openLightbox(img.src);
+            }
         }
 
         async function excluirJogador() {
@@ -1959,32 +2223,27 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         function updateElogioSelects() {
-            const de = document.getElementById('elogio-de');
             const para = document.getElementById('elogio-para');
-            if (de) {
-                de.innerHTML = '<option value="">Selecione quem elogia</option>' +
-                    players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''} (Jogador)</option>`).join('');
-            }
             if (para) {
-                para.innerHTML = '<option value="">Selecione quem recebe</option>' +
+                para.innerHTML = '<option value="">Selecione quem recebe o elogio</option>' +
                     comissao.map(c => `<option value="${c.id}">${c.nome} (${c.funcaoLabel})</option>`).join('');
             }
         }
 
         async function enviarElogio() {
-            const deId = document.getElementById('elogio-de').value;
+            const deNome = document.getElementById('elogio-de-nome').value.trim();
             const paraId = document.getElementById('elogio-para').value;
             const mensagem = document.getElementById('elogio-mensagem').value.trim();
 
-            if (!deId || !paraId) { showToast('Selecione quem elogia e quem recebe', 'error'); return; }
+            if (!deNome) { showToast('Digite seu nome', 'error'); return; }
+            if (!paraId) { showToast('Selecione quem recebe o elogio', 'error'); return; }
             if (!mensagem) { showToast('Escreva uma mensagem', 'error'); return; }
 
-            const de = players.find(p => p.id === deId);
             const para = comissao.find(c => c.id === paraId);
 
             try {
                 await window.addDoc(window.collection(window.db, 'elogios'), {
-                    deId, deNome: de ? `${de.nome} ${de.sobrenome || ''}` : deId,
+                    deNome,
                     paraId, paraNome: para ? para.nome : paraId,
                     mensagem, data: new Date().toISOString(),
                     createdAt: new Date().toISOString()
@@ -1999,6 +2258,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                 }
 
                 showToast('Elogio enviado com sucesso!', 'success');
+                document.getElementById('elogio-de-nome').value = '';
                 document.getElementById('elogio-mensagem').value = '';
             } catch (e) {
                 console.error(e);
@@ -2028,6 +2288,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                                 <p class="text-white"><span class="font-bold text-[#1DBCB8]">${e.deNome}</span> → <span class="font-bold text-yellow-400">${e.paraNome}</span></p>
                                 <p class="text-gray-300 mt-2 italic">"${e.mensagem}"</p>
                             </div>
+                            ${isAdmin ? `<button onclick="excluirElogio('${e.id}')" class="text-red-400 hover:text-red-300 transition-all"><i class="fas fa-trash-alt"></i></button>` : ''}
                         </div>
                     </div>
                 `;
@@ -2035,12 +2296,68 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         // Expose functions
+        async function excluirElogio(elogioId) {
+            if (!confirm('Tem certeza que deseja excluir este elogio?')) return;
+            try {
+                const elogio = elogios.find(e => e.id === elogioId);
+                if (elogio) {
+                    // Diminuir reconhecimento do comissionado
+                    const comRef = window.doc(window.db, 'comissao', elogio.paraId);
+                    const comSnap = await window.getDoc(comRef);
+                    if (comSnap.exists()) {
+                        const recs = Math.max(0, (comSnap.data().reconhecimentos || 0) - 1);
+                        await window.updateDoc(comRef, { reconhecimentos: recs });
+                    }
+                }
+                await window.deleteDoc(window.doc(window.db, 'elogios', elogioId));
+                showToast('Elogio excluído!', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao excluir elogio', 'error');
+            }
+        }
+
+        function renderElogiosAdmin() {
+            const container = document.getElementById('elogios-admin-list');
+            if (!container) return;
+
+            if (elogios.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum elogio cadastrado</p>';
+                return;
+            }
+
+            container.innerHTML = elogios.map(e => {
+                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                return `
+                    <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg">💬</span>
+                            <div>
+                                <p class="text-sm font-semibold text-white">${e.deNome || 'Anônimo'} → ${e.paraNome || '?'}</p>
+                                <p class="text-xs text-gray-500">${data}</p>
+                                <p class="text-gray-300 italic text-sm">"${e.mensagem || ''}"</p>
+                            </div>
+                        </div>
+                        <button onclick="excluirElogio('${e.id}')" class="text-red-400 hover:text-red-300 transition-all">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
         window.cadastrarComissao = cadastrarComissao;
         window.cadastrarCorpoTecnico = cadastrarCorpoTecnico;
         window.excluirComissao = excluirComissao;
         window.excluirCorpoTecnico = excluirCorpoTecnico;
         window.enviarElogio = enviarElogio;
         window.renderMural = renderMural;
+        window.excluirElogio = excluirElogio;
+        window.showAlbumComissao = showAlbumComissao;
+        window.showAlbumCorpo = showAlbumCorpo;
+        window.openLightboxFromComissao = openLightboxFromComissao;
+        window.openLightboxFromCorpo = openLightboxFromCorpo;
+        window.renderElogiosAdmin = renderElogiosAdmin;
     </script>
 </body>
 </html>
