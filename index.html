@@ -294,6 +294,10 @@
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-history mr-2 text-[#1DBCB8]"></i>Histórico de Eventos</h3>
                             <div id="album-events" class="space-y-2 max-h-64 overflow-y-auto"></div>
                         </div>
+                        <div id="album-mural-fotos" class="player-card hidden">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-images mr-2 text-[#1DBCB8]"></i>Mural de Fotos</h3>
+                            <div id="album-mural-fotos-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -456,6 +460,9 @@
                     </button>
                     <button onclick="showAdminTab('elogios-admin')" id="admin-tab-elogios-admin" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-comments mr-2"></i>Gerenciar Elogios
+                    </button>
+                    <button onclick="showAdminTab('mural-fotos')" id="admin-tab-mural-fotos" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-images mr-2"></i>Mural de Fotos
                     </button>
                     <button onclick="showAdminTab('corrigir')" id="admin-tab-corrigir" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-edit mr-2"></i>Corrigir
@@ -747,6 +754,48 @@
                         </div>
                     </div>
 
+                    <!-- Mural de Fotos -->
+                    <div id="admin-panel-mural-fotos" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Mural de Fotos</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl mb-6">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
+                                <select id="mural-fotos-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="">Selecione um jogador</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">URL da Foto (nome do arquivo no GitHub)</label>
+                                <input type="text" id="mural-foto-url" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="ex: gabriel-cliente-silva.jpg">
+                                <p class="text-xs text-gray-500 mt-1">Nome do arquivo na raiz do repo (ex: foto1.jpg)</p>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Legenda (opcional)</label>
+                                <input type="text" id="mural-foto-legenda" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: Cliente Silva - Master Verão">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Data</label>
+                                <input type="date" id="mural-foto-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            </div>
+                            <button onclick="adicionarFotoMural()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-plus mr-2"></i>Adicionar Foto ao Mural
+                            </button>
+                        </div>
+
+                        <h3 class="text-2xl font-bold mb-6"><i class="fas fa-trash-alt mr-2 text-red-400"></i>Excluir Fotos</h3>
+                        <div class="glass rounded-2xl p-6 max-w-3xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
+                                <select id="mural-fotos-del-jogador" onchange="carregarFotosMural()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="">Selecione um jogador</option>
+                                </select>
+                            </div>
+                            <div id="mural-fotos-list" class="space-y-2 max-h-96 overflow-y-auto">
+                                <p class="text-gray-500 text-center py-4">Selecione um jogador para ver as fotos</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Corrigir -->
                     <div id="admin-panel-corrigir" class="admin-panel hidden">
                         <h3 class="text-2xl font-bold mb-6">Corrigir / Excluir Eventos</h3>
@@ -858,7 +907,7 @@
         // ===== INIT =====
         document.addEventListener('DOMContentLoaded', () => {
             const today = getTodayStr();
-            ['gols-data', 'fig-data', 'pun-data'].forEach(id => {
+            ['gols-data', 'fig-data', 'pun-data', 'mural-foto-data'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = today;
             });
@@ -868,6 +917,7 @@
             loadComissao();
             loadCorpoTecnico();
             loadElogios();
+            loadMuralFotos();
         });
 
         // ===== NAVIGATION =====
@@ -1478,7 +1528,10 @@
                     </div>
                 `;
                 }).join('');
-            }const eventsDiv = document.getElementById('album-events');
+            }// Render Mural de Fotos
+            renderMuralFotosAlbum(playerId);
+
+            const eventsDiv = document.getElementById('album-events');
             if (playerEvents.length === 0) {
                 eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento registrado</p>';
             } else {
@@ -1562,6 +1615,10 @@
             if (tab === 'comissao') updateDeleteComissaoSelect();
             if (tab === 'corpo-tecnico') updateDeleteCorpoSelect();
             if (tab === 'elogios-admin') renderElogiosAdmin();
+            if (tab === 'mural-fotos') {
+                updateMuralFotosSelects();
+                document.getElementById('mural-foto-data').value = getTodayStr();
+            }
         }
 
         function updateAdminSelects() {
@@ -2365,6 +2422,137 @@ Isso também excluirá todos os seus eventos!`)) return;
             }).join('');
         }
 
+        // ===== MURAL DE FOTOS =====
+        let muralFotos = [];
+
+        async function loadMuralFotos() {
+            try {
+                const q = window.query(window.collection(window.db, 'muralFotos'), window.orderBy('data', 'desc'));
+                window.onSnapshot(q, (snapshot) => {
+                    muralFotos = [];
+                    snapshot.forEach(doc => {
+                        muralFotos.push({ id: doc.id, ...doc.data() });
+                    });
+                    if (currentAlbumPlayer) {
+                        renderMuralFotosAlbum(currentAlbumPlayer);
+                    }
+                });
+            } catch (e) {
+                console.error('Erro ao carregar mural de fotos:', e);
+            }
+        }
+
+        function renderMuralFotosAlbum(jogadorId) {
+            const container = document.getElementById('album-mural-fotos');
+            const grid = document.getElementById('album-mural-fotos-grid');
+            if (!container || !grid) return;
+
+            const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
+
+            if (fotos.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            grid.innerHTML = fotos.map(f => {
+                const imgUrl = f.url ? REPO_BASE + f.url : '';
+                const data = f.data ? formatDate(f.data) : '';
+                return `
+                    <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${imgUrl}')">
+                        <div style="aspect-ratio: 1; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
+                            <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=font-size:40px>📷</span>';">
+                        </div>
+                        ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function adicionarFotoMural() {
+            const jogadorId = document.getElementById('mural-fotos-jogador').value;
+            const url = document.getElementById('mural-foto-url').value.trim();
+            const legenda = document.getElementById('mural-foto-legenda').value.trim();
+            const data = document.getElementById('mural-foto-data').value;
+
+            if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
+            if (!url) { showToast('Informe o nome do arquivo da foto', 'error'); return; }
+
+            try {
+                await window.addDoc(window.collection(window.db, 'muralFotos'), {
+                    jogadorId, url, legenda, data,
+                    createdAt: new Date().toISOString()
+                });
+                showToast('Foto adicionada ao mural!', 'success');
+                document.getElementById('mural-foto-url').value = '';
+                document.getElementById('mural-foto-legenda').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao adicionar foto', 'error');
+            }
+        }
+
+        async function carregarFotosMural() {
+            const jogadorId = document.getElementById('mural-fotos-del-jogador').value;
+            const container = document.getElementById('mural-fotos-list');
+            if (!container) return;
+
+            if (!jogadorId) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Selecione um jogador para ver as fotos</p>';
+                return;
+            }
+
+            const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
+            if (fotos.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma foto no mural</p>';
+                return;
+            }
+
+            container.innerHTML = fotos.map(f => {
+                const imgUrl = f.url ? REPO_BASE + f.url : '';
+                const data = f.data ? formatDate(f.data) : '';
+                return `
+                    <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                        <div class="flex items-center gap-3">
+                            <img src="${imgUrl}" class="w-12 h-12 rounded-lg object-cover border border-gray-600" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center hidden"><span class="text-lg">📷</span></div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">${f.legenda || 'Sem legenda'}</p>
+                                <p class="text-xs text-gray-500">${data}</p>
+                            </div>
+                        </div>
+                        <button onclick="excluirFotoMural('${f.id}')" class="text-red-400 hover:text-red-300 transition-all">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function excluirFotoMural(fotoId) {
+            if (!confirm('Tem certeza que deseja excluir esta foto?')) return;
+            try {
+                await window.deleteDoc(window.doc(window.db, 'muralFotos', fotoId));
+                showToast('Foto excluída!', 'success');
+                carregarFotosMural();
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao excluir foto', 'error');
+            }
+        }
+
+        function updateMuralFotosSelects() {
+            const selects = ['mural-fotos-jogador', 'mural-fotos-del-jogador'];
+            selects.forEach(id => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="">Selecione um jogador</option>' +
+                    players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''}</option>`).join('');
+                sel.value = currentVal;
+            });
+        }
+
         window.cadastrarComissao = cadastrarComissao;
         window.cadastrarCorpoTecnico = cadastrarCorpoTecnico;
         window.excluirComissao = excluirComissao;
@@ -2377,6 +2565,9 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.openLightboxFromComissao = openLightboxFromComissao;
         window.openLightboxFromCorpo = openLightboxFromCorpo;
         window.renderElogiosAdmin = renderElogiosAdmin;
+        window.adicionarFotoMural = adicionarFotoMural;
+        window.carregarFotosMural = carregarFotosMural;
+        window.excluirFotoMural = excluirFotoMural;
     </script>
 </body>
 </html>
