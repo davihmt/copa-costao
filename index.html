@@ -853,6 +853,16 @@
         // ===== CONFIG =====
         const ADMIN_PASSWORD = 'costao2026';
         const REPO_BASE = 'https://davihmt.github.io/copa-costao/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
 
         // ===== STATE =====
         let players = [];
@@ -2456,7 +2466,7 @@ Isso também excluirá todos os seus eventos!`)) return;
 
             container.classList.remove('hidden');
             grid.innerHTML = fotos.map(f => {
-                const imgUrl = f.url ? REPO_BASE + f.url : '';
+                const imgUrl = f.url ? FOTOS_BASE + f.url : '';
                 const data = f.data ? formatDate(f.data) : '';
                 return `
                     <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${imgUrl}')">
@@ -2509,7 +2519,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             }
 
             container.innerHTML = fotos.map(f => {
-                const imgUrl = f.url ? REPO_BASE + f.url : '';
+                const imgUrl = f.url ? FOTOS_BASE + f.url : '';
                 const data = f.data ? formatDate(f.data) : '';
                 return `
                     <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
