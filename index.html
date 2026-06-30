@@ -104,6 +104,13 @@
         .check-circle i { font-size: 10px; color: white; opacity: 0; transition: opacity 0.2s; }
         .multi-select-player.selected .check-circle i { opacity: 1; }
         .multi-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+        .comissao-card { border: 2px solid #FFD700; }
+        .comissao-card.preparador-campo { border-color: #FFD700; }
+        .comissao-card.analista-operacional { border-color: #22c55e; }
+        .comissao-card.nutricionista { border-color: #FFD700; }
+        .comissao-card.olheiro { border-color: #22c55e; }
+        .comissao-card.treinador-sub6 { border-color: #3b82f6; }
+        .corpo-tecnico-card { border: 2px solid #6b7280; opacity: 0.95; }
         @media (max-width: 768px) {
             .desktop-layout { flex-direction: column !important; }
             .admin-sidebar { width: 100% !important; min-height: auto !important; }
@@ -149,8 +156,8 @@
                 <button onclick="showSection('ranking')" id="nav-ranking" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
                     <i class="fas fa-trophy mr-1"></i> Ranking
                 </button>
-                <button onclick="showSection('album')" id="nav-album" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
-                    <i class="fas fa-images mr-1"></i> Álbum
+                <button onclick="showSection('mural')" id="nav-mural" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
+                    <i class="fas fa-comments mr-1"></i> Elogios
                 </button>
                 <button onclick="showAdminLogin()" class="px-3 py-2 rounded-lg font-semibold bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-lg transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
                     <i class="fas fa-lock mr-1"></i> Admin
@@ -195,6 +202,14 @@
                         <i class="fas fa-infinity mr-1"></i> Total
                     </button>
                 </div>
+            </div>
+            <div class="mb-6 flex gap-2 flex-wrap">
+                <button onclick="setRankingType('jogadores')" id="ranking-type-jogadores" class="filter-btn active px-4 py-2 rounded-lg font-semibold text-sm">
+                    <i class="fas fa-futbol mr-1"></i> Jogadores
+                </button>
+                <button onclick="setRankingType('comissao')" id="ranking-type-comissao" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
+                    <i class="fas fa-users mr-1"></i> Comissão Técnica
+                </button>
             </div>
             <div class="mb-8">
                 <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
@@ -284,6 +299,45 @@
             </div>
         </section>
 
+        <!-- MURAL DE ELOGIOS SECTION -->
+        <section id="section-mural" class="hidden fade-in">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold mb-2"><i class="fas fa-comments text-[#1DBCB8] mr-2"></i>Mural de Elogios</h2>
+                <p class="text-gray-400">Reconhecimentos e elogios entre a equipe</p>
+            </div>
+
+            <!-- Formulário de Elogio -->
+            <div class="glass rounded-2xl p-6 max-w-2xl mx-auto mb-8">
+                <h3 class="text-xl font-bold mb-4">Deixar um Elogio</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-400 mb-2">De (Vendedor)</label>
+                        <select id="elogio-de" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            <option value="">Selecione quem elogia</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-400 mb-2">Para (Comissão Técnica)</label>
+                        <select id="elogio-para" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            <option value="">Selecione quem recebe</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold text-gray-400 mb-2">Mensagem</label>
+                    <textarea id="elogio-mensagem" rows="3" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none resize-none" placeholder="Escreva seu reconhecimento..."></textarea>
+                </div>
+                <button onclick="enviarElogio()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                    <i class="fas fa-paper-plane mr-2"></i>Enviar Elogio
+                </button>
+            </div>
+
+            <!-- Lista de Elogios -->
+            <div id="mural-elogios" class="space-y-4 max-w-3xl mx-auto">
+                <p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>
+            </div>
+        </section>
+
         <!-- ADMIN LOGIN MODAL -->
         <div id="admin-login-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div class="glass rounded-2xl p-8 max-w-md w-full text-center">
@@ -320,6 +374,12 @@
                     </button>
                     <button onclick="showAdminTab('punicoes')" id="admin-tab-punicoes" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-exclamation-triangle mr-2"></i>VAR
+                    </button>
+                    <button onclick="showAdminTab('comissao')" id="admin-tab-comissao" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-users mr-2"></i>Comissão Técnica
+                    </button>
+                    <button onclick="showAdminTab('corpo-tecnico')" id="admin-tab-corpo-tecnico" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-user-tie mr-2"></i>Corpo Técnico
                     </button>
                     <button onclick="showAdminTab('corrigir')" id="admin-tab-corrigir" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-edit mr-2"></i>Corrigir
@@ -515,6 +575,92 @@
                         </div>
                     </div>
 
+                    <!-- Comissão Técnica -->
+                    <div id="admin-panel-comissao" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Cadastrar Comissão Técnica</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Nome</label>
+                                    <input type="text" id="comissao-nome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Nome do colaborador">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Função</label>
+                                    <select id="comissao-funcao" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                        <option value="preparador-campo">Preparador de Campo (Recepcionista)</option>
+                                        <option value="analista-operacional">Analista Operacional (ADM)</option>
+                                        <option value="nutricionista">Nutricionista (Garçons)</option>
+                                        <option value="olheiro">Olheiro (Confirmadora)</option>
+                                        <option value="treinador-sub6">Treinador Sub-6 (Recreação)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Foto de Perfil</label>
+                                <input type="text" id="comissao-foto" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="nome-foto.png">
+                            </div>
+                            <button onclick="cadastrarComissao()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-save mr-2"></i>Cadastrar Comissão Técnica
+                            </button>
+                        </div>
+
+                        <h3 class="text-2xl font-bold mb-6"><i class="fas fa-trash-alt mr-2 text-red-400"></i>Excluir Comissão Técnica</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar para Excluir</label>
+                                <select id="del-comissao" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-red-500 focus:outline-none">
+                                    <option value="">Selecione um colaborador</option>
+                                </select>
+                            </div>
+                            <button onclick="excluirComissao()" class="w-full py-3 rounded-xl btn-danger text-white font-bold text-lg">
+                                <i class="fas fa-trash-alt mr-2"></i>Excluir Permanentemente
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Corpo Técnico -->
+                    <div id="admin-panel-corpo-tecnico" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6">Cadastrar Corpo Técnico</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Nome</label>
+                                    <input type="text" id="corpo-nome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Nome do líder">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Função</label>
+                                    <select id="corpo-funcao" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                        <option value="auxiliar-tecnico">Auxiliar Técnico (Líder de Promotores)</option>
+                                        <option value="tecnico">Técnico (Gerente Promoção)</option>
+                                        <option value="tecnico">Técnico (Gerente Comercial)</option>
+                                        <option value="coordenador-tecnico">Coordenador Técnico (Líder Administrativo)</option>
+                                        <option value="tecnico">Técnico (Gerente Administrativo)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Foto de Perfil</label>
+                                <input type="text" id="corpo-foto" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="nome-foto.png">
+                            </div>
+                            <button onclick="cadastrarCorpoTecnico()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-save mr-2"></i>Cadastrar Corpo Técnico
+                            </button>
+                        </div>
+
+                        <h3 class="text-2xl font-bold mb-6"><i class="fas fa-trash-alt mr-2 text-red-400"></i>Excluir Corpo Técnico</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar para Excluir</label>
+                                <select id="del-corpo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-red-500 focus:outline-none">
+                                    <option value="">Selecione um líder</option>
+                                </select>
+                            </div>
+                            <button onclick="excluirCorpoTecnico()" class="w-full py-3 rounded-xl btn-danger text-white font-bold text-lg">
+                                <i class="fas fa-trash-alt mr-2"></i>Excluir Permanentemente
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Corrigir -->
                     <div id="admin-panel-corrigir" class="admin-panel hidden">
                         <h3 class="text-2xl font-bold mb-6">Corrigir / Excluir Eventos</h3>
@@ -633,12 +779,15 @@
 
             loadPlayers();
             loadEvents();
+            loadComissao();
+            loadCorpoTecnico();
+            loadElogios();
         });
 
         // ===== NAVIGATION =====
         function showSection(section) {
             inAdmin = (section === 'admin');
-            ['home', 'ranking', 'album', 'admin'].forEach(s => {
+            ['home', 'ranking', 'album', 'mural', 'admin'].forEach(s => {
                 document.getElementById('section-' + s)?.classList.add('hidden');
                 document.getElementById('nav-' + s)?.classList.remove('tab-active');
                 document.getElementById('nav-' + s)?.classList.add('tab-inactive');
@@ -649,6 +798,7 @@
 
             if (section === 'ranking') renderRanking();
             if (section === 'home') renderPlayers();
+            if (section === 'mural') renderMural();
             if (section === 'album' && !currentAlbumPlayer) {
                 document.getElementById('album-empty').classList.remove('hidden');
                 document.getElementById('album-content').classList.add('hidden');
@@ -656,9 +806,18 @@
         }
 
         // ===== RANKING FILTER =====
+        let rankingType = 'jogadores';
+
+        function setRankingType(type) {
+            rankingType = type;
+            document.querySelectorAll('#ranking-type-jogadores, #ranking-type-comissao').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('ranking-type-' + type)?.classList.add('active');
+            renderRanking();
+        }
+
         function setRankingPeriod(period) {
             rankingPeriod = period;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#filter-day, #filter-week, #filter-month, #filter-total').forEach(btn => btn.classList.remove('active'));
             document.getElementById('filter-' + period)?.classList.add('active');
             renderRanking();
         }
@@ -783,52 +942,109 @@
             const grid = document.getElementById('players-grid');
             if (!grid) return;
 
-            if (players.length === 0) {
-                grid.innerHTML = '<p class="text-gray-400 col-span-full text-center py-10">Nenhum jogador cadastrado</p>';
-                return;
+            let html = '';
+
+            // JOGADORES
+            if (players.length > 0) {
+                html += '<div class="col-span-full mb-4"><h3 class="text-2xl font-bold text-[#1DBCB8]"><i class="fas fa-futbol mr-2"></i>Jogadores</h3></div>';
+                const sorted = [...players].sort((a, b) => {
+                    const sa = getPlayerStats(a.id).totalReal;
+                    const sb = getPlayerStats(b.id).totalReal;
+                    return sb - sa;
+                });
+
+                html += sorted.map((p, idx) => {
+                    const stats = getPlayerStats(p.id);
+                    const rank = idx + 1;
+                    let rankClass = '';
+                    if (rank === 1) rankClass = 'rank-1';
+                    else if (rank === 2) rankClass = 'rank-2';
+                    else if (rank === 3) rankClass = 'rank-3';
+
+                    const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                    const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+
+                    return `
+                        <div class="player-card card-hover ${rankClass}" onclick="window.showAlbum('${p.id}')">
+                            <div class="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black flex items-center justify-center text-sm shadow-lg">
+                                ${rank}
+                            </div>
+                            <div class="photo-area mx-auto">
+                                <img src="${photoUrl}" alt="${p.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback" style="display:none">${initials}</div>
+                            </div>
+                            <h3 class="font-bold text-lg">${p.nome || ''}</h3>
+                            <p class="text-gray-400 text-sm mb-2">${p.sobrenome || ''}</p>
+                            <p class="text-[#1DBCB8] text-xs font-semibold mb-2">${p.time || 'Sem time'}</p>
+                            <div class="flex items-center justify-center gap-1 text-lg font-black">
+                                <span>⚽</span>
+                                <span>${stats.totalReal}</span>
+                            </div>
+                            <div class="flex justify-center gap-2 mt-2">
+                                <span class="period-badge period-day" title="Hoje">D ${stats.totalDay}</span>
+                                <span class="period-badge period-week" title="Semana">S ${stats.totalWeek}</span>
+                                <span class="period-badge period-month" title="Mês">M ${stats.totalMonth}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
 
-            const sorted = [...players].sort((a, b) => {
-                const sa = getPlayerStats(a.id).totalReal;
-                const sb = getPlayerStats(b.id).totalReal;
-                return sb - sa;
-            });
+            // COMISSÃO TÉCNICA
+            if (comissao.length > 0) {
+                html += '<div class="col-span-full mb-4 mt-8"><h3 class="text-2xl font-bold text-yellow-400"><i class="fas fa-users mr-2"></i>Comissão Técnica</h3></div>';
+                html += comissao.map(c => {
+                    const photoUrl = c.foto ? REPO_BASE + c.foto : '';
+                    const initials = c.nome?.[0] || '?';
+                    const borderColor = c.funcao === 'preparador-campo' ? '#FFD700' : 
+                                       c.funcao === 'analista-operacional' ? '#22c55e' :
+                                       c.funcao === 'nutricionista' ? '#FFD700' :
+                                       c.funcao === 'olheiro' ? '#22c55e' : '#3b82f6';
 
-            grid.innerHTML = sorted.map((p, idx) => {
-                const stats = getPlayerStats(p.id);
-                const rank = idx + 1;
-                let rankClass = '';
-                if (rank === 1) rankClass = 'rank-1';
-                else if (rank === 2) rankClass = 'rank-2';
-                else if (rank === 3) rankClass = 'rank-3';
+                    return `
+                        <div class="player-card card-hover" style="border-color: ${borderColor};" onclick="window.showAlbumComissao('${c.id}')">
+                            <div class="photo-area mx-auto" style="border-color: ${borderColor};">
+                                <img src="${photoUrl}" alt="${c.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback" style="display:none">${initials}</div>
+                            </div>
+                            <h3 class="font-bold text-lg">${c.nome || ''}</h3>
+                            <p class="text-yellow-400 text-sm font-semibold mb-1">${c.funcaoLabel || ''}</p>
+                            <p class="text-gray-500 text-xs mb-2">${c.origem || ''}</p>
+                            <div class="flex items-center justify-center gap-1 text-lg font-black text-yellow-400">
+                                <span>⭐</span>
+                                <span>${c.reconhecimentos || 0}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
 
-                const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
-                const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+            // CORPO TÉCNICO
+            if (corpoTecnico.length > 0) {
+                html += '<div class="col-span-full mb-4 mt-8"><h3 class="text-2xl font-bold text-gray-300"><i class="fas fa-user-tie mr-2"></i>Corpo Técnico</h3></div>';
+                html += corpoTecnico.map(c => {
+                    const photoUrl = c.foto ? REPO_BASE + c.foto : '';
+                    const initials = c.nome?.[0] || '?';
 
-                return `
-                    <div class="player-card card-hover ${rankClass}" onclick="window.showAlbum('${p.id}')">
-                        <div class="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black flex items-center justify-center text-sm shadow-lg">
-                            ${rank}
+                    return `
+                        <div class="player-card" style="border-color: #6b7280; opacity: 0.9;">
+                            <div class="photo-area mx-auto" style="border-color: #6b7280;">
+                                <img src="${photoUrl}" alt="${c.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="fallback" style="display:none">${initials}</div>
+                            </div>
+                            <h3 class="font-bold text-lg">${c.nome || ''}</h3>
+                            <p class="text-gray-300 text-sm font-semibold mb-1">${c.funcaoLabel || ''}</p>
+                            <p class="text-gray-500 text-xs">${c.origem || ''}</p>
                         </div>
-                        <div class="photo-area mx-auto">
-                            <img src="${photoUrl}" alt="${p.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="fallback" style="display:none">${initials}</div>
-                        </div>
-                        <h3 class="font-bold text-lg">${p.nome || ''}</h3>
-                        <p class="text-gray-400 text-sm mb-2">${p.sobrenome || ''}</p>
-                        <p class="text-[#1DBCB8] text-xs font-semibold mb-2">${p.time || 'Sem time'}</p>
-                        <div class="flex items-center justify-center gap-1 text-lg font-black">
-                            <span>⚽</span>
-                            <span>${stats.totalReal}</span>
-                        </div>
-                        <div class="flex justify-center gap-2 mt-2">
-                            <span class="period-badge period-day" title="Hoje">D ${stats.totalDay}</span>
-                            <span class="period-badge period-week" title="Semana">S ${stats.totalWeek}</span>
-                            <span class="period-badge period-month" title="Mês">M ${stats.totalMonth}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            }
+
+            if (players.length === 0 && comissao.length === 0 && corpoTecnico.length === 0) {
+                html = '<p class="text-gray-400 col-span-full text-center py-10">Nenhum colaborador cadastrado</p>';
+            }
+
+            grid.innerHTML = html;
         }
 
         // ===== RENDER RANKING =====
@@ -839,7 +1055,45 @@
 
             const periodLabel = rankingPeriod === 'day' ? 'do Dia' : rankingPeriod === 'week' ? 'da Semana' : rankingPeriod === 'month' ? 'do Mês' : 'Geral';
 
-            // Geral
+            if (rankingType === 'comissao') {
+                // RANKING COMISSÃO TÉCNICA
+                const sortedComissao = [...comissao].sort((a, b) => (b.reconhecimentos || 0) - (a.reconhecimentos || 0));
+
+                geral.innerHTML = sortedComissao.map((c, idx) => {
+                    const rank = idx + 1;
+                    let medal = '';
+                    if (rank === 1) medal = '🥇';
+                    else if (rank === 2) medal = '🥈';
+                    else if (rank === 3) medal = '🥉';
+                    else medal = `<span class="text-gray-500 font-bold">${rank}</span>`;
+
+                    const photoUrl = c.foto ? REPO_BASE + c.foto : '';
+                    const borderColor = c.funcao === 'preparador-campo' || c.funcao === 'nutricionista' ? '#FFD700' : 
+                                       c.funcao === 'analista-operacional' || c.funcao === 'olheiro' ? '#22c55e' : '#3b82f6';
+
+                    return `
+                        <div class="team-ranking-card flex items-center gap-4" style="border-color: ${borderColor};">
+                            <div class="text-2xl w-10 text-center">${medal}</div>
+                            <img src="${photoUrl}" class="w-12 h-12 rounded-full object-cover border-2" style="border-color: ${borderColor};" onerror="this.style.display='none'">
+                            <div class="flex-1">
+                                <h4 class="font-bold">${c.nome}</h4>
+                                <p class="text-yellow-400 text-sm">${c.funcaoLabel}</p>
+                                <p class="text-gray-500 text-xs">${c.origem}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-black text-yellow-400">${c.reconhecimentos || 0}</p>
+                                <p class="text-xs text-gray-400">reconhecimentos</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                porTime.innerHTML = `<h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-8 bg-gradient-to-b from-[#FFD700] to-[#B45309] rounded-full"></span>Comissão Técnica — ${periodLabel}</h3>` +
+                    `<div class="text-gray-400 text-center py-4">Ranking por reconhecimentos recebidos no Mural de Elogios</div>`;
+                return;
+            }
+
+            // RANKING JOGADORES (original)
             const sorted = [...players].sort((a, b) => {
                 const sa = getPlayerStats(a.id);
                 const sb = getPlayerStats(b.id);
@@ -1192,8 +1446,10 @@
             document.getElementById('admin-tab-' + tab)?.classList.add('bg-white/10', 'text-white');
             document.getElementById('admin-tab-' + tab)?.classList.remove('text-white/60');
 
-            if (tab !== 'cadastrar') updateAdminSelects();
+            if (tab !== 'cadastrar' && tab !== 'comissao' && tab !== 'corpo-tecnico') updateAdminSelects();
             if (tab === 'figurinhas') renderFigPlayersGrid();
+            if (tab === 'comissao') updateDeleteComissaoSelect();
+            if (tab === 'corpo-tecnico') updateDeleteCorpoSelect();
         }
 
         function updateAdminSelects() {
@@ -1545,6 +1801,246 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.carregarCorrecao = carregarCorrecao;
         window.excluirEvento = excluirEvento;
         window.excluirJogador = excluirJogador;
+    
+
+        // ===== COMISSÃO TÉCNICA =====
+        let comissao = [];
+        let corpoTecnico = [];
+        let elogios = [];
+
+        async function loadComissao() {
+            try {
+                const q = window.query(window.collection(window.db, 'comissao'), window.orderBy('nome'));
+                window.onSnapshot(q, (snapshot) => {
+                    comissao = [];
+                    snapshot.forEach(doc => {
+                        comissao.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderPlayers();
+                    updateElogioSelects();
+                    updateDeleteComissaoSelect();
+                });
+            } catch (e) {
+                console.error('Erro ao carregar comissão:', e);
+            }
+        }
+
+        async function loadCorpoTecnico() {
+            try {
+                const q = window.query(window.collection(window.db, 'corpoTecnico'), window.orderBy('nome'));
+                window.onSnapshot(q, (snapshot) => {
+                    corpoTecnico = [];
+                    snapshot.forEach(doc => {
+                        corpoTecnico.push({ id: doc.id, ...doc.data() });
+                    });
+                    renderPlayers();
+                    updateDeleteCorpoSelect();
+                });
+            } catch (e) {
+                console.error('Erro ao carregar corpo técnico:', e);
+            }
+        }
+
+        async function loadElogios() {
+            try {
+                const q = window.query(window.collection(window.db, 'elogios'), window.orderBy('data', 'desc'));
+                window.onSnapshot(q, (snapshot) => {
+                    elogios = [];
+                    snapshot.forEach(doc => {
+                        elogios.push({ id: doc.id, ...doc.data() });
+                    });
+                    if (document.getElementById('section-mural') && !document.getElementById('section-mural').classList.contains('hidden')) {
+                        renderMural();
+                    }
+                });
+            } catch (e) {
+                console.error('Erro ao carregar elogios:', e);
+            }
+        }
+
+        async function cadastrarComissao() {
+            const nome = document.getElementById('comissao-nome').value.trim();
+            const funcao = document.getElementById('comissao-funcao').value;
+            const foto = document.getElementById('comissao-foto').value.trim();
+
+            if (!nome) { showToast('Nome é obrigatório', 'error'); return; }
+
+            const funcaoMap = {
+                'preparador-campo': { label: 'Preparador de Campo', origem: 'Recepcionista' },
+                'analista-operacional': { label: 'Analista Operacional', origem: 'ADM' },
+                'nutricionista': { label: 'Nutricionista', origem: 'Garçons' },
+                'olheiro': { label: 'Olheiro', origem: 'Confirmadora' },
+                'treinador-sub6': { label: 'Treinador Sub-6', origem: 'Recreação' }
+            };
+
+            try {
+                const id = nome.toLowerCase().replace(/\s+/g, '-');
+                await window.setDoc(window.doc(window.db, 'comissao', id), {
+                    nome, funcao, funcaoLabel: funcaoMap[funcao].label, origem: funcaoMap[funcao].origem,
+                    foto, reconhecimentos: 0, createdAt: new Date().toISOString()
+                });
+                showToast('Comissão Técnica cadastrada!', 'success');
+                document.getElementById('comissao-nome').value = '';
+                document.getElementById('comissao-foto').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao cadastrar', 'error');
+            }
+        }
+
+        async function cadastrarCorpoTecnico() {
+            const nome = document.getElementById('corpo-nome').value.trim();
+            const funcao = document.getElementById('corpo-funcao').value;
+            const foto = document.getElementById('corpo-foto').value.trim();
+
+            if (!nome) { showToast('Nome é obrigatório', 'error'); return; }
+
+            const funcaoMap = {
+                'auxiliar-tecnico': { label: 'Auxiliar Técnico', origem: 'Líder de Promotores' },
+                'tecnico': { label: 'Técnico', origem: 'Gerente' },
+                'coordenador-tecnico': { label: 'Coordenador Técnico', origem: 'Líder Administrativo' }
+            };
+
+            try {
+                const id = nome.toLowerCase().replace(/\s+/g, '-');
+                await window.setDoc(window.doc(window.db, 'corpoTecnico', id), {
+                    nome, funcao, funcaoLabel: funcaoMap[funcao].label, origem: funcaoMap[funcao].origem,
+                    foto, createdAt: new Date().toISOString()
+                });
+                showToast('Corpo Técnico cadastrado!', 'success');
+                document.getElementById('corpo-nome').value = '';
+                document.getElementById('corpo-foto').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao cadastrar', 'error');
+            }
+        }
+
+        async function excluirComissao() {
+            const id = document.getElementById('del-comissao').value;
+            if (!id) { showToast('Selecione um colaborador', 'error'); return; }
+            if (!confirm('Tem certeza que deseja excluir este colaborador da Comissão Técnica?')) return;
+            try {
+                await window.deleteDoc(window.doc(window.db, 'comissao', id));
+                showToast('Excluído com sucesso!', 'success');
+                document.getElementById('del-comissao').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao excluir', 'error');
+            }
+        }
+
+        async function excluirCorpoTecnico() {
+            const id = document.getElementById('del-corpo').value;
+            if (!id) { showToast('Selecione um líder', 'error'); return; }
+            if (!confirm('Tem certeza que deseja excluir este líder do Corpo Técnico?')) return;
+            try {
+                await window.deleteDoc(window.doc(window.db, 'corpoTecnico', id));
+                showToast('Excluído com sucesso!', 'success');
+                document.getElementById('del-corpo').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao excluir', 'error');
+            }
+        }
+
+        function updateDeleteComissaoSelect() {
+            const sel = document.getElementById('del-comissao');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">Selecione um colaborador</option>' +
+                comissao.map(c => `<option value="${c.id}">${c.nome} (${c.funcaoLabel})</option>`).join('');
+        }
+
+        function updateDeleteCorpoSelect() {
+            const sel = document.getElementById('del-corpo');
+            if (!sel) return;
+            sel.innerHTML = '<option value="">Selecione um líder</option>' +
+                corpoTecnico.map(c => `<option value="${c.id}">${c.nome} (${c.funcaoLabel})</option>`).join('');
+        }
+
+        function updateElogioSelects() {
+            const de = document.getElementById('elogio-de');
+            const para = document.getElementById('elogio-para');
+            if (de) {
+                de.innerHTML = '<option value="">Selecione quem elogia</option>' +
+                    players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''} (Jogador)</option>`).join('');
+            }
+            if (para) {
+                para.innerHTML = '<option value="">Selecione quem recebe</option>' +
+                    comissao.map(c => `<option value="${c.id}">${c.nome} (${c.funcaoLabel})</option>`).join('');
+            }
+        }
+
+        async function enviarElogio() {
+            const deId = document.getElementById('elogio-de').value;
+            const paraId = document.getElementById('elogio-para').value;
+            const mensagem = document.getElementById('elogio-mensagem').value.trim();
+
+            if (!deId || !paraId) { showToast('Selecione quem elogia e quem recebe', 'error'); return; }
+            if (!mensagem) { showToast('Escreva uma mensagem', 'error'); return; }
+
+            const de = players.find(p => p.id === deId);
+            const para = comissao.find(c => c.id === paraId);
+
+            try {
+                await window.addDoc(window.collection(window.db, 'elogios'), {
+                    deId, deNome: de ? `${de.nome} ${de.sobrenome || ''}` : deId,
+                    paraId, paraNome: para ? para.nome : paraId,
+                    mensagem, data: new Date().toISOString(),
+                    createdAt: new Date().toISOString()
+                });
+
+                // Atualizar reconhecimentos do comissionado
+                const comRef = window.doc(window.db, 'comissao', paraId);
+                const comSnap = await window.getDoc(comRef);
+                if (comSnap.exists()) {
+                    const recs = (comSnap.data().reconhecimentos || 0) + 1;
+                    await window.updateDoc(comRef, { reconhecimentos: recs });
+                }
+
+                showToast('Elogio enviado com sucesso!', 'success');
+                document.getElementById('elogio-mensagem').value = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao enviar elogio', 'error');
+            }
+        }
+
+        function renderMural() {
+            const container = document.getElementById('mural-elogios');
+            if (!container) return;
+
+            if (elogios.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>';
+                return;
+            }
+
+            container.innerHTML = elogios.map(e => {
+                const data = new Date(e.data).toLocaleDateString('pt-BR');
+                return `
+                    <div class="glass rounded-xl p-4 border-l-4 border-[#1DBCB8]">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ${e.deNome ? e.deNome.charAt(0) : '?'}
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-400 mb-1">${data}</p>
+                                <p class="text-white"><span class="font-bold text-[#1DBCB8]">${e.deNome}</span> → <span class="font-bold text-yellow-400">${e.paraNome}</span></p>
+                                <p class="text-gray-300 mt-2 italic">"${e.mensagem}"</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Expose functions
+        window.cadastrarComissao = cadastrarComissao;
+        window.cadastrarCorpoTecnico = cadastrarCorpoTecnico;
+        window.excluirComissao = excluirComissao;
+        window.excluirCorpoTecnico = excluirCorpoTecnico;
+        window.enviarElogio = enviarElogio;
+        window.renderMural = renderMural;
     </script>
 </body>
 </html>
