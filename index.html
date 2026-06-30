@@ -300,6 +300,10 @@
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-images mr-2 text-[#1DBCB8]"></i>Mural de Fotos</h3>
                             <div id="album-mural-fotos-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
                         </div>
+                        <div id="album-elogios" class="player-card hidden">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-comments mr-2 text-[#1DBCB8]"></i>Mural de Elogios</h3>
+                            <div id="album-elogios-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -373,10 +377,14 @@
                         <p id="album-corpo-origem" class="text-gray-400 text-sm"></p>
                     </div>
                 </div>
-                <div class="lg:col-span-2">
+                <div class="lg:col-span-2 space-y-4">
                     <div class="player-card">
                         <h3 class="text-xl font-bold mb-4"><i class="fas fa-user-tie mr-2 text-gray-400"></i>Corpo Técnico</h3>
                         <p class="text-gray-400">Liderança e gestão da equipe. Reconhecimento pela excelência em coordenação e direcionamento estratégico.</p>
+                    </div>
+                    <div class="player-card">
+                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-comments mr-2 text-[#1DBCB8]"></i>Mural de Elogios Recebidos</h3>
+                        <div id="album-corpo-elogios" class="space-y-3 max-h-96 overflow-y-auto"></div>
                     </div>
                 </div>
             </div>
@@ -1060,14 +1068,14 @@
         }
     });
         // ===== LIGHTBOX =====
-    function openLightbox(url) {
+    function openLightbox(url, isSinglePhoto = false) {
         if (!url) return;
-    
+
         lightboxPhotos = [];
         lightboxCurrentIndex = 0;
-    
+
         const grid = document.getElementById('album-mural-fotos-grid');
-        if (grid && !document.getElementById('section-album').classList.contains('hidden')) {
+        if (!isSinglePhoto && grid && !document.getElementById('section-album').classList.contains('hidden')) {
             const imgs = grid.querySelectorAll('img');
             imgs.forEach((img, idx) => {
                 if (img.src && img.style.display !== 'none') {
@@ -1078,11 +1086,11 @@
                 }
             });
         }
-    
+
         if (lightboxPhotos.length === 0) {
             lightboxPhotos = [url];
         }
-    
+
         updateLightbox();
         document.getElementById('lightbox').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
@@ -1090,11 +1098,9 @@
         function openLightboxFromAlbum() {
             const img = document.getElementById('album-player-photo');
             if (img && img.src && img.style.display !== 'none') {
-                openLightbox(img.src);
+                openLightbox(img.src, true);
             }
-        }
-
-        function closeLightbox() {
+        }function closeLightbox() {
            document.getElementById('lightbox').classList.add('hidden');
            document.body.style.overflow = '';
            lightboxPhotos = [];
@@ -1440,34 +1446,31 @@
                 }).join('');
         }
 
+        // ===== ELOGIOS ALBUM =====
+        function renderElogiosAlbum(jogadorId) {
+            const container = document.getElementById('album-elogios');
+            const list = document.getElementById('album-elogios-list');
+            if (!container || !list) return;
 
-        // ===== MURAL PUBLIC =====
-        function renderMural() {
-            const container = document.getElementById('mural-elogios');
-            if (!container) return;
+            const elogiosJogador = elogios.filter(e => e.paraId === jogadorId && e.paraTipo === 'jogador').sort((a, b) => new Date(b.data) - new Date(a.data));
 
-            if (elogios.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>';
+            if (elogiosJogador.length === 0) {
+                container.classList.add('hidden');
                 return;
             }
 
-            container.innerHTML = elogios.map(e => {
+            container.classList.remove('hidden');
+            list.innerHTML = elogiosJogador.map(e => {
                 const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
                 return `
-                    <div class="glass rounded-xl p-4 max-w-2xl mx-auto">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                ${e.deNome ? e.deNome.charAt(0) : '?'}
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span>
-                                    <span class="text-gray-500 text-xs">→</span>
-                                    <span class="font-semibold text-yellow-400">${e.paraNome || '?'}</span>
-                                    <span class="text-gray-500 text-xs ml-auto">${data}</span>
-                                </div>
-                                <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
-                            </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/30">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                            ${e.deNome ? e.deNome.charAt(0) : '?'}
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm text-gray-400">${data}</p>
+                            <p class="text-white"><span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span></p>
+                            <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
                         </div>
                     </div>
                 `;
@@ -1669,6 +1672,7 @@
                 }).join('');
             }// Render Mural de Fotos
             renderMuralFotosAlbum(playerId);
+            renderElogiosAlbum(playerId);
 
             const eventsDiv = document.getElementById('album-events');
             if (playerEvents.length === 0) {
@@ -1858,14 +1862,12 @@
                 if (el) el.classList.add('hidden');
             });
 
-            const elogiosComissao = elogios.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
             const conquistasCount = calcConquistasComissao(c.reconhecimentos || 0);
 
             const nomeEl = document.getElementById('album-comissao-nome');
             const nome2El = document.getElementById('album-comissao-nome2');
             const funcaoEl = document.getElementById('album-comissao-funcao');
             const origemEl = document.getElementById('album-comissao-origem');
-            const recEl = document.getElementById('album-comissao-reconhecimentos');
             const recCountEl = document.getElementById('album-comissao-rec-count');
             const conquistasEl = document.getElementById('album-comissao-conquistas');
 
@@ -1873,7 +1875,6 @@
             if (nome2El) nome2El.textContent = c.nome || '';
             if (funcaoEl) funcaoEl.textContent = c.funcaoLabel || '';
             if (origemEl) origemEl.textContent = c.origem || '';
-            if (recEl) recEl.textContent = (c.reconhecimentos || 0) + ' reconhecimentos';
             if (recCountEl) recCountEl.textContent = c.reconhecimentos || 0;
             if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
@@ -1891,7 +1892,8 @@
                 }
             }
 
-            // Elogios recebidos
+            // Render elogios
+            const elogiosComissao = elogios.filter(e => e.paraId === comissaoId && e.paraTipo === 'comissao').sort((a, b) => new Date(b.data) - new Date(a.data));
             const elogiosDiv = document.getElementById('album-comissao-elogios');
             if (elogiosDiv) {
                 if (elogiosComissao.length === 0) {
@@ -1919,11 +1921,11 @@
             const conquistasDiv = document.getElementById('album-comissao-conquistas-grid');
             if (conquistasDiv) {
                 const CONQUISTAS_COMISSAO = [
-                    { id: 'heroi-bastidores', name: 'Herói dos Bastidores!', rule: '10+ reconhecimentos no mês', goals: 10, img: 'heroi.png' },
-                    { id: 'mvp-comissao', name: 'MVP da Comissão!', rule: '20+ reconhecimentos no mês', goals: 20, img: 'mvp.png' },
-                    { id: 'playmaker', name: 'Playmaker!', rule: '5+ elogios de vendedores diferentes', goals: 5, img: 'playmaker.png' },
-                    { id: 'craque-apoio', name: 'Craque do Apoio!', rule: '30+ reconhecimentos no total', goals: 30, img: 'craque-apoio.png' },
-                    { id: 'lenda-viva', name: 'Lenda Viva!', rule: '50+ reconhecimentos no total', goals: 50, img: 'lenda.png' }
+                    { id: 'heroi-bastidores', name: 'Herói dos Bastidores!', rule: '10+ reconhecimentos no mês', goals: 10 },
+                    { id: 'mvp-comissao', name: 'MVP da Comissão!', rule: '20+ reconhecimentos no mês', goals: 20 },
+                    { id: 'playmaker', name: 'Playmaker!', rule: '5+ elogios de vendedores diferentes', goals: 5 },
+                    { id: 'craque-apoio', name: 'Craque do Apoio!', rule: '30+ reconhecimentos no total', goals: 30 },
+                    { id: 'lenda-viva', name: 'Lenda Viva!', rule: '50+ reconhecimentos no total', goals: 50 }
                 ];
 
                 conquistasDiv.innerHTML = CONQUISTAS_COMISSAO.map(conq => {
@@ -1959,22 +1961,6 @@
             window.scrollTo(0, 0);
         }
 
-        function calcConquistasComissao(reconhecimentos) {
-            let count = 0;
-            if (reconhecimentos >= 10) count++;
-            if (reconhecimentos >= 20) count++;
-            if (reconhecimentos >= 30) count++;
-            if (reconhecimentos >= 50) count++;
-            return count;
-        }
-
-        function openLightboxFromComissao() {
-            const img = document.getElementById('album-comissao-photo');
-            if (img && img.src && img.style.display !== 'none') {
-                openLightbox(img.src);
-            }
-        }
-
         function showAlbumCorpo(corpoId) {
             currentAlbumPlayer = null;
             const c = corpoTecnico.find(x => x.id === corpoId);
@@ -2004,7 +1990,31 @@
                 fallback.textContent = c.nome?.[0] || '?';
             }
 
-            // Mostrar álbum corpo
+            // Render elogios
+            const elogiosCorpo = elogios.filter(e => e.paraId === corpoId && e.paraTipo === 'corpo').sort((a, b) => new Date(b.data) - new Date(a.data));
+            const elogiosDiv = document.getElementById('album-corpo-elogios');
+            if (elogiosDiv) {
+                if (elogiosCorpo.length === 0) {
+                    elogiosDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum elogio recebido ainda</p>';
+                } else {
+                    elogiosDiv.innerHTML = elogiosCorpo.map(e => {
+                        const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                        return `
+                            <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/30">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                                    ${e.deNome ? e.deNome.charAt(0) : '?'}
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-400">${data}</p>
+                                    <p class="text-white"><span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span></p>
+                                    <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
             const albumEl = document.getElementById('section-album-corpo');
             if (albumEl) albumEl.classList.remove('hidden');
             window.scrollTo(0, 0);
@@ -2013,7 +2023,7 @@
         function openLightboxFromCorpo() {
             const img = document.getElementById('album-corpo-photo');
             if (img && img.src && img.style.display !== 'none') {
-                openLightbox(img.src);
+                openLightbox(img.src, true);
             }
         }
 
@@ -2441,37 +2451,70 @@ Isso também excluirá todos os seus eventos!`)) return;
 
         function updateElogioSelects() {
             const para = document.getElementById('elogio-para');
-            if (para) {
-                para.innerHTML = '<option value="">Selecione quem recebe o elogio</option>' +
-                    comissao.map(c => `<option value="${c.id}">${c.nome} (${c.funcaoLabel})</option>`).join('');
+            if (!para) return;
+
+            let html = '<option value="">Selecione quem recebe o elogio</option>';
+
+            if (players.length > 0) {
+                html += '<optgroup label="⚽ Jogadores">' +
+                    players.map(p => `<option value="jogador|${p.id}">${p.nome} ${p.sobrenome || ''} (${p.time || 'Sem time'})</option>`).join('') +
+                    '</optgroup>';
             }
+
+            if (comissao.length > 0) {
+                html += '<optgroup label="⭐ Comissão Técnica">' +
+                    comissao.map(c => `<option value="comissao|${c.id}">${c.nome} (${c.funcaoLabel})</option>`).join('') +
+                    '</optgroup>';
+            }
+
+            if (corpoTecnico.length > 0) {
+                html += '<optgroup label="👔 Corpo Técnico">' +
+                    corpoTecnico.map(c => `<option value="corpo|${c.id}">${c.nome} (${c.funcaoLabel})</option>`).join('') +
+                    '</optgroup>';
+            }
+
+            para.innerHTML = html;
         }
 
         async function enviarElogio() {
             const deNome = document.getElementById('elogio-de-nome').value.trim();
-            const paraId = document.getElementById('elogio-para').value;
+            const paraValue = document.getElementById('elogio-para').value;
             const mensagem = document.getElementById('elogio-mensagem').value.trim();
 
             if (!deNome) { showToast('Digite seu nome', 'error'); return; }
-            if (!paraId) { showToast('Selecione quem recebe o elogio', 'error'); return; }
+            if (!paraValue) { showToast('Selecione quem recebe o elogio', 'error'); return; }
             if (!mensagem) { showToast('Escreva uma mensagem', 'error'); return; }
 
-            const para = comissao.find(c => c.id === paraId);
+            const [paraTipo, paraId] = paraValue.split('|');
+            let paraNome = '';
+            let paraObj = null;
+
+            if (paraTipo === 'jogador') {
+                paraObj = players.find(p => p.id === paraId);
+                paraNome = paraObj ? `${paraObj.nome} ${paraObj.sobrenome || ''}` : paraId;
+            } else if (paraTipo === 'comissao') {
+                paraObj = comissao.find(c => c.id === paraId);
+                paraNome = paraObj ? paraObj.nome : paraId;
+            } else if (paraTipo === 'corpo') {
+                paraObj = corpoTecnico.find(c => c.id === paraId);
+                paraNome = paraObj ? paraObj.nome : paraId;
+            }
 
             try {
                 await window.addDoc(window.collection(window.db, 'elogios'), {
                     deNome,
-                    paraId, paraNome: para ? para.nome : paraId,
+                    paraId, paraTipo, paraNome,
                     mensagem, data: new Date().toISOString(),
                     createdAt: new Date().toISOString()
                 });
 
-                // Atualizar reconhecimentos do comissionado
-                const comRef = window.doc(window.db, 'comissao', paraId);
-                const comSnap = await window.getDoc(comRef);
-                if (comSnap.exists()) {
-                    const recs = (comSnap.data().reconhecimentos || 0) + 1;
-                    await window.updateDoc(comRef, { reconhecimentos: recs });
+                if (paraTipo === 'comissao' && paraObj) {
+                    const comRef = window.doc(window.db, 'comissao', paraId);
+                    const comSnap = await window.getDoc(comRef);
+                    if (comSnap.exists()) {
+                        const recs = (comSnap.data().reconhecimentos || 0) + 1;
+                        await window.updateDoc(comRef, { reconhecimentos: recs });
+                    }
                 }
 
                 showToast('Elogio enviado com sucesso!', 'success');
@@ -2596,6 +2639,33 @@ Isso também excluirá todos os seus eventos!`)) return;
             }
         }
 
+        function renderMuralFotosAlbum(jogadorId) {
+            const container = document.getElementById('album-mural-fotos');
+            const grid = document.getElementById('album-mural-fotos-grid');
+            if (!container || !grid) return;
+
+            const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
+
+            if (fotos.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            grid.innerHTML = fotos.map(f => {
+                const baseUrl = f.url ? FOTOS_BASE + f.url : '';
+                const data = f.data ? formatDate(f.data) : '';
+                return `
+                    <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${baseUrl}.jpeg')">
+                        <div style="aspect-ratio: 1; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
+                            <img src="${baseUrl}.jpeg" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
+                                onerror="tryNextExtension(this, '${baseUrl}')">
+                        </div>
+                        ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
 
         async function adicionarFotoMural() {
             const jogadorId = document.getElementById('mural-fotos-jogador').value;
@@ -2689,6 +2759,7 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.excluirCorpoTecnico = excluirCorpoTecnico;
         window.enviarElogio = enviarElogio;
         window.renderMural = renderMural;
+        window.renderElogiosAlbum = renderElogiosAlbum;
         window.excluirElogio = excluirElogio;
         window.showAlbumComissao = showAlbumComissao;
         window.showAlbumCorpo = showAlbumCorpo;
@@ -2732,4 +2803,39 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
     </script>
 </body>
-</html>
+</html>function renderMural() {
+            const container = document.getElementById('mural-elogios');
+            if (!container) return;
+
+            if (elogios.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>';
+                return;
+            }
+
+            container.innerHTML = elogios.map(e => {
+                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                const tipoLabel = e.paraTipo === 'jogador' ? '⚽' : e.paraTipo === 'comissao' ? '⭐' : '👔';
+                const tipoText = e.paraTipo === 'jogador' ? 'Jogador' : e.paraTipo === 'comissao' ? 'Comissão' : 'Corpo Técnico';
+                return `
+                    <div class="glass rounded-xl p-4 max-w-2xl mx-auto">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ${e.deNome ? e.deNome.charAt(0) : '?'}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span>
+                                    <span class="text-gray-500 text-xs">→</span>
+                                    <span class="font-semibold text-yellow-400">${e.paraNome || '?'}</span>
+                                    <span class="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-300">${tipoLabel} ${tipoText}</span>
+                                    <span class="text-gray-500 text-xs ml-auto">${data}</span>
+                                </div>
+                                <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        
