@@ -853,16 +853,16 @@
         // ===== CONFIG =====
         const ADMIN_PASSWORD = 'costao2026';
         const REPO_BASE = 'https://davihmt.github.io/copa-costao/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
-        const FOTOS_BASE = 'https://davihmt.github.io/copa-costao/Fotos/';
+        const FOTOS_BASE = './Fotos/';
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
         // ===== STATE =====
         let players = [];
@@ -2458,6 +2458,10 @@ Isso também excluirá todos os seus eventos!`)) return;
             if (!container || !grid) return;
 
             const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
+            console.log('Mural de Fotos para jogador:', jogadorId, '- Fotos encontradas:', fotos.length);
+            if (fotos.length > 0) {
+                console.log('Primeira foto URL:', FOTOS_BASE + fotos[0].url);
+            }
 
             if (fotos.length === 0) {
                 container.classList.add('hidden');
@@ -2471,7 +2475,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                 return `
                     <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${imgUrl}')">
                         <div style="aspect-ratio: 1; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
-                            <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=font-size:40px>📷</span>';">
+                            <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" onerror="console.log('Foto não carregada:', this.src); this.style.display='none'; this.parentElement.innerHTML='<span style=font-size:40px>📷</span>';">
                         </div>
                         ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
                     </div>
@@ -2578,6 +2582,44 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.adicionarFotoMural = adicionarFotoMural;
         window.carregarFotosMural = carregarFotosMural;
         window.excluirFotoMural = excluirFotoMural;
+
+        // Helper function to try multiple image extensions
+        function tryNextExtension(imgElement, baseUrl) {
+            const extensions = ['.jpeg', '.jpg', '.png'];
+            const currentSrc = imgElement.src;
+
+            // Find which extension we're currently trying
+            let currentExt = '';
+            for (const ext of extensions) {
+                if (currentSrc.endsWith(ext)) {
+                    currentExt = ext;
+                    break;
+                }
+            }
+
+            // Get the base URL without extension
+            let base = currentSrc;
+            if (currentExt) {
+                base = currentSrc.substring(0, currentSrc.length - currentExt.length);
+            }
+
+            // Find next extension to try
+            const currentIndex = extensions.indexOf(currentExt);
+            const nextIndex = currentIndex + 1;
+
+            if (nextIndex < extensions.length) {
+                // Try next extension
+                imgElement.src = base + extensions[nextIndex];
+            } else {
+                // All extensions failed, show fallback
+                console.log('Foto não carregada (todas as extensões tentadas):', baseUrl);
+                imgElement.style.display = 'none';
+                const parent = imgElement.parentElement;
+                if (parent) {
+                    parent.innerHTML = '<span style="font-size:40px">📷</span>';
+                }
+            }
+        }
     </script>
 </body>
 </html>
