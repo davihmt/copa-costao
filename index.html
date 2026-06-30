@@ -143,9 +143,11 @@
     <!-- Lightbox -->
     <div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
         <div class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()"><i class="fas fa-times"></i></div>
+        <button id="lightbox-prev" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl z-10 transition-all" onclick="event.stopPropagation(); navigateLightbox(-1);"><i class="fas fa-chevron-left"></i></button>
+        <button id="lightbox-next" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-2xl z-10 transition-all" onclick="event.stopPropagation(); navigateLightbox(1);"><i class="fas fa-chevron-right"></i></button>
         <img id="lightbox-img" src="" alt="">
+        <div id="lightbox-counter" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/50 px-4 py-2 rounded-full text-white text-sm font-semibold"></div>
     </div>
-
     <!-- Header -->
     <header class="glass sticky top-0 z-50 px-4 py-3">
         <div class="max-w-7xl mx-auto flex items-center justify-center">
@@ -985,15 +987,106 @@
             document.getElementById('filter-' + period)?.classList.add('active');
             renderRanking();
         }
+    let lightboxPhotos = [];
+    let lightboxCurrentIndex = 0;
 
-        // ===== LIGHTBOX =====
-        function openLightbox(url) {
-            if (!url) return;
-            document.getElementById('lightbox-img').src = url;
-            document.getElementById('lightbox').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
+    function updateLightbox() {
+        const img = document.getElementById('lightbox-img');
+        const counter = document.getElementById('lightbox-counter');
+        const prevBtn = document.getElementById('lightbox-prev');
+        const nextBtn = document.getElementById('lightbox-next');
+    
+        if (lightboxPhotos.length > 0 && lightboxCurrentIndex >= 0 && lightboxCurrentIndex < lightboxPhotos.length) {
+            img.src = lightboxPhotos[lightboxCurrentIndex];
+            if (counter) counter.textContent = (lightboxPhotos.length > 1) ? (lightboxCurrentIndex + 1) + ' / ' + lightboxPhotos.length : '';
         }
+    
+        if (lightboxPhotos.length <= 1) {
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (counter) counter.style.display = 'none';
+        } else {
+            if (prevBtn) prevBtn.style.display = 'flex';
+            if (nextBtn) nextBtn.style.display = 'flex';
+            if (counter) counter.style.display = 'block';
+        }
+    }
 
+    function navigateLightbox(direction) {
+        if (lightboxPhotos.length <= 1) return;
+        lightboxCurrentIndex += direction;
+        if (lightboxCurrentIndex < 0) lightboxCurrentIndex = lightboxPhotos.length - 1;
+        if (lightboxCurrentIndex >= lightboxPhotos.length) lightboxCurrentIndex = 0;
+        updateLightbox();
+    }
+
+    // Swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const lightbox = document.getElementById('lightbox');
+        if (lightbox) {
+            lightbox.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+        
+            lightbox.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+        }
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                navigateLightbox(1);
+            } else {
+                navigateLightbox(-1);
+            }
+        }
+    }
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+        const lightbox = document.getElementById('lightbox');
+        if (lightbox && !lightbox.classList.contains('hidden')) {
+            if (e.key === 'ArrowLeft') navigateLightbox(-1);
+            if (e.key === 'ArrowRight') navigateLightbox(1);
+            if (e.key === 'Escape') closeLightbox();
+        }
+    });
+        // ===== LIGHTBOX =====
+    function openLightbox(url) {
+        if (!url) return;
+    
+        lightboxPhotos = [];
+        lightboxCurrentIndex = 0;
+    
+        const grid = document.getElementById('album-mural-fotos-grid');
+        if (grid && !document.getElementById('section-album').classList.contains('hidden')) {
+            const imgs = grid.querySelectorAll('img');
+            imgs.forEach((img, idx) => {
+                if (img.src && img.style.display !== 'none') {
+                    lightboxPhotos.push(img.src);
+                    if (img.src === url) {
+                        lightboxCurrentIndex = idx;
+                    }
+                }
+            });
+        }
+    
+        if (lightboxPhotos.length === 0) {
+            lightboxPhotos = [url];
+        }
+    
+        updateLightbox();
+        document.getElementById('lightbox').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
         function openLightboxFromAlbum() {
             const img = document.getElementById('album-player-photo');
             if (img && img.src && img.style.display !== 'none') {
@@ -1002,10 +1095,12 @@
         }
 
         function closeLightbox() {
-            document.getElementById('lightbox').classList.add('hidden');
-            document.body.style.overflow = '';
+           document.getElementById('lightbox').classList.add('hidden');
+           document.body.style.overflow = '';
+           lightboxPhotos = [];
+           lightboxCurrentIndex = 0;
         }
-
+       
         // ===== FIREBASE LOADERS =====
         async function loadPlayers() {
             try {
@@ -2152,6 +2247,7 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.carregarCorrecao = carregarCorrecao;
         window.excluirEvento = excluirEvento;
         window.excluirJogador = excluirJogador;
+        window.navigateLightbox = navigateLightbox;
     
 
         // ===== COMISSÃO TÉCNICA =====
