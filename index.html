@@ -315,9 +315,7 @@
                                 <img id="album-comissao-photo" src="" alt="" onerror="this.style.display='none'; document.getElementById('album-comissao-fallback').style.display='flex';">
                                 <div id="album-comissao-fallback" class="fallback" style="display:none"></div>
                             </div>
-                            <div id="album-comissao-reconhecimentos" class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-black px-4 py-1 rounded-full text-lg whitespace-nowrap">
-                                0 reconhecimentos
-                            </div>
+                            <!-- reconhecimentos removido - já aparece na linha de baixo -->
                         </div>
                         <h3 id="album-comissao-nome2" class="text-xl font-bold mb-1"></h3>
                         <p id="album-comissao-funcao" class="text-[#1DBCB8] font-semibold mb-2"></p>
@@ -875,14 +873,32 @@
         // ===== NAVIGATION =====
         function showSection(section) {
             inAdmin = (section === 'admin');
-            ['home', 'ranking', 'album', 'mural', 'admin'].forEach(s => {
-                document.getElementById('section-' + s)?.classList.add('hidden');
-                document.getElementById('nav-' + s)?.classList.remove('tab-active');
-                document.getElementById('nav-' + s)?.classList.add('tab-inactive');
+
+            // Esconder TODAS as seções principais + álbuns
+            const allSections = ['section-home', 'section-ranking', 'section-album', 'section-mural', 'section-admin', 'section-album-comissao', 'section-album-corpo'];
+            allSections.forEach(sid => {
+                const el = document.getElementById(sid);
+                if (el) el.classList.add('hidden');
             });
-            document.getElementById('section-' + section)?.classList.remove('hidden');
-            document.getElementById('nav-' + section)?.classList.remove('tab-inactive');
-            document.getElementById('nav-' + section)?.classList.add('tab-active');
+
+            // Atualizar nav tabs
+            ['home', 'ranking', 'album', 'mural', 'admin'].forEach(s => {
+                const navEl = document.getElementById('nav-' + s);
+                if (navEl) {
+                    navEl.classList.remove('tab-active');
+                    navEl.classList.add('tab-inactive');
+                }
+            });
+
+            // Mostrar seção selecionada
+            const targetEl = document.getElementById('section-' + section);
+            if (targetEl) targetEl.classList.remove('hidden');
+
+            const navTarget = document.getElementById('nav-' + section);
+            if (navTarget) {
+                navTarget.classList.remove('tab-inactive');
+                navTarget.classList.add('tab-active');
+            }
 
             if (section === 'ranking') renderRanking();
             if (section === 'home') renderPlayers();
@@ -1277,10 +1293,10 @@
 
             currentAlbumPlayer = playerId;
 
-            // Esconder álbuns de comissão e corpo técnico
-            const albumSections = ['album-comissao', 'album-corpo'];
-            albumSections.forEach(s => {
-                const el = document.getElementById('section-' + s);
+            // Esconder TODAS as seções primeiro
+            const allSections = ['section-home', 'section-ranking', 'section-mural', 'section-admin', 'section-album', 'section-album-corpo', 'section-album-comissao'];
+            allSections.forEach(sid => {
+                const el = document.getElementById(sid);
                 if (el) el.classList.add('hidden');
             });
             const stats = getPlayerStats(playerId);
@@ -1635,14 +1651,14 @@
 
         
         function showAlbumComissao(comissaoId) {
-            currentAlbumPlayer = null; // Reset para não conflitar com album de jogador
+            currentAlbumPlayer = null;
             const c = comissao.find(x => x.id === comissaoId);
             if (!c) return;
 
-            // Esconder TODAS as seções primeiro (incluindo mural e album-corpo)
-            const allSections = ['home', 'ranking', 'mural', 'admin', 'album', 'album-corpo', 'album-comissao'];
-            allSections.forEach(s => {
-                const el = document.getElementById('section-' + s);
+            // Esconder TODAS as seções primeiro
+            const allSections = ['section-home', 'section-ranking', 'section-mural', 'section-admin', 'section-album', 'section-album-corpo', 'section-album-comissao'];
+            allSections.forEach(sid => {
+                const el = document.getElementById(sid);
                 if (el) el.classList.add('hidden');
             });
 
@@ -1716,17 +1732,23 @@
 
                 conquistasDiv.innerHTML = CONQUISTAS_COMISSAO.map(conq => {
                     const isUnlocked = (c.reconhecimentos || 0) >= conq.goals;
-                    const imgUrl = REPO_BASE + conq.img;
+                    const progress = Math.min(100, ((c.reconhecimentos || 0) / conq.goals) * 100);
+
+                    let progressHtml = '';
+                    if (!isUnlocked) {
+                        progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${c.reconhecimentos || 0}/${conq.goals}</p>`;
+                    }
+
                     return `
                         <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${isUnlocked ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isUnlocked ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255,255,255,0.1)'};">
                             <div class="text-center mb-2 w-full">
                                 <h4 class="font-bold text-lg ${isUnlocked ? 'text-yellow-400' : 'text-gray-500'}">${conq.name}</h4>
                             </div>
-                            <div style="width:100%;aspect-ratio:1;max-width:180px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
-                                <span style="font-size:64px;position:absolute;z-index:1;">🏆</span>
-                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:2;" alt="${conq.name}" onload="this.previousElementSibling.style.display='none'">
+                            <div style="width:100%;aspect-ratio:1;max-width:180px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+                                <span style="font-size:80px;">🏆</span>
                             </div>
                             <p class="text-xs text-gray-400 text-center">${conq.rule}</p>
+                            <div class="w-full">${progressHtml}</div>
                             <div class="mt-2">
                                 ${isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-lock text-gray-500 text-xl"></i>'}
                             </div>
@@ -1758,14 +1780,14 @@
         }
 
         function showAlbumCorpo(corpoId) {
-            currentAlbumPlayer = null; // Reset para não conflitar
+            currentAlbumPlayer = null;
             const c = corpoTecnico.find(x => x.id === corpoId);
             if (!c) return;
 
             // Esconder TODAS as seções primeiro
-            const allSections = ['home', 'ranking', 'mural', 'admin', 'album', 'album-corpo', 'album-comissao'];
-            allSections.forEach(s => {
-                const el = document.getElementById('section-' + s);
+            const allSections = ['section-home', 'section-ranking', 'section-mural', 'section-admin', 'section-album', 'section-album-corpo', 'section-album-comissao'];
+            allSections.forEach(sid => {
+                const el = document.getElementById(sid);
                 if (el) el.classList.add('hidden');
             });
 
@@ -1786,11 +1808,9 @@
                 fallback.textContent = c.nome?.[0] || '?';
             }
 
-            // Esconder outras seções e mostrar álbum corpo
-            ['home', 'ranking', 'mural', 'admin', 'album', 'album-comissao'].forEach(s => {
-                document.getElementById('section-' + s)?.classList.add('hidden');
-            });
-            document.getElementById('section-album-corpo')?.classList.remove('hidden');
+            // Mostrar álbum corpo
+            const albumEl = document.getElementById('section-album-corpo');
+            if (albumEl) albumEl.classList.remove('hidden');
             window.scrollTo(0, 0);
         }
 
@@ -2288,7 +2308,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                                 <p class="text-white"><span class="font-bold text-[#1DBCB8]">${e.deNome}</span> → <span class="font-bold text-yellow-400">${e.paraNome}</span></p>
                                 <p class="text-gray-300 mt-2 italic">"${e.mensagem}"</p>
                             </div>
-                            ${isAdmin ? `<button onclick="excluirElogio('${e.id}')" class="text-red-400 hover:text-red-300 transition-all"><i class="fas fa-trash-alt"></i></button>` : ''}
                         </div>
                     </div>
                 `;
