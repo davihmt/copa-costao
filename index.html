@@ -1870,11 +1870,37 @@
         }
 
         function toggleFigPlayer(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+
+            const playerFunc = player.time || 'Sem Time';
+
+            // Check if already selected
             if (selectedFigPlayers.has(playerId)) {
                 selectedFigPlayers.delete(playerId);
-            } else {
-                selectedFigPlayers.add(playerId);
+                renderFigPlayersGrid();
+                return;
             }
+
+            // Check if we already have someone from this function selected
+            const selectedFuncs = new Set();
+            selectedFigPlayers.forEach(id => {
+                const p = players.find(x => x.id === id);
+                if (p) selectedFuncs.add(p.time || 'Sem Time');
+            });
+
+            if (selectedFuncs.has(playerFunc)) {
+                showToast(`Você já selecionou um ${playerFunc}`, 'error');
+                return;
+            }
+
+            // Max 3 players
+            if (selectedFigPlayers.size >= 3) {
+                showToast('Máximo de 3 jogadores atingido', 'error');
+                return;
+            }
+
+            selectedFigPlayers.add(playerId);
             renderFigPlayersGrid();
         }
 
