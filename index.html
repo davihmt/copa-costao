@@ -266,6 +266,10 @@
                                     <span class="text-purple-400">🏆 Conquistas</span>
                                     <span id="album-conquistas-count" class="font-bold text-purple-400">0</span>
                                 </div>
+                                <div class="flex justify-between px-3 py-2 rounded-lg bg-green-900/20">
+                                    <span class="text-green-400">💬 Reconhecimento</span>
+                                    <span id="album-reconhecimento-gols" class="font-bold text-green-400">0</span>
+                                </div>
                                 <div class="flex justify-between px-3 py-2 rounded-lg bg-gradient-to-r from-[#1DBCB8]/20 to-[#0B4F6C]/20 border border-[#1DBCB8]/30">
                                     <span class="font-bold">GOLS VALIDOS</span>
                                     <span id="album-total-real" class="font-black text-lg">0</span>
@@ -328,7 +332,7 @@
                         <p id="album-comissao-origem" class="text-gray-400 text-sm mb-4"></p>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-yellow-900/20">
-                                <span class="text-yellow-400">⭐ Reconhecimentos</span>
+                                <span class="text-yellow-400">⚽ Gols</span>
                                 <span id="album-comissao-rec-count" class="font-bold text-yellow-400">0</span>
                             </div>
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-purple-900/20">
@@ -386,7 +390,7 @@
         <section id="section-mural" class="hidden fade-in">
             <div class="mb-6">
                 <h2 class="text-3xl font-bold mb-2"><i class="fas fa-comments text-[#1DBCB8] mr-2"></i>Mural de Elogios</h2>
-                <p class="text-gray-400">Reconhecimentos e elogios entre a equipe</p>
+                <p class="text-gray-400">Gols e elogios entre a equipe</p>
             </div>
 
             <!-- Formulário de Elogio -->
@@ -645,6 +649,7 @@
                                     <option value="quebra-processos">Quebra de Processos (-1)</option>
                                     <option value="cancelamento">Cancelamento (-3)</option>
                                     <option value="falta-justificativa">Falta s/ Justificativa (-5)</option>
+                                    <option value="cartao-verde">🟢 Cartão Verde (+1)</option>
                                     <option value="custom">Outros (personalizado)</option>
                                 </select>
                             </div>
@@ -1549,6 +1554,7 @@
             document.getElementById('album-player-total').textContent = `${stats.totalReal} gols`;
             document.getElementById('album-total-goals').textContent = stats.baseTotal + stats.stickersTotal;
             document.getElementById('album-punishment-goals').textContent = `-${stats.punishTotal}`;
+            document.getElementById('album-reconhecimento-gols').textContent = stats.elogiosRecebidos + stats.elogiosDados;
             document.getElementById('album-total-real').textContent = stats.totalReal;
 
             // Calcular conquistas
@@ -1827,26 +1833,39 @@
                 return;
             }
 
-            grid.innerHTML = players.map(p => {
-                const isSelected = selectedFigPlayers.has(p.id);
-                const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
-                const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+            // Group players by function
+            const functions = {};
+            players.forEach(p => {
+                const func = p.time || 'Sem Time';
+                if (!functions[func]) functions[func] = [];
+                functions[func].push(p);
+            });
 
-                return `
-                    <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
-                        <div class="check-circle">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#1DBCB8]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
-                            <p class="text-xs text-gray-500">${p.time || 'Sem time'}</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            let html = '';
+            for (const [func, members] of Object.entries(functions)) {
+                html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#1DBCB8] uppercase tracking-wider">${func}</h4></div>`;
+                html += members.map(p => {
+                    const isSelected = selectedFigPlayers.has(p.id);
+                    const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                    const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
 
+                    return `
+                        <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
+                            <div class="check-circle">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#1DBCB8]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
+                                <p class="text-xs text-gray-500">${p.time || 'Sem time'}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            grid.innerHTML = html;
             updateFigSelectedCount();
         }
 
@@ -2193,11 +2212,11 @@ Isso também excluirá todos os seus eventos!`)) return;
             if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
 
             const map = {
-                'cartao-amarelo': { label: 'Cartão Amarelo', val: -1 },
-                'cartao-vermelho': { label: 'Cartão Vermelho', val: -2 },
-                'falta-grave': { label: 'Falta Grave', val: -1 },
-                'atraso': { label: 'Atraso', val: -1 },
-                'falta-treino': { label: 'Falta no Treino', val: -1 },
+                'chegar-atrasado': { label: 'Chegar Atrasado', val: -1 },
+                'quebra-processos': { label: 'Quebra de Processos', val: -1 },
+                'cancelamento': { label: 'Cancelamento', val: -3 },
+                'falta-justificativa': { label: 'Falta s/ Justificativa', val: -5 },
+                'cartao-verde': { label: '🟢 Cartão Verde', val: 1 },
                 'custom': { label: 'Punição Personalizada', val: 0 }
             };
 
@@ -2536,7 +2555,7 @@ Isso também excluirá todos os seus eventos!`)) return;
 
             if (!deValue) { showToast('Selecione quem está enviando', 'error'); return; }
             if (!paraValue) { showToast('Selecione quem recebe o elogio', 'error'); return; }
-            if (!mensagem || mensagem.length < 15) { showToast('A justificativa precisa ter no mínimo 15 caracteres', 'error'); return; }
+            if (!mensagem || mensagem.length < 25) { showToast('A justificativa precisa ter no mínimo 25 caracteres', 'error'); return; }
 
             const [deTipo, deId] = deValue.split('|');
             const [paraTipo, paraId] = paraValue.split('|');
