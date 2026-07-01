@@ -926,12 +926,13 @@
                 if (el) el.value = today;
             });
 
-            loadPlayers();
-            loadEvents();
+            // Load data in correct order: dependencies first
             loadComissao();
             loadCorpoTecnico();
             loadElogios();
             loadMuralFotos();
+            loadPlayers();
+            loadEvents();
         });
 
         // ===== NAVIGATION =====
@@ -1089,6 +1090,13 @@
         document.getElementById('lightbox').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
+        
+        function openLightboxFromAlbum() {
+            const img = document.getElementById('album-player-photo');
+            if (img && img.src && img.style.display !== 'none') {
+                openLightbox(img.src, true);
+            }
+        }
         function closeLightbox() {
            document.getElementById('lightbox').classList.add('hidden');
            document.body.style.overflow = '';
