@@ -156,7 +156,7 @@
                     <i class="fas fa-home mr-1"></i> Home
                 </button>
                 <button onclick="showSection('ranking')" id="nav-ranking" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
-                    <i class="fas fa-trophy mr-1"></i> Ranking
+                    <i class="fas fa-trophy mr-1"></i> Destaques
                 </button>
                 <button onclick="showSection('mural')" id="nav-mural" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
                     <i class="fas fa-comments mr-1"></i> Elogios
@@ -187,8 +187,8 @@
         <section id="section-ranking" class="hidden fade-in">
             <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 class="text-3xl font-bold mb-2"><i class="fas fa-trophy text-yellow-400 mr-2"></i>Ranking</h2>
-                    <p class="text-gray-400">Ranking geral e por time/função</p>
+                    <h2 class="text-3xl font-bold mb-2"><i class="fas fa-trophy text-yellow-400 mr-2"></i>Destaques</h2>
+                    <p class="text-gray-400">Destaques geral e por time/função</p>
                 </div>
                 <div class="flex gap-2 flex-wrap">
                     <button onclick="setRankingPeriod('day')" id="filter-day" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
@@ -299,6 +299,10 @@
                         <div class="player-card">
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-history mr-2 text-[#1DBCB8]"></i>Histórico de Eventos</h3>
                             <div id="album-events" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                        </div>
+                        <div id="album-elogios" class="player-card hidden">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-comments mr-2 text-[#1DBCB8]"></i>Mural de Elogios Recebidos</h3>
+                            <div id="album-elogios-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
                         </div>
                         <div id="album-mural-fotos" class="player-card hidden">
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-images mr-2 text-[#1DBCB8]"></i>Mural de Fotos</h3>
@@ -415,6 +419,7 @@
                 <button onclick="enviarElogio()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
                     <i class="fas fa-paper-plane mr-2"></i>Enviar Elogio
                 </button>
+                <div id="elogio-contador" class="mt-3 text-center text-sm text-gray-400"></div>
             </div>
 
             <!-- Lista de Elogios -->
@@ -938,6 +943,11 @@
             loadMuralFotos();
             loadPlayers();
             loadEvents();
+
+            // Garantir que selects de elogio sejam populados após carregamento
+            setTimeout(() => {
+                updateElogioSelects();
+            }, 2000);
         });
 
         // ===== NAVIGATION =====
@@ -1286,7 +1296,7 @@
                             <p class="text-yellow-400 text-sm font-semibold mb-1">${c.funcaoLabel || ''}</p>
                             <p class="text-gray-500 text-xs mb-2">${c.origem || ''}</p>
                             <div class="flex items-center justify-center gap-1 text-lg font-black text-yellow-400">
-                                <span>⭐</span>
+                                <span>⚽</span>
                                 <span>${c.reconhecimentos || 0}</span>
                             </div>
                         </div>
@@ -1357,14 +1367,14 @@
                             </div>
                             <div class="text-right">
                                 <p class="text-2xl font-black text-yellow-400">${c.reconhecimentos || 0}</p>
-                                <p class="text-xs text-gray-400">reconhecimentos</p>
+                                <p class="text-xs text-gray-400">gols</p>
                             </div>
                         </div>
                     `;
                 }).join('');
 
                 porTime.innerHTML = `<h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-8 bg-gradient-to-b from-[#FFD700] to-[#B45309] rounded-full"></span>Comissão Técnica — ${periodLabel}</h3>` +
-                    `<div class="text-gray-400 text-center py-4">Ranking por reconhecimentos recebidos no Mural de Elogios</div>`;
+                    `<div class="text-gray-400 text-center py-4">Destaques por gols recebidos no Mural de Elogios</div>`;
                 return;
             }
 
@@ -1721,6 +1731,9 @@
             }// Render Mural de Fotos
             renderMuralFotosAlbum(playerId);
 
+            // Render Mural de Elogios
+            renderElogiosAlbum(playerId);
+
             const eventsDiv = document.getElementById('album-events');
             if (playerEvents.length === 0) {
                 eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento registrado</p>';
@@ -1833,6 +1846,13 @@
                 return;
             }
 
+            // Get selected functions
+            const selectedFuncs = new Set();
+            selectedFigPlayers.forEach(id => {
+                const p = players.find(x => x.id === id);
+                if (p) selectedFuncs.add(p.time || 'Sem Time');
+            });
+
             // Group players by function
             const functions = {};
             players.forEach(p => {
@@ -1843,26 +1863,54 @@
 
             let html = '';
             for (const [func, members] of Object.entries(functions)) {
-                html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#1DBCB8] uppercase tracking-wider">${func}</h4></div>`;
-                html += members.map(p => {
-                    const isSelected = selectedFigPlayers.has(p.id);
-                    const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
-                    const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+                const isFuncSelected = selectedFuncs.has(func);
+                // Hide this function section if already selected and not the current player's func
+                if (isFuncSelected) {
+                    // Show only the selected player from this function
+                    const selectedFromFunc = members.filter(p => selectedFigPlayers.has(p.id));
+                    if (selectedFromFunc.length > 0) {
+                        html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#1DBCB8] uppercase tracking-wider">${func} <span class="text-green-400">✓ Selecionado</span></h4></div>`;
+                        html += selectedFromFunc.map(p => {
+                            const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                            const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+                            return `
+                                <div class="multi-select-player selected" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
+                                    <div class="check-circle">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#1DBCB8]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
+                                        <p class="text-xs text-gray-500">${p.time || 'Sem time'}</p>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                } else {
+                    // Show all players from this function
+                    html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#1DBCB8] uppercase tracking-wider">${func}</h4></div>`;
+                    html += members.map(p => {
+                        const isSelected = selectedFigPlayers.has(p.id);
+                        const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                        const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
 
-                    return `
-                        <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
-                            <div class="check-circle">
-                                <i class="fas fa-check"></i>
+                        return `
+                            <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
+                                <div class="check-circle">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#1DBCB8]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
+                                    <p class="text-xs text-gray-500">${p.time || 'Sem time'}</p>
+                                </div>
                             </div>
-                            <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#1DBCB8]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
-                            <div class="flex-1 min-w-0">
-                                <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
-                                <p class="text-xs text-gray-500">${p.time || 'Sem time'}</p>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                        `;
+                    }).join('');
+                }
             }
 
             grid.innerHTML = html;
@@ -1873,8 +1921,6 @@
             const player = players.find(p => p.id === playerId);
             if (!player) return;
 
-            const playerFunc = player.time || 'Sem Time';
-
             // Check if already selected
             if (selectedFigPlayers.has(playerId)) {
                 selectedFigPlayers.delete(playerId);
@@ -1882,19 +1928,7 @@
                 return;
             }
 
-            // Check if we already have someone from this function selected
-            const selectedFuncs = new Set();
-            selectedFigPlayers.forEach(id => {
-                const p = players.find(x => x.id === id);
-                if (p) selectedFuncs.add(p.time || 'Sem Time');
-            });
-
-            if (selectedFuncs.has(playerFunc)) {
-                showToast(`Você já selecionou um ${playerFunc}`, 'error');
-                return;
-            }
-
-            // Max 3 players
+            // Max 3 players total
             if (selectedFigPlayers.size >= 3) {
                 showToast('Máximo de 3 jogadores atingido', 'error');
                 return;
@@ -1963,7 +1997,7 @@
             if (nome2El) nome2El.textContent = c.nome || '';
             if (funcaoEl) funcaoEl.textContent = c.funcaoLabel || '';
             if (origemEl) origemEl.textContent = c.origem || '';
-            if (recEl) recEl.textContent = (c.reconhecimentos || 0) + ' reconhecimentos';
+            if (recEl) recEl.textContent = (c.reconhecimentos || 0) + ' gols';
             if (recCountEl) recCountEl.textContent = c.reconhecimentos || 0;
             if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
@@ -2009,11 +2043,11 @@
             const conquistasDiv = document.getElementById('album-comissao-conquistas-grid');
             if (conquistasDiv) {
                 const CONQUISTAS_COMISSAO = [
-                    { id: 'heroi-bastidores', name: 'Herói dos Bastidores!', rule: '10+ reconhecimentos no mês', goals: 10, img: 'heroi.png' },
-                    { id: 'mvp-comissao', name: 'MVP da Comissão!', rule: '20+ reconhecimentos no mês', goals: 20, img: 'mvp.png' },
+                    { id: 'heroi-bastidores', name: 'Herói dos Bastidores!', rule: '10+ gols no mês', goals: 10, img: 'heroi.png' },
+                    { id: 'mvp-comissao', name: 'MVP da Comissão!', rule: '20+ gols no mês', goals: 20, img: 'mvp.png' },
                     { id: 'playmaker', name: 'Playmaker!', rule: '5+ elogios de vendedores diferentes', goals: 5, img: 'playmaker.png' },
-                    { id: 'craque-apoio', name: 'Craque do Apoio!', rule: '30+ reconhecimentos no total', goals: 30, img: 'craque-apoio.png' },
-                    { id: 'lenda-viva', name: 'Lenda Viva!', rule: '50+ reconhecimentos no total', goals: 50, img: 'lenda.png' }
+                    { id: 'craque-apoio', name: 'Craque do Apoio!', rule: '30+ gols no total', goals: 30, img: 'craque-apoio.png' },
+                    { id: 'lenda-viva', name: 'Lenda Viva!', rule: '50+ gols no total', goals: 50, img: 'lenda.png' }
                 ];
 
                 conquistasDiv.innerHTML = CONQUISTAS_COMISSAO.map(conq => {
@@ -2573,6 +2607,42 @@ Isso também excluirá todos os seus eventos!`)) return;
             end.setHours(23, 59, 59, 999);
             return end;
         }
+
+        function atualizarContadorElogio() {
+            const contador = document.getElementById('elogio-contador');
+            if (!contador) return;
+
+            const de = document.getElementById('elogio-de');
+            if (!de || !de.value) {
+                contador.innerHTML = '<span class="text-gray-500">Selecione quem está enviando para ver seu limite</span>';
+                return;
+            }
+
+            const [deTipo, deId] = de.value.split('|');
+            const today = getTodayStr();
+            const elogiosHoje = elogios.filter(e => {
+                const d = e.data ? new Date(e.data).toISOString().split('T')[0] : '';
+                return d === today;
+            });
+            const jaEnviou = elogiosHoje.filter(e => e.deId === deId && e.deTipo === deTipo).length;
+
+            if (jaEnviou >= 1) {
+                contador.innerHTML = '<span class="text-red-400"><i class="fas fa-lock mr-1"></i>Você já enviou seu elogio hoje</span>';
+            } else {
+                contador.innerHTML = '<span class="text-green-400"><i class="fas fa-check-circle mr-1"></i>Você ainda tem 1 elogio para dar hoje</span>';
+            }
+        }
+
+        // Atualizar contador quando mudar o select "De"
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const deSelect = document.getElementById('elogio-de');
+                if (deSelect) {
+                    deSelect.addEventListener('change', atualizarContadorElogio);
+                    atualizarContadorElogio();
+                }
+            }, 2500);
+        });
 
         async function enviarElogio() {
             const deValue = document.getElementById('elogio-de').value;
