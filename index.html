@@ -300,10 +300,6 @@
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-images mr-2 text-[#1DBCB8]"></i>Mural de Fotos</h3>
                             <div id="album-mural-fotos-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
                         </div>
-                        <div id="album-elogios" class="player-card hidden">
-                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-comments mr-2 text-[#1DBCB8]"></i>Mural de Elogios</h3>
-                            <div id="album-elogios-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -377,14 +373,10 @@
                         <p id="album-corpo-origem" class="text-gray-400 text-sm"></p>
                     </div>
                 </div>
-                <div class="lg:col-span-2 space-y-4">
+                <div class="lg:col-span-2">
                     <div class="player-card">
                         <h3 class="text-xl font-bold mb-4"><i class="fas fa-user-tie mr-2 text-gray-400"></i>Corpo Técnico</h3>
                         <p class="text-gray-400">Liderança e gestão da equipe. Reconhecimento pela excelência em coordenação e direcionamento estratégico.</p>
-                    </div>
-                    <div class="player-card">
-                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-comments mr-2 text-[#1DBCB8]"></i>Mural de Elogios Recebidos</h3>
-                        <div id="album-corpo-elogios" class="space-y-3 max-h-96 overflow-y-auto"></div>
                     </div>
                 </div>
             </div>
@@ -401,8 +393,10 @@
             <div class="glass rounded-2xl p-6 max-w-2xl mx-auto mb-8">
                 <h3 class="text-xl font-bold mb-4">Deixar um Elogio</h3>
                 <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-400 mb-2">Seu Nome</label>
-                    <input type="text" id="elogio-de-nome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Digite seu nome">
+                    <label class="block text-sm font-semibold text-gray-400 mb-2">De</label>
+                    <select id="elogio-de" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                        <option value="">Quem está enviando o elogio</option>
+                    </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-400 mb-2">Para</label>
@@ -1095,12 +1089,7 @@
         document.getElementById('lightbox').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
-        function openLightboxFromAlbum() {
-            const img = document.getElementById('album-player-photo');
-            if (img && img.src && img.style.display !== 'none') {
-                openLightbox(img.src, true);
-            }
-        }function closeLightbox() {
+        function closeLightbox() {
            document.getElementById('lightbox').classList.add('hidden');
            document.body.style.overflow = '';
            lightboxPhotos = [];
@@ -1161,16 +1150,23 @@
             let baseTotal = 0, baseDay = 0, baseWeek = 0, baseMonth = 0;
             let stickersTotal = 0, stickersDay = 0, stickersWeek = 0, stickersMonth = 0;
             let punishTotal = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
+            let elogiosRecebidos = 0, elogiosDados = 0;
 
             playerEvents.forEach(ev => {
                 const evDate = getBRDate(ev.data);
                 const val = Number(ev.valor) || 0;
 
                 if (ev.tipo === 'gol') {
-                    baseTotal += val;
-                    if (isSameDay(evDate, today)) baseDay += val;
-                    if (isSameWeek(evDate, today)) baseWeek += val;
-                    if (isSameMonth(evDate, today)) baseMonth += val;
+                    if (ev.subtipo === 'elogio-recebido') {
+                        elogiosRecebidos += val;
+                    } else if (ev.subtipo === 'elogio-dado') {
+                        elogiosDados += val;
+                    } else {
+                        baseTotal += val;
+                        if (isSameDay(evDate, today)) baseDay += val;
+                        if (isSameWeek(evDate, today)) baseWeek += val;
+                        if (isSameMonth(evDate, today)) baseMonth += val;
+                    }
                 } else if (ev.tipo === 'figurinha') {
                     stickersTotal += val;
                     if (isSameDay(evDate, today)) stickersDay += val;
@@ -1188,10 +1184,11 @@
                 baseTotal, baseDay, baseWeek, baseMonth,
                 stickersTotal, stickersDay, stickersWeek, stickersMonth,
                 punishTotal, punishDay, punishWeek, punishMonth,
-                totalReal: baseTotal + stickersTotal - punishTotal,
-                totalDay: baseDay + stickersDay - punishDay,
-                totalWeek: baseWeek + stickersWeek - punishWeek,
-                totalMonth: baseMonth + stickersMonth - punishMonth
+                elogiosRecebidos, elogiosDados,
+                totalReal: baseTotal + stickersTotal + elogiosRecebidos + elogiosDados - punishTotal,
+                totalDay: baseDay + stickersDay + elogiosRecebidos + elogiosDados - punishDay,
+                totalWeek: baseWeek + stickersWeek + elogiosRecebidos + elogiosDados - punishWeek,
+                totalMonth: baseMonth + stickersMonth + elogiosRecebidos + elogiosDados - punishMonth
             };
         }
 
@@ -1446,6 +1443,44 @@
                 }).join('');
         }
 
+        // ===== MURAL PUBLIC =====
+        function renderMural() {
+            const container = document.getElementById('mural-elogios');
+            if (!container) return;
+
+            if (elogios.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>';
+                return;
+            }
+
+            container.innerHTML = elogios.map(e => {
+                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                const tipoLabel = e.paraTipo === 'jogador' ? '⚽' : e.paraTipo === 'comissao' ? '⭐' : '👔';
+                const tipoText = e.paraTipo === 'jogador' ? 'Jogador' : e.paraTipo === 'comissao' ? 'Comissão' : 'Corpo Técnico';
+                return `
+                    <div class="glass rounded-xl p-4 max-w-2xl mx-auto">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ${e.deNome ? e.deNome.charAt(0) : '?'}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span>
+                                    <span class="text-gray-500 text-xs">→</span>
+                                    <span class="font-semibold text-yellow-400">${e.paraNome || '?'}</span>
+                                    <span class="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-300">${tipoLabel} ${tipoText}</span>
+                                    <span class="text-xs bg-green-600 px-2 py-1 rounded-full text-white font-bold">+1 gol</span>
+                                    <span class="text-gray-500 text-xs ml-auto">${data}</span>
+                                </div>
+                                <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== ALBUM =====
         // ===== ELOGIOS ALBUM =====
         function renderElogiosAlbum(jogadorId) {
             const container = document.getElementById('album-elogios');
@@ -1477,7 +1512,6 @@
             }).join('');
         }
 
-        // ===== ALBUM =====
         function showAlbum(playerId) {
             console.log('showAlbum chamado com:', playerId);
             const player = players.find(p => p.id === playerId);
@@ -1672,7 +1706,6 @@
                 }).join('');
             }// Render Mural de Fotos
             renderMuralFotosAlbum(playerId);
-            renderElogiosAlbum(playerId);
 
             const eventsDiv = document.getElementById('album-events');
             if (playerEvents.length === 0) {
@@ -1862,12 +1895,14 @@
                 if (el) el.classList.add('hidden');
             });
 
+            const elogiosComissao = elogios.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
             const conquistasCount = calcConquistasComissao(c.reconhecimentos || 0);
 
             const nomeEl = document.getElementById('album-comissao-nome');
             const nome2El = document.getElementById('album-comissao-nome2');
             const funcaoEl = document.getElementById('album-comissao-funcao');
             const origemEl = document.getElementById('album-comissao-origem');
+            const recEl = document.getElementById('album-comissao-reconhecimentos');
             const recCountEl = document.getElementById('album-comissao-rec-count');
             const conquistasEl = document.getElementById('album-comissao-conquistas');
 
@@ -1875,6 +1910,7 @@
             if (nome2El) nome2El.textContent = c.nome || '';
             if (funcaoEl) funcaoEl.textContent = c.funcaoLabel || '';
             if (origemEl) origemEl.textContent = c.origem || '';
+            if (recEl) recEl.textContent = (c.reconhecimentos || 0) + ' reconhecimentos';
             if (recCountEl) recCountEl.textContent = c.reconhecimentos || 0;
             if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
@@ -1892,8 +1928,7 @@
                 }
             }
 
-            // Render elogios
-            const elogiosComissao = elogios.filter(e => e.paraId === comissaoId && e.paraTipo === 'comissao').sort((a, b) => new Date(b.data) - new Date(a.data));
+            // Elogios recebidos
             const elogiosDiv = document.getElementById('album-comissao-elogios');
             if (elogiosDiv) {
                 if (elogiosComissao.length === 0) {
@@ -1921,11 +1956,11 @@
             const conquistasDiv = document.getElementById('album-comissao-conquistas-grid');
             if (conquistasDiv) {
                 const CONQUISTAS_COMISSAO = [
-                    { id: 'heroi-bastidores', name: 'Herói dos Bastidores!', rule: '10+ reconhecimentos no mês', goals: 10 },
-                    { id: 'mvp-comissao', name: 'MVP da Comissão!', rule: '20+ reconhecimentos no mês', goals: 20 },
-                    { id: 'playmaker', name: 'Playmaker!', rule: '5+ elogios de vendedores diferentes', goals: 5 },
-                    { id: 'craque-apoio', name: 'Craque do Apoio!', rule: '30+ reconhecimentos no total', goals: 30 },
-                    { id: 'lenda-viva', name: 'Lenda Viva!', rule: '50+ reconhecimentos no total', goals: 50 }
+                    { id: 'heroi-bastidores', name: 'Herói dos Bastidores!', rule: '10+ reconhecimentos no mês', goals: 10, img: 'heroi.png' },
+                    { id: 'mvp-comissao', name: 'MVP da Comissão!', rule: '20+ reconhecimentos no mês', goals: 20, img: 'mvp.png' },
+                    { id: 'playmaker', name: 'Playmaker!', rule: '5+ elogios de vendedores diferentes', goals: 5, img: 'playmaker.png' },
+                    { id: 'craque-apoio', name: 'Craque do Apoio!', rule: '30+ reconhecimentos no total', goals: 30, img: 'craque-apoio.png' },
+                    { id: 'lenda-viva', name: 'Lenda Viva!', rule: '50+ reconhecimentos no total', goals: 50, img: 'lenda.png' }
                 ];
 
                 conquistasDiv.innerHTML = CONQUISTAS_COMISSAO.map(conq => {
@@ -1961,6 +1996,22 @@
             window.scrollTo(0, 0);
         }
 
+        function calcConquistasComissao(reconhecimentos) {
+            let count = 0;
+            if (reconhecimentos >= 10) count++;
+            if (reconhecimentos >= 20) count++;
+            if (reconhecimentos >= 30) count++;
+            if (reconhecimentos >= 50) count++;
+            return count;
+        }
+
+        function openLightboxFromComissao() {
+            const img = document.getElementById('album-comissao-photo');
+            if (img && img.src && img.style.display !== 'none') {
+                openLightbox(img.src);
+            }
+        }
+
         function showAlbumCorpo(corpoId) {
             currentAlbumPlayer = null;
             const c = corpoTecnico.find(x => x.id === corpoId);
@@ -1990,31 +2041,7 @@
                 fallback.textContent = c.nome?.[0] || '?';
             }
 
-            // Render elogios
-            const elogiosCorpo = elogios.filter(e => e.paraId === corpoId && e.paraTipo === 'corpo').sort((a, b) => new Date(b.data) - new Date(a.data));
-            const elogiosDiv = document.getElementById('album-corpo-elogios');
-            if (elogiosDiv) {
-                if (elogiosCorpo.length === 0) {
-                    elogiosDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum elogio recebido ainda</p>';
-                } else {
-                    elogiosDiv.innerHTML = elogiosCorpo.map(e => {
-                        const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
-                        return `
-                            <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/30">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                                    ${e.deNome ? e.deNome.charAt(0) : '?'}
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-sm text-gray-400">${data}</p>
-                                    <p class="text-white"><span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span></p>
-                                    <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            }
-
+            // Mostrar álbum corpo
             const albumEl = document.getElementById('section-album-corpo');
             if (albumEl) albumEl.classList.remove('hidden');
             window.scrollTo(0, 0);
@@ -2023,7 +2050,7 @@
         function openLightboxFromCorpo() {
             const img = document.getElementById('album-corpo-photo');
             if (img && img.src && img.style.display !== 'none') {
-                openLightbox(img.src, true);
+                openLightbox(img.src);
             }
         }
 
@@ -2450,10 +2477,10 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         function updateElogioSelects() {
+            const de = document.getElementById('elogio-de');
             const para = document.getElementById('elogio-para');
-            if (!para) return;
 
-            let html = '<option value="">Selecione quem recebe o elogio</option>';
+            let html = '<option value="">Selecione</option>';
 
             if (players.length > 0) {
                 html += '<optgroup label="⚽ Jogadores">' +
@@ -2473,21 +2500,55 @@ Isso também excluirá todos os seus eventos!`)) return;
                     '</optgroup>';
             }
 
-            para.innerHTML = html;
+            if (de) de.innerHTML = '<option value="">Quem está enviando</option>' + html.substring(html.indexOf('>') + 1);
+            if (para) para.innerHTML = '<option value="">Quem recebe o elogio</option>' + html.substring(html.indexOf('>') + 1);
+        }
+
+        function getWeekStart(dateStr) {
+            const d = new Date(dateStr);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(d.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            return monday;
+        }
+
+        function getWeekEnd(dateStr) {
+            const start = getWeekStart(dateStr);
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            end.setHours(23, 59, 59, 999);
+            return end;
         }
 
         async function enviarElogio() {
-            const deNome = document.getElementById('elogio-de-nome').value.trim();
+            const deValue = document.getElementById('elogio-de').value;
             const paraValue = document.getElementById('elogio-para').value;
             const mensagem = document.getElementById('elogio-mensagem').value.trim();
 
-            if (!deNome) { showToast('Digite seu nome', 'error'); return; }
+            if (!deValue) { showToast('Selecione quem está enviando', 'error'); return; }
             if (!paraValue) { showToast('Selecione quem recebe o elogio', 'error'); return; }
-            if (!mensagem) { showToast('Escreva uma mensagem', 'error'); return; }
+            if (!mensagem || mensagem.length < 15) { showToast('A justificativa precisa ter no mínimo 15 caracteres', 'error'); return; }
 
+            const [deTipo, deId] = deValue.split('|');
             const [paraTipo, paraId] = paraValue.split('|');
+
+            if (deId === paraId && deTipo === paraTipo) { showToast('Não pode elogiar a si mesmo', 'error'); return; }
+
+            let deNome = '';
             let paraNome = '';
             let paraObj = null;
+
+            if (deTipo === 'jogador') {
+                const p = players.find(p => p.id === deId);
+                deNome = p ? `${p.nome} ${p.sobrenome || ''}` : deId;
+            } else if (deTipo === 'comissao') {
+                const c = comissao.find(c => c.id === deId);
+                deNome = c ? c.nome : deId;
+            } else if (deTipo === 'corpo') {
+                const c = corpoTecnico.find(c => c.id === deId);
+                deNome = c ? c.nome : deId;
+            }
 
             if (paraTipo === 'jogador') {
                 paraObj = players.find(p => p.id === paraId);
@@ -2500,12 +2561,63 @@ Isso também excluirá todos os seus eventos!`)) return;
                 paraNome = paraObj ? paraObj.nome : paraId;
             }
 
+            const today = getTodayStr();
+            const elogiosHoje = elogios.filter(e => {
+                const d = e.data ? new Date(e.data).toISOString().split('T')[0] : '';
+                return d === today;
+            });
+
+            const jaEnviou = elogiosHoje.filter(e => e.deId === deId && e.deTipo === deTipo).length;
+            if (jaEnviou >= 1) { showToast('Você já enviou seu elogio hoje', 'error'); return; }
+
+            const jaRecebeu = elogiosHoje.filter(e => e.paraId === paraId && e.paraTipo === paraTipo).length;
+            if (jaRecebeu >= 2) { showToast('Esta pessoa já recebeu 2 elogios hoje', 'error'); return; }
+
+            const weekStart = getWeekStart(today);
+            const weekEnd = getWeekEnd(today);
+            const elogiosSemana = elogios.filter(e => {
+                const d = e.data ? new Date(e.data) : null;
+                return d && d >= weekStart && d <= weekEnd;
+            });
+            const paraMesmaPessoa = elogiosSemana.filter(e => e.deId === deId && e.deTipo === deTipo && e.paraId === paraId && e.paraTipo === paraTipo).length;
+            if (paraMesmaPessoa >= 3) { showToast('Você já elogiou esta pessoa 3 vezes esta semana', 'error'); return; }
+
+            if (deId !== paraId || deTipo !== paraTipo) {
+                const duplas = elogiosSemana.filter(e => {
+                    const aParaB = e.deId === deId && e.deTipo === deTipo && e.paraId === paraId && e.paraTipo === paraTipo;
+                    const bParaA = e.deId === paraId && e.deTipo === paraTipo && e.paraId === deId && e.paraTipo === deTipo;
+                    return aParaB || bParaA;
+                });
+                let duplaCount = 0;
+                const checked = new Set();
+                for (const e of duplas) {
+                    const key = [e.deId + '|' + e.deTipo, e.paraId + '|' + e.paraTipo].sort().join('->');
+                    if (!checked.has(key)) {
+                        checked.add(key);
+                        duplaCount++;
+                    }
+                }
+                if (duplaCount >= 2) { showToast('Dupla de Ouro já atingiu o limite de 2x esta semana', 'error'); return; }
+            }
+
             try {
                 await window.addDoc(window.collection(window.db, 'elogios'), {
-                    deNome,
+                    deId, deTipo, deNome,
                     paraId, paraTipo, paraNome,
                     mensagem, data: new Date().toISOString(),
                     createdAt: new Date().toISOString()
+                });
+
+                await window.addDoc(window.collection(window.db, 'eventos'), {
+                    jogadorId: paraId, tipo: 'gol', subtipo: 'elogio-recebido', subtipoLabel: 'Reconhecimento Recebido',
+                    valor: 1, data: today, observacao: mensagem,
+                    deId, deNome, createdAt: new Date().toISOString()
+                });
+
+                await window.addDoc(window.collection(window.db, 'eventos'), {
+                    jogadorId: deId, tipo: 'gol', subtipo: 'elogio-dado', subtipoLabel: 'Reconhecimento Dado',
+                    valor: 1, data: today, observacao: mensagem,
+                    paraId, paraNome, createdAt: new Date().toISOString()
                 });
 
                 if (paraTipo === 'comissao' && paraObj) {
@@ -2517,8 +2629,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                     }
                 }
 
-                showToast('Elogio enviado com sucesso!', 'success');
-                document.getElementById('elogio-de-nome').value = '';
+                showToast('Elogio enviado! +1 gol para ambos!', 'success');
                 document.getElementById('elogio-mensagem').value = '';
             } catch (e) {
                 console.error(e);
@@ -2764,7 +2875,6 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.showAlbumComissao = showAlbumComissao;
         window.showAlbumCorpo = showAlbumCorpo;
         window.openLightboxFromComissao = openLightboxFromComissao;
-        window.calcConquistasComissao = calcConquistasComissao;
         window.openLightboxFromCorpo = openLightboxFromCorpo;
         window.renderElogiosAdmin = renderElogiosAdmin;
         window.adicionarFotoMural = adicionarFotoMural;
@@ -2801,41 +2911,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                     parent.innerHTML = '<span style="font-size:40px">📷</span>';
                 }
             }
-        }
-
-        function renderMural() {
-            const container = document.getElementById('mural-elogios');
-            if (!container) return;
-
-            if (elogios.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>';
-                return;
-            }
-
-            container.innerHTML = elogios.map(e => {
-                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
-                const tipoLabel = e.paraTipo === 'jogador' ? '⚽' : e.paraTipo === 'comissao' ? '⭐' : '👔';
-                const tipoText = e.paraTipo === 'jogador' ? 'Jogador' : e.paraTipo === 'comissao' ? 'Comissão' : 'Corpo Técnico';
-                return `
-                    <div class="glass rounded-xl p-4 max-w-2xl mx-auto">
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                ${e.deNome ? e.deNome.charAt(0) : '?'}
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                    <span class="font-bold text-[#1DBCB8]">${e.deNome || 'Anônimo'}</span>
-                                    <span class="text-gray-500 text-xs">→</span>
-                                    <span class="font-semibold text-yellow-400">${e.paraNome || '?'}</span>
-                                    <span class="text-xs bg-gray-700 px-2 py-1 rounded-full text-gray-300">${tipoLabel} ${tipoText}</span>
-                                    <span class="text-gray-500 text-xs ml-auto">${data}</span>
-                                </div>
-                                <p class="text-gray-300 italic">"${e.mensagem || ''}"</p>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
         }
     </script>
 </body>
