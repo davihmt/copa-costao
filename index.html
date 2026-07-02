@@ -969,6 +969,11 @@
         }
 
         // ===== INIT =====
+        let comissao = [];
+        let corpoTecnico = [];
+        let elogios = [];
+        let muralFotos = [];
+
         document.addEventListener('DOMContentLoaded', () => {
             const today = getTodayStr();
             ['gols-data', 'fig-data', 'pun-data', 'mural-foto-data'].forEach(id => {
@@ -1082,7 +1087,12 @@
     let touchStartX = 0;
     let touchEndX = 0;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    let comissao = [];
+        let corpoTecnico = [];
+        let elogios = [];
+        let muralFotos = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
         const lightbox = document.getElementById('lightbox');
         if (lightbox) {
             lightbox.addEventListener('touchstart', (e) => {
@@ -2594,9 +2604,7 @@ Isso também excluirá todos os seus eventos!`)) return;
     
 
         // ===== COMISSÃO TÉCNICA =====
-        let comissao = [];
-        let corpoTecnico = [];
-        let elogios = [];
+        
 
         async function loadComissao() {
             try {
@@ -2819,6 +2827,11 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         // Atualizar contador quando mudar o select "De"
+        let comissao = [];
+        let corpoTecnico = [];
+        let elogios = [];
+        let muralFotos = [];
+
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const deSelect = document.getElementById('elogio-de');
@@ -3039,8 +3052,6 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         // ===== MURAL DE FOTOS =====
-        let muralFotos = [];
-
         async function loadMuralFotos() {
             try {
                 const q = window.query(window.collection(window.db, 'muralFotos'), window.orderBy('data', 'desc'));
