@@ -396,7 +396,7 @@
         <section id="section-mural" class="hidden fade-in">
             <div class="mb-6">
                 <h2 class="text-3xl font-bold mb-2"><i class="fas fa-comments text-[#1DBCB8] mr-2"></i>Mural de Elogios</h2>
-                <p class="text-gray-400">Gols e elogios entre a equipe</p>
+                <p class="text-gray-400">Gols e elogios entre a equipe. Elogios devem ser respeitosos, sem linguagem ofensiva, discriminatória ou inadequada.</p>
             </div>
 
             <!-- Formulário de Elogio -->
@@ -2574,7 +2574,7 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.lancarGols = lancarGols;
         window.lancarFigurinha = lancarFigurinha;
         window.lancarPunicao = lancarPunicao;
-        window.carregarCorrecao = carregarCorrecao;
+        window.carregarCorrecaoUnificada = carregarCorrecaoUnificada;
         window.excluirEvento = excluirEvento;
         window.excluirJogador = excluirJogador;
         window.navigateLightbox = navigateLightbox;
@@ -2865,7 +2865,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             if (jaEnviou >= 1) { showToast('Você já enviou seu elogio hoje', 'error'); return; }
 
             const jaRecebeu = elogiosHoje.filter(e => e.paraId === paraId && e.paraTipo === paraTipo).length;
-            if (jaRecebeu >= 2) { showToast('Esta pessoa já recebeu 2 elogios hoje', 'error'); return; }
+            if (jaRecebeu >= 1) { showToast('Esta pessoa já recebeu 1 elogio hoje', 'error'); return; }
 
             const weekStart = getWeekStart(today);
             const weekEnd = getWeekEnd(today);
@@ -2874,7 +2874,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                 return d && d >= weekStart && d <= weekEnd;
             });
             const paraMesmaPessoa = elogiosSemana.filter(e => e.deId === deId && e.deTipo === deTipo && e.paraId === paraId && e.paraTipo === paraTipo).length;
-            if (paraMesmaPessoa >= 3) { showToast('Você já elogiou esta pessoa 3 vezes esta semana', 'error'); return; }
+            if (paraMesmaPessoa >= 2) { showToast('Você já elogiou esta pessoa 2 vezes esta semana', 'error'); return; }
 
             if (deId !== paraId || deTipo !== paraTipo) {
                 const duplas = elogiosSemana.filter(e => {
@@ -2891,7 +2891,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                         duplaCount++;
                     }
                 }
-                if (duplaCount >= 2) { showToast('Dupla de Ouro já atingiu o limite de 2x esta semana', 'error'); return; }
+                if (duplaCount >= 1) { showToast('Elogio mútuo já atingiu o limite de 1x esta semana', 'error'); return; }
             }
 
             try {
@@ -3184,7 +3184,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             // Find which extension we're currently trying
             let currentExt = '';
             for (const ext of extensions) {
-                if (currentSrc.endsWith(ext)) {
+                if (currentSrc.toLowerCase().endsWith(ext)) {
                     currentExt = ext;
                     break;
                 }
@@ -3196,7 +3196,14 @@ Isso também excluirá todos os seus eventos!`)) return;
 
             if (nextIndex < extensions.length) {
                 // Try next extension
-                imgElement.src = baseUrl + extensions[nextIndex];
+                const nextUrl = baseUrl + extensions[nextIndex];
+                // Prevent double extension like .jpeg.jpeg
+                if (!currentSrc.toLowerCase().endsWith(extensions[nextIndex])) {
+                    imgElement.src = nextUrl;
+                } else {
+                    // Already tried this extension, skip to next
+                    imgElement.src = baseUrl + extensions[nextIndex + 1] || '';
+                }
             } else {
                 // All extensions failed, show fallback
                 console.log('Foto não carregada (todas as extensões tentadas):', baseUrl);
