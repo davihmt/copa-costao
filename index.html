@@ -7,6 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, updateDoc, addDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -821,7 +825,7 @@
                         <div class="glass rounded-2xl p-6 max-w-3xl">
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogador</label>
-                                <select id="corr-jogador" onchange="carregarCorrecaoUnificada()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                <select id="corr-jogador" onchange="if(typeof carregarCorrecaoUnificada === 'function') carregarCorrecaoUnificada(); else if(typeof carregarCorrecao === 'function') carregarCorrecao();" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="">Selecione um jogador</option>
                                     <option value="125k">125.000 pt (+3)</option>
                                     <option value="100k">100.000 pt (+3)</option>
@@ -3175,6 +3179,9 @@ Isso também excluirá todos os seus eventos!`)) return;
         window.adicionarFotoMural = adicionarFotoMural;
         window.carregarFotosMural = carregarFotosMural;
         window.excluirFotoMural = excluirFotoMural;
+
+        // Defensive alias for cached/old references
+        window.carregarCorrecao = carregarCorrecaoUnificada;
 
         // Helper function to try multiple image extensions
         function tryNextExtension(imgElement, baseUrl) {
