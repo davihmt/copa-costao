@@ -1419,10 +1419,15 @@
 
             if (rankingType === 'comissao') {
                 // RANKING COMISSÃO TÉCNICA - Top 5, em empate ordem alfabética
-                const sortedComissao = [...comissao].sort((a, b) => {
-                    const recA = a.reconhecimentos || 0;
-                    const recB = b.reconhecimentos || 0;
-                    if (recB !== recA) return recB - recA; // Mais gols primeiro
+                // Total gols = reconhecimentos (elogios) + eventos de cartão verde
+                const comissaoWithTotals = comissao.map(c => {
+                    const comissaoEvents = events.filter(e => e.jogadorId === c.id && e.tipo === 'gol');
+                    const cartoesGols = comissaoEvents.reduce((sum, e) => sum + (Number(e.valor) || 0), 0);
+                    const totalGols = (c.reconhecimentos || 0) + cartoesGols;
+                    return { ...c, totalGols };
+                });
+                const sortedComissao = comissaoWithTotals.sort((a, b) => {
+                    if (b.totalGols !== a.totalGols) return b.totalGols - a.totalGols; // Mais gols primeiro
                     return (a.nome || '').toLowerCase().localeCompare((b.nome || '').toLowerCase()); // Empate: alfabética
                 }).slice(0, 5); // Apenas top 5
 
@@ -1448,7 +1453,7 @@
                                 <p class="text-gray-500 text-xs">${c.origem}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-2xl font-black text-yellow-400">${c.reconhecimentos || 0}</p>
+                                <p class="text-2xl font-black text-yellow-400">${c.totalGols}</p>
                                 <p class="text-xs text-gray-400">gols</p>
                             </div>
                         </div>
@@ -2137,7 +2142,7 @@
             if (funcaoEl) funcaoEl.textContent = c.funcaoLabel || '';
             if (origemEl) origemEl.textContent = c.origem || '';
             if (recEl) recEl.textContent = (c.reconhecimentos || 0) + ' gols';
-            const comissaoEvents = events.filter(e => e.jogadorId === comissaoId); const cartoesGols = comissaoEvents.reduce((sum, e) => sum + (Number(e.valor) || 0), 0); const totalGols = (c.reconhecimentos || 0) + cartoesGols; if (recCountEl) recCountEl.textContent = totalGols;
+            const totalGols = (c.reconhecimentos || 0) + cartoesGols; if (recCountEl) recCountEl.textContent = totalGols;
             if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
             const photo = document.getElementById('album-comissao-photo');
@@ -2225,12 +2230,14 @@
             window.scrollTo(0, 0);
         }
 
-        function calcConquistasComissao(reconhecimentos) {
+        function calcConquistasComissao(totalGols) {
             let count = 0;
-            if (reconhecimentos >= 10) count++;
-            if (reconhecimentos >= 20) count++;
-            if (reconhecimentos >= 30) count++;
-            if (reconhecimentos >= 50) count++;
+            if (totalGols >= 5) count++;
+            if (totalGols >= 10) count++;
+            if (totalGols >= 15) count++;
+            if (totalGols >= 20) count++;
+            if (totalGols >= 25) count++;
+            if (totalGols >= 30) count++;
             return count;
         }
 
