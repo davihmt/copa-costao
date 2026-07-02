@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Copa Costão 2026</title>
+    <meta name="version" content="v2.1">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -143,6 +144,16 @@
     </style>
 </head>
 <body class="min-h-screen">
+    <script>
+        // Force cache bust - add version to URL if not present
+        (function() {
+            if (!window.location.search.includes('v=')) {
+                var url = new URL(window.location.href);
+                url.searchParams.set('v', '2.1');
+                window.history.replaceState({}, '', url);
+            }
+        })();
+    </script>
 
     <!-- Lightbox -->
     <div id="lightbox" class="lightbox hidden" onclick="closeLightbox()">
@@ -169,6 +180,11 @@
                     <i class="fas fa-lock mr-1"></i> Admin
                 </button>
             </nav>
+        </div>
+        <div class="text-center mt-1">
+            <button onclick="location.reload(true)" class="text-xs text-gray-500 hover:text-[#1DBCB8] transition-all" title="Forçar atualização">
+                <i class="fas fa-sync-alt mr-1"></i>Atualizar página
+            </button>
         </div>
     </header>
 
@@ -875,11 +891,19 @@
         </section>
     </main>
 
+    <footer class="glass mt-8 py-4 text-center">
+        <p class="text-gray-500 text-xs">Copa Costão 2026 — v2.1 | Atualizado: <span id="last-updated">carregando...</span></p>
+        <script>
+            document.getElementById('last-updated').textContent = new Date().toLocaleString('pt-BR');
+        </script>
+    </footer>
+
     <script>
 
         // ===== CONFIG =====
         const ADMIN_PASSWORD = 'costao2026';
         const REPO_BASE = 'https://davihmt.github.io/copa-costao/';
+        const CACHE_VERSION = '?v=2.1_' + new Date().toISOString().split('T')[0]; // Daily cache bust
         const FOTOS_BASE = './Fotos/';
         
         
@@ -1318,7 +1342,7 @@
                         const func = p.time || 'Sem Time';
                         const borderColor = funcColors[func] || '#1DBCB8';
 
-                        const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                        const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
                         const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
 
                         return `
@@ -1354,7 +1378,7 @@
                 });
                 html += '<div class="col-span-full mb-4 mt-8"><h3 class="text-2xl font-bold text-yellow-400"><i class="fas fa-users mr-2"></i>Comissão Técnica</h3></div>';
                 html += comissaoSorted.map(c => {
-                    const photoUrl = c.foto ? REPO_BASE + c.foto : '';
+                    const photoUrl = c.foto ? REPO_BASE + c.foto + CACHE_VERSION : '';
                     const initials = c.nome?.[0] || '?';
                     const borderColor = c.funcao === 'preparador-campo' ? '#FFD700' : 
                                        c.funcao === 'analista-operacional' ? '#22c55e' :
@@ -1389,7 +1413,7 @@
                 });
                 html += '<div class="col-span-full mb-4 mt-8"><h3 class="text-2xl font-bold text-gray-300"><i class="fas fa-user-tie mr-2"></i>Corpo Técnico</h3></div>';
                 html += corpoSorted.map(c => {
-                    const photoUrl = c.foto ? REPO_BASE + c.foto : '';
+                    const photoUrl = c.foto ? REPO_BASE + c.foto + CACHE_VERSION : '';
                     const initials = c.nome?.[0] || '?';
 
                     return `
@@ -1443,7 +1467,7 @@
                     else if (rank === 3) medal = '🥉';
                     else medal = `<span class="text-gray-500 font-bold">${rank}</span>`;
 
-                    const photoUrl = c.foto ? REPO_BASE + c.foto : '';
+                    const photoUrl = c.foto ? REPO_BASE + c.foto + CACHE_VERSION : '';
                     const borderColor = c.funcao === 'preparador-campo' || c.funcao === 'nutricionista' ? '#FFD700' : 
                                        c.funcao === 'analista-operacional' || c.funcao === 'olheiro' ? '#22c55e' : '#3b82f6';
 
@@ -1489,7 +1513,7 @@
                 else if (rank === 3) medal = '🥉';
                 else medal = `<span class="text-gray-500 font-bold">${rank}</span>`;
 
-                const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
 
                 return `
                     <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="window.showAlbum('${p.id}')">
@@ -1545,7 +1569,7 @@
                                 ${sortedMembers.map((p, idx) => {
                                     const stats = getPlayerStats(p.id);
                                     const total = getPeriodTotal(stats);
-                                    const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                                    const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
                                     const rank = idx + 1;
                                     let rankBadge = '';
                                     if (rank === 1) rankBadge = '<span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-400 text-black text-xs font-bold flex items-center justify-center">1</span>';
@@ -2010,7 +2034,7 @@
                     if (selectedFromFunc.length > 0) {
                         html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#1DBCB8] uppercase tracking-wider">${func} <span class="text-green-400">✓ Selecionado</span></h4></div>`;
                         html += selectedFromFunc.map(p => {
-                            const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                            const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
                             const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
                             return `
                                 <div class="multi-select-player selected" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
@@ -2032,7 +2056,7 @@
                     html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#1DBCB8] uppercase tracking-wider">${func}</h4></div>`;
                     html += members.map(p => {
                         const isSelected = selectedFigPlayers.has(p.id);
-                        const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil : '';
+                        const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
                         const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
 
                         return `
