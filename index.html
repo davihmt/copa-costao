@@ -817,41 +817,6 @@
                     <div id="admin-panel-corrigir" class="admin-panel hidden">
                         <h3 class="text-2xl font-bold mb-6">Corrigir / Excluir Eventos</h3>
 
-                        <!-- CORRIGIR CARTÕES -->
-                        <div class="glass rounded-2xl p-6 max-w-3xl mb-8">
-                            <h4 class="text-xl font-bold mb-4"><i class="fas fa-id-card mr-2 text-[#1DBCB8]"></i>Corrigir / Excluir Cartões</h4>
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Colaborador</label>
-                                <select id="corr-cartao-colaborador" onchange="carregarCartoesCorrecao()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
-                                    <option value="">Selecione um colaborador</option>
-                                </select>
-                            </div>
-                            <div id="corr-cartao-info" class="player-select-info rounded-xl p-4 mb-4 hidden">
-                                <div class="flex items-center gap-4 mb-4">
-                                    <img id="corr-cartao-foto" src="" class="w-16 h-16 rounded-full object-cover border-2 border-[#1DBCB8]" onerror="this.style.display='none'">
-                                    <div>
-                                        <h4 id="corr-cartao-nome" class="font-bold text-lg"></h4>
-                                        <p id="corr-cartao-funcao" class="text-[#1DBCB8] text-sm"></p>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-3 gap-2 text-center">
-                                    <div class="bg-green-900/20 rounded-lg p-2">
-                                        <p class="text-xs text-green-400">🟢 Verdes</p>
-                                        <p id="corr-cartao-verdes" class="font-bold text-green-400">0</p>
-                                    </div>
-                                    <div class="bg-yellow-900/20 rounded-lg p-2">
-                                        <p class="text-xs text-yellow-400">🟡 Amarelos</p>
-                                        <p id="corr-cartao-amarelos" class="font-bold text-yellow-400">0</p>
-                                    </div>
-                                    <div class="bg-red-900/20 rounded-lg p-2">
-                                        <p class="text-xs text-red-400">🔴 Vermelhos</p>
-                                        <p id="corr-cartao-vermelhos" class="font-bold text-red-400">0</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="corr-cartao-lista" class="space-y-2 max-h-96 overflow-y-auto"></div>
-                        </div>
-
                         <!-- CORRIGIR EVENTOS -->
                         <div class="glass rounded-2xl p-6 max-w-3xl">
                             <div class="mb-4">
@@ -875,7 +840,7 @@
                                         <p id="corr-time" class="text-[#1DBCB8] text-sm"></p>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-4 gap-2 text-center">
+                                <div class="grid grid-cols-5 gap-2 text-center">
                                     <div class="bg-gray-800/50 rounded-lg p-2">
                                         <p class="text-xs text-gray-400">Gols</p>
                                         <p id="corr-base" class="font-bold">0</p>
@@ -887,6 +852,10 @@
                                     <div class="bg-red-900/20 rounded-lg p-2">
                                         <p class="text-xs text-red-400">VAR</p>
                                         <p id="corr-pun" class="font-bold text-red-400">0</p>
+                                    </div>
+                                    <div class="bg-green-900/20 rounded-lg p-2">
+                                        <p class="text-xs text-green-400">Cartões Verdes</p>
+                                        <p id="corr-verdes" class="font-bold text-green-400">0</p>
                                     </div>
                                     <div class="bg-gradient-to-r from-[#1DBCB8]/20 to-[#0B4F6C]/20 rounded-lg p-2 border border-[#1DBCB8]/30">
                                         <p class="text-xs font-bold">Gols Validos</p>
@@ -1201,7 +1170,7 @@
                         showAlbum(currentAlbumPlayer);
                     }
                     if (inAdmin && document.getElementById('corr-jogador').value) {
-                        carregarCorrecao();
+                        carregarCorrecaoUnificada();
                     }
                 });
             } catch (e) {
@@ -2144,7 +2113,11 @@
             });
 
             const elogiosComissao = elogios.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
-            const conquistasCount = calcConquistasComissao(c.reconhecimentos || 0);
+            // Total de gols = reconhecimentos (elogios) + eventos de cartão verde
+            const comissaoEvents = events.filter(e => e.jogadorId === comissaoId && e.tipo === 'gol');
+            const cartoesGols = comissaoEvents.reduce((sum, e) => sum + (Number(e.valor) || 0), 0);
+            const totalGolsComissao = (c.reconhecimentos || 0) + cartoesGols;
+            const conquistasCount = calcConquistasComissao(totalGolsComissao);
 
             // Patentes (cartões)
             const comissaoPatentesHtml = getPatenteBadgeComissao(comissaoId, 'perfil');
@@ -2209,21 +2182,22 @@
             const conquistasDiv = document.getElementById('album-comissao-conquistas-grid');
             if (conquistasDiv) {
                 const CONQUISTAS_COMISSAO = [
-                    { id: 'espirito-time', name: 'Espírito de Time!', rule: '5+ gols no mês', goals: 5, img: 'espirito-time.png' },
-                    { id: 'rei-assistencia', name: 'Rei da Assistência!', rule: '10+ gols no mês', goals: 10, img: 'rei-assistencia.png' },
-                    { id: 'lenda-vestiario', name: 'Lenda do Vestiário!', rule: '15+ gols no mês', goals: 15, img: 'lenda-vestiario.png' },
-                    { id: 'idolo-torcida', name: 'Ídolo da Torcida!', rule: '25+ gols no mês', goals: 25, img: 'idolo-torcida.png' },
-                    { id: 'motor-time', name: 'Motor do Time!', rule: '20+ gols no mês', goals: 20, img: 'motor-time.png' },
-                    { id: 'embaixador-costao', name: 'Embaixador Costão!', rule: '30+ gols no mês', goals: 30, img: 'embaixador-costao.png' }
+                    { id: 'espirito-time', name: 'Espírito de Time!', rule: '5+ gols no mês', goals: 5, img: '+5ct.png' },
+                    { id: 'rei-assistencia', name: 'Rei da Assistência!', rule: '10+ gols no mês', goals: 10, img: '+10ct.png' },
+                    { id: 'lenda-vestiario', name: 'Lenda do Vestiário!', rule: '15+ gols no mês', goals: 15, img: '+15ct.png' },
+                    { id: 'motor-time', name: 'Motor do Time!', rule: '20+ gols no mês', goals: 20, img: '+20ct.png' },
+                    { id: 'idolo-torcida', name: 'Ídolo da Torcida!', rule: '25+ gols no mês', goals: 25, img: '+25ct.png' },
+                    { id: 'embaixador-costao', name: 'Embaixador Costão!', rule: '30+ gols no mês', goals: 30, img: '+30ct.png' }
                 ];
 
                 conquistasDiv.innerHTML = CONQUISTAS_COMISSAO.map(conq => {
-                    const isUnlocked = (c.reconhecimentos || 0) >= conq.goals;
-                    const progress = Math.min(100, ((c.reconhecimentos || 0) / conq.goals) * 100);
+                    const isUnlocked = totalGols >= conq.goals;
+                    const progress = Math.min(100, (totalGols / conq.goals) * 100);
+                    const imgUrl = REPO_BASE + conq.img;
 
                     let progressHtml = '';
                     if (!isUnlocked) {
-                        progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${c.reconhecimentos || 0}/${conq.goals}</p>`;
+                        progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${totalGols}/${conq.goals}</p>`;
                     }
 
                     return `
@@ -2231,8 +2205,9 @@
                             <div class="text-center mb-2 w-full">
                                 <h4 class="font-bold text-lg ${isUnlocked ? 'text-yellow-400' : 'text-gray-500'}">${conq.name}</h4>
                             </div>
-                            <div style="width:100%;aspect-ratio:1;max-width:180px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
-                                <span style="font-size:80px;">🏆</span>
+                            <div style="width:100%;aspect-ratio:1;max-width:260px;border-radius:12px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
+                                <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
+                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${conq.name}" onload="this.previousElementSibling.style.display='none'">
                             </div>
                             <p class="text-xs text-gray-400 text-center">${conq.rule}</p>
                             <div class="w-full">${progressHtml}</div>
@@ -2553,7 +2528,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             try {
                 await window.deleteDoc(window.doc(window.db, 'eventos', eventId));
                 showToast('Evento excluído!', 'success');
-                carregarCorrecao();
+                carregarCorrecaoUnificada();
             } catch (e) {
                 console.error(e);
                 showToast('Erro ao excluir', 'error');
@@ -3174,99 +3149,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             });
         }
 
-        function carregarCartoesCorrecao() {
-            const colaboradorValue = document.getElementById('corr-cartao-colaborador').value;
-            const info = document.getElementById('corr-cartao-info');
-            const lista = document.getElementById('corr-cartao-lista');
 
-            if (!colaboradorValue) {
-                info.classList.add('hidden');
-                lista.innerHTML = '';
-                return;
-            }
-
-            const [tipo, id] = colaboradorValue.split('|');
-            let colaborador = null;
-
-            if (tipo === 'jogador') colaborador = players.find(p => p.id === id);
-            else if (tipo === 'comissao') colaborador = comissao.find(c => c.id === id);
-
-            if (!colaborador) {
-                info.classList.add('hidden');
-                lista.innerHTML = '';
-                return;
-            }
-
-            info.classList.remove('hidden');
-            document.getElementById('corr-cartao-nome').textContent = colaborador.nome || '';
-            document.getElementById('corr-cartao-funcao').textContent = colaborador.funcaoLabel || colaborador.time || '';
-            document.getElementById('corr-cartao-foto').src = colaborador.foto || colaborador.fotoPerfil ? REPO_BASE + (colaborador.foto || colaborador.fotoPerfil) : '';
-
-            // Contar cartões
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const colaboradorEvents = events.filter(e => e.jogadorId === id && (e.tipo === 'punicao' || e.tipo === 'gol'));
-
-            let verdes = 0, amarelos = 0, vermelhos = 0;
-            colaboradorEvents.forEach(ev => {
-                const evDate = getBRDate(ev.data);
-                const isToday = isSameDay(evDate, today);
-                const isThisMonth = isSameMonth(evDate, today);
-                const subtipo = ev.subtipo || '';
-
-                if (subtipo === 'cartao-verde' && isThisMonth) verdes++;
-                else if ((subtipo === 'chegar-atrasado' || subtipo === 'quebra-processos') && isToday) amarelos++;
-                else if ((subtipo === 'cancelamento' || subtipo === 'falta-justificativa' || subtipo === 'custom') && isToday) vermelhos++;
-            });
-
-            document.getElementById('corr-cartao-verdes').textContent = verdes;
-            document.getElementById('corr-cartao-amarelos').textContent = amarelos;
-            document.getElementById('corr-cartao-vermelhos').textContent = vermelhos;
-
-            // Listar cartões
-            if (colaboradorEvents.length === 0) {
-                lista.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum cartão registrado</p>';
-            } else {
-                lista.innerHTML = colaboradorEvents.map(e => {
-                    let cor = '', emoji = '';
-                    if (e.subtipo === 'cartao-verde') { cor = 'text-green-400'; emoji = '🟢'; }
-                    else if (e.subtipo === 'chegar-atrasado' || e.subtipo === 'quebra-processos') { cor = 'text-yellow-400'; emoji = '🟡'; }
-                    else { cor = 'text-red-400'; emoji = '🔴'; }
-
-                    return `
-                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
-                            <div class="flex items-center gap-3">
-                                <span class="text-lg">${emoji}</span>
-                                <div>
-                                    <p class="text-sm font-semibold ${cor}">${e.subtipoLabel || e.subtipo}</p>
-                                    <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="font-bold ${cor}">${e.valor > 0 ? '+' : ''}${e.valor}</span>
-                                <button onclick="excluirCartao('${e.id}')" class="text-red-400 hover:text-red-300 transition-all">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        }
-
-        async function excluirCartao(eventId) {
-            if (!confirm('Tem certeza que deseja excluir este cartão?')) return;
-            try {
-                await window.deleteDoc(window.doc(window.db, 'eventos', eventId));
-                showToast('Cartão excluído!', 'success');
-                carregarCartoesCorrecao();
-            } catch (e) {
-                console.error(e);
-                showToast('Erro ao excluir cartão', 'error');
-            }
-        }
-
-        
         
 
         window.cadastrarComissao = cadastrarComissao;
