@@ -1296,58 +1296,6 @@
             };
         }
 
-
-        // ===== COMISSAO STATS (inclui cartões) =====
-        function getComissaoStats(comissaoId) {
-            const comissaoEvents = events.filter(e => e.jogadorId === comissaoId);
-            const today = new Date();
-            today.setHours(12, 0, 0, 0);
-
-            let baseTotal = 0, baseDay = 0, baseWeek = 0, baseMonth = 0;
-            let punishTotal = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
-            let verdesTotal = 0, verdesDay = 0, verdesWeek = 0, verdesMonth = 0;
-
-            comissaoEvents.forEach(ev => {
-                const evDate = getBRDate(ev.data);
-                const val = Number(ev.valor) || 0;
-
-                if (ev.tipo === 'gol') {
-                    if (ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado') {
-                        // Elogios já contam em reconhecimentos, não duplicar aqui
-                    } else if (ev.subtipo === 'cartao-verde') {
-                        verdesTotal += val;
-                        if (isSameDay(evDate, today)) verdesDay += val;
-                        if (isSameWeek(evDate, today)) verdesWeek += val;
-                        if (isSameMonth(evDate, today)) verdesMonth += val;
-                    } else {
-                        baseTotal += val;
-                        if (isSameDay(evDate, today)) baseDay += val;
-                        if (isSameWeek(evDate, today)) baseWeek += val;
-                        if (isSameMonth(evDate, today)) baseMonth += val;
-                    }
-                } else if (ev.tipo === 'punicao') {
-                    punishTotal += Math.abs(val);
-                    if (isSameDay(evDate, today)) punishDay += Math.abs(val);
-                    if (isSameWeek(evDate, today)) punishWeek += Math.abs(val);
-                    if (isSameMonth(evDate, today)) punishMonth += Math.abs(val);
-                }
-            });
-
-            const c = comissao.find(x => x.id === comissaoId);
-            const reconhecimentos = c ? (c.reconhecimentos || 0) : 0;
-
-            return {
-                baseTotal, baseDay, baseWeek, baseMonth,
-                verdesTotal, verdesDay, verdesWeek, verdesMonth,
-                punishTotal, punishDay, punishWeek, punishMonth,
-                reconhecimentos,
-                totalReal: reconhecimentos + baseTotal + verdesTotal - punishTotal,
-                totalDay: reconhecimentos + baseDay + verdesDay - punishDay,
-                totalWeek: reconhecimentos + baseWeek + verdesWeek - punishWeek,
-                totalMonth: reconhecimentos + baseMonth + verdesMonth - punishMonth
-            };
-        }
-
         function getPeriodTotal(stats) {
             if (rankingPeriod === 'day') return stats.totalDay;
             if (rankingPeriod === 'week') return stats.totalWeek;
@@ -1441,12 +1389,7 @@
                             <p class="text-gray-500 text-xs mb-2">${c.origem || ''}</p>
                             <div class="flex items-center justify-center gap-1 text-lg font-black text-yellow-400">
                                 <span>⚽</span>
-                                <span>${getComissaoStats(c.id).totalReal}</span>
-                            </div>
-                            <div class="flex justify-center gap-2 mt-2">
-                                <span class="period-badge period-day" title="Hoje">D ${getComissaoStats(c.id).totalDay}</span>
-                                <span class="period-badge period-week" title="Semana">S ${getComissaoStats(c.id).totalWeek}</span>
-                                <span class="period-badge period-month" title="Mês">M ${getComissaoStats(c.id).totalMonth}</span>
+                                <span>${c.reconhecimentos || 0}</span>
                             </div>
                         </div>
                     `;
@@ -1498,8 +1441,10 @@
                 // RANKING COMISSÃO TÉCNICA - Top 5, em empate ordem alfabética
                 // Total gols = reconhecimentos (elogios) + eventos de cartão verde
                 const comissaoWithTotals = comissao.map(c => {
-                    const stats = getComissaoStats(c.id);
-                    return { ...c, totalGols: stats.totalReal };
+                    const comissaoEvents = events.filter(e => e.jogadorId === c.id && e.tipo === 'gol');
+                    const cartoesGols = comissaoEvents.reduce((sum, e) => sum + (Number(e.valor) || 0), 0);
+                    const totalGols = (c.reconhecimentos || 0) + cartoesGols;
+                    return { ...c, totalGols };
                 });
                 const sortedComissao = comissaoWithTotals.sort((a, b) => {
                     if (b.totalGols !== a.totalGols) return b.totalGols - a.totalGols; // Mais gols primeiro
@@ -2194,8 +2139,9 @@
 
             const elogiosComissao = elogios.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
             // Total de gols = reconhecimentos (elogios) + eventos de cartão verde
-            const stats = getComissaoStats(comissaoId);
-            const totalGolsComissao = stats.totalReal;
+            const comissaoEvents = events.filter(e => e.jogadorId === comissaoId && e.tipo === 'gol');
+            const cartoesGols = comissaoEvents.reduce((sum, e) => sum + (Number(e.valor) || 0), 0);
+            const totalGolsComissao = (c.reconhecimentos || 0) + cartoesGols;
             const conquistasCount = calcConquistasComissao(totalGolsComissao);
 
             // Patentes (cartões)
@@ -2215,8 +2161,8 @@
             if (nome2El) nome2El.textContent = c.nome || '';
             if (funcaoEl) funcaoEl.textContent = c.funcaoLabel || '';
             if (origemEl) origemEl.textContent = c.origem || '';
-            if (recEl) recEl.textContent = stats.totalReal + ' gols';
-            if (recCountEl) recCountEl.textContent = stats.totalReal;
+            if (recEl) recEl.textContent = (c.reconhecimentos || 0) + ' gols';
+            const totalGols = (c.reconhecimentos || 0) + cartoesGols; if (recCountEl) recCountEl.textContent = totalGols;
             if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
             const photo = document.getElementById('album-comissao-photo');
@@ -2549,53 +2495,29 @@ Isso também excluirá todos os seus eventos!`)) return;
                 return;
             }
 
-            let stats, colaboradorEvents;
-
-            if (tipo === 'comissao') {
-                stats = getComissaoStats(id);
-                colaboradorEvents = events.filter(e => e.jogadorId === id).sort((a, b) => {
-                    const da = getBRDate(a.data);
-                    const db = getBRDate(b.data);
-                    return db - da;
-                });
-            } else {
-                stats = getPlayerStats(id);
-                colaboradorEvents = events.filter(e => e.jogadorId === id).sort((a, b) => {
-                    const da = getBRDate(a.data);
-                    const db = getBRDate(b.data);
-                    return db - da;
-                });
-            }
+            const stats = getPlayerStats(id);
+            const colaboradorEvents = events.filter(e => e.jogadorId === id).sort((a, b) => {
+                const da = getBRDate(a.data);
+                const db = getBRDate(b.data);
+                return db - da;
+            });
 
             info.classList.remove('hidden');
             document.getElementById('corr-nome').textContent = colaborador.nome + (colaborador.sobrenome ? ' ' + colaborador.sobrenome : '');
             document.getElementById('corr-time').textContent = colaborador.funcaoLabel || colaborador.time || 'Sem time';
             document.getElementById('corr-foto').src = (colaborador.fotoPerfil || colaborador.foto) ? REPO_BASE + (colaborador.fotoPerfil || colaborador.foto) : '';
+            document.getElementById('corr-base').textContent = stats.baseTotal;
+            document.getElementById('corr-fig').textContent = stats.stickersTotal;
+            document.getElementById('corr-pun').textContent = stats.punishTotal;
+            document.getElementById('corr-total').textContent = stats.totalReal;
 
-            if (tipo === 'comissao') {
-                document.getElementById('corr-base').textContent = stats.baseTotal;
-                document.getElementById('corr-fig').textContent = stats.verdesTotal;
-                document.getElementById('corr-pun').textContent = stats.punishTotal;
-                document.getElementById('corr-total').textContent = stats.totalReal;
-                // Para comissão: verdes = cartões verdes do mês
-                const today = new Date(); today.setHours(0,0,0,0);
-                let verdes = 0;
-                colaboradorEvents.forEach(e => {
-                    if (e.subtipo === 'cartao-verde' && isSameMonth(getBRDate(e.data), today)) verdes++;
-                });
-                document.getElementById('corr-verdes').textContent = verdes;
-            } else {
-                document.getElementById('corr-base').textContent = stats.baseTotal;
-                document.getElementById('corr-fig').textContent = stats.stickersTotal;
-                document.getElementById('corr-pun').textContent = stats.punishTotal;
-                document.getElementById('corr-total').textContent = stats.totalReal;
-                const today = new Date(); today.setHours(0,0,0,0);
-                let verdes = 0;
-                colaboradorEvents.forEach(e => {
-                    if (e.subtipo === 'cartao-verde' && isSameMonth(getBRDate(e.data), today)) verdes++;
-                });
-                document.getElementById('corr-verdes').textContent = verdes;
-            }
+            // Contar cartões verdes
+            const today = new Date(); today.setHours(0,0,0,0);
+            let verdes = 0;
+            colaboradorEvents.forEach(e => {
+                if (e.subtipo === 'cartao-verde' && isSameMonth(getBRDate(e.data), today)) verdes++;
+            });
+            document.getElementById('corr-verdes').textContent = verdes;
 
             if (colaboradorEvents.length === 0) {
                 eventosDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum evento registrado</p>';
@@ -2965,25 +2887,33 @@ Isso também excluirá todos os seus eventos!`)) return;
                 const d = e.data ? new Date(e.data) : null;
                 return d && d >= weekStart && d <= weekEnd;
             });
-            const paraMesmaPessoa = elogiosSemana.filter(e => e.deId === deId && e.deTipo === deTipo && e.paraId === paraId && e.paraTipo === paraTipo).length;
-            if (paraMesmaPessoa >= 2) { showToast('Você já elogiou esta pessoa 2 vezes esta semana', 'error'); return; }
 
+
+            // REGRA 1: Limite de 2 elogios por semana da mesma pessoa para a mesma pessoa
+            const elogiosDeParaSemana = elogiosSemana.filter(e => 
+                e.deId === deId && e.deTipo === deTipo && 
+                e.paraId === paraId && e.paraTipo === paraTipo
+            );
+            if (elogiosDeParaSemana.length >= 2) {
+                showToast('Você já elogiou esta pessoa 2 vezes esta semana', 'error'); 
+                return;
+            }
+
+            // REGRA 2: Dupla de Ouro — só trava se já houve reciprocidade (A→B + B→A)
             if (deId !== paraId || deTipo !== paraTipo) {
-                const duplas = elogiosSemana.filter(e => {
-                    const aParaB = e.deId === deId && e.deTipo === deTipo && e.paraId === paraId && e.paraTipo === paraTipo;
-                    const bParaA = e.deId === paraId && e.deTipo === paraTipo && e.paraId === deId && e.paraTipo === deTipo;
-                    return aParaB || bParaA;
-                });
-                let duplaCount = 0;
-                const checked = new Set();
-                for (const e of duplas) {
-                    const key = [e.deId + '|' + e.deTipo, e.paraId + '|' + e.paraTipo].sort().join('->');
-                    if (!checked.has(key)) {
-                        checked.add(key);
-                        duplaCount++;
-                    }
+                const aParaB = elogiosSemana.some(e => 
+                    e.deId === deId && e.deTipo === deTipo && 
+                    e.paraId === paraId && e.paraTipo === paraTipo
+                );
+                const bParaA = elogiosSemana.some(e => 
+                    e.deId === paraId && e.deTipo === paraTipo && 
+                    e.paraId === deId && e.paraTipo === deTipo
+                );
+                // Se já existe A→B e B→A na semana, a Dupla de Ouro já foi atingida
+                if (aParaB && bParaA) {
+                    showToast('Dupla de Ouro já atingiu o limite de 1x esta semana', 'error'); 
+                    return;
                 }
-                if (duplaCount >= 1) { showToast('Elogio mútuo já atingiu o limite de 1x esta semana', 'error'); return; }
             }
 
             try {
@@ -3270,7 +3200,6 @@ Isso também excluirá todos os seus eventos!`)) return;
 
         // Defensive alias for cached/old references
         window.carregarCorrecao = carregarCorrecaoUnificada;
-        window.getComissaoStats = getComissaoStats;
 
         // Helper function to try multiple image extensions
         function tryNextExtension(imgElement, baseUrl) {
