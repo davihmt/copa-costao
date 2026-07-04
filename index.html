@@ -1808,12 +1808,12 @@
 
             const CONQUISTAS = [
                 { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', repeatable: true, img: '+14.png', current: conqMural.diaCount },
-                { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', repeatable: true, img: '+20.png', current: conqMural.semanaCount },
-                { id: 'premio-mes-50', name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+30.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-60', name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: '+40.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-80', name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+50.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-120', name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', repeatable: false, img: '+80.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-150', name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', repeatable: false, img: '+100.png', current: conqMural.monthTotal }
+                { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', repeatable: true, img: '+30.png', current: conqMural.semanaCount },
+                { id: 'premio-mes-50', name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-60', name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: '+60.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-80', name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-120', name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', repeatable: false, img: '+120.png', current: conqMural.monthTotal },
+                { id: 'premio-mes-150', name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', repeatable: false, img: '+150.png', current: conqMural.monthTotal }
             ];
 
             let rewardsHtml = '';
@@ -2762,7 +2762,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             const funcaoMap = {
                 'auxiliar-tecnico': { label: 'Auxiliar Técnico', origem: 'Líder de Promotores' },
                 'tecnico': { label: 'Técnico', origem: 'Gerente' },
-                'coordenador-tecnico': { label: 'Coordenador Técnico', origem: 'Líder Administrativo' }
+                'coordenador-tecnico': { label: 'Coordenador Técnico', origem: 'Coordenadora Administrativo' }
             };
 
             try {
