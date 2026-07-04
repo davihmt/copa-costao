@@ -3005,6 +3005,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                     paraId, paraNome, createdAt: new Date().toISOString()
                 });
 
+                // Quem RECEBE o elogio (comissão) ganha reconhecimento
                 if (paraTipo === 'comissao' && paraObj) {
                     const comRef = window.doc(window.db, 'comissao', paraId);
                     const comSnap = await window.getDoc(comRef);
@@ -3014,8 +3015,26 @@ Isso também excluirá todos os seus eventos!`)) return;
                     }
                 }
 
+                // Quem ENVIA o elogio (comissão) também ganha reconhecimento
+                if (deTipo === 'comissao') {
+                    const comRef = window.doc(window.db, 'comissao', deId);
+                    const comSnap = await window.getDoc(comRef);
+                    if (comSnap.exists()) {
+                        const recs = (comSnap.data().reconhecimentos || 0) + 1;
+                        await window.updateDoc(comRef, { reconhecimentos: recs });
+                        console.log('Comissão', deId, 'reconhecimentos atualizado para', recs);
+                    } else {
+                        console.log('Comissão', deId, 'NÃO ENCONTRADA no Firebase');
+                    }
+                }
+
                 showToast('Elogio enviado! +1 gol para ambos!', 'success');
                 document.getElementById('elogio-mensagem').value = '';
+
+                // Forçar atualização da home se estiver visível
+                if (!document.getElementById('section-home').classList.contains('hidden')) {
+                    renderPlayers();
+                }
             } catch (e) {
                 console.error(e);
                 showToast('Erro ao enviar elogio', 'error');
