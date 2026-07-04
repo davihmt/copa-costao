@@ -1297,7 +1297,7 @@
         }
 
 
-        // ===== COMISSAO STATS (inclui cartões) =====
+        // ===== COMISSAO STATS (inclui cartões + elogios históricos) =====
         function getComissaoStats(comissaoId) {
             const comissaoEvents = events.filter(e => e.jogadorId === comissaoId);
             const today = new Date();
@@ -1333,18 +1333,45 @@
                 }
             });
 
-            const c = comissao.find(x => x.id === comissaoId);
-            const reconhecimentos = c ? (c.reconhecimentos || 0) : 0;
+            // Buscar elogios da comissão diretamente na coleção 'elogios'
+            // Contar tanto os RECEBIDOS quanto os ENVIADOS
+            let elogiosRecebidos = 0, elogiosRecebidosDay = 0, elogiosRecebidosWeek = 0, elogiosRecebidosMonth = 0;
+            let elogiosDados = 0, elogiosDadosDay = 0, elogiosDadosWeek = 0, elogiosDadosMonth = 0;
+
+            elogios.forEach(el => {
+                if (!el.data) return;
+                const elDate = new Date(el.data);
+
+                // Comissão RECEBEU elogio
+                if (el.paraId === comissaoId && el.paraTipo === 'comissao') {
+                    elogiosRecebidos++;
+                    if (isSameDay(elDate, today)) elogiosRecebidosDay++;
+                    if (isSameWeek(elDate, today)) elogiosRecebidosWeek++;
+                    if (isSameMonth(elDate, today)) elogiosRecebidosMonth++;
+                }
+                // Comissão ENVIOU elogio
+                if (el.deId === comissaoId && el.deTipo === 'comissao') {
+                    elogiosDados++;
+                    if (isSameDay(elDate, today)) elogiosDadosDay++;
+                    if (isSameWeek(elDate, today)) elogiosDadosWeek++;
+                    if (isSameMonth(elDate, today)) elogiosDadosMonth++;
+                }
+            });
+
+            const totalElogios = elogiosRecebidos + elogiosDados;
+            const totalElogiosDay = elogiosRecebidosDay + elogiosDadosDay;
+            const totalElogiosWeek = elogiosRecebidosWeek + elogiosDadosWeek;
+            const totalElogiosMonth = elogiosRecebidosMonth + elogiosDadosMonth;
 
             return {
                 baseTotal, baseDay, baseWeek, baseMonth,
                 verdesTotal, verdesDay, verdesWeek, verdesMonth,
                 punishTotal, punishDay, punishWeek, punishMonth,
-                reconhecimentos,
-                totalReal: reconhecimentos + baseTotal + verdesTotal - punishTotal,
-                totalDay: reconhecimentos + baseDay + verdesDay - punishDay,
-                totalWeek: reconhecimentos + baseWeek + verdesWeek - punishWeek,
-                totalMonth: reconhecimentos + baseMonth + verdesMonth - punishMonth
+                elogiosRecebidos, elogiosDados,
+                totalReal: baseTotal + verdesTotal + totalElogios - punishTotal,
+                totalDay: baseDay + verdesDay + totalElogiosDay - punishDay,
+                totalWeek: baseWeek + verdesWeek + totalElogiosWeek - punishWeek,
+                totalMonth: baseMonth + verdesMonth + totalElogiosMonth - punishMonth
             };
         }
 
