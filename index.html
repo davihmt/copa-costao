@@ -754,7 +754,7 @@
                                         <option value="auxiliar-tecnico">Auxiliar Técnico (Líder de Promotores)</option>
                                         <option value="tecnico">Técnico (Gerente Promoção)</option>
                                         <option value="tecnico">Técnico (Gerente Comercial)</option>
-                                        <option value="coordenador-tecnico">Coordenador Técnico (Coordenadora de Operações)</option>
+                                        <option value="coordenador-tecnico">Coordenador Técnico (Coordenadora Administrativo)</option>
                                         <option value="tecnico">Técnico (Gerente Administrativo)</option>
                                     </select>
                                 </div>
@@ -2789,7 +2789,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             const funcaoMap = {
                 'auxiliar-tecnico': { label: 'Auxiliar Técnico', origem: 'Líder de Promotores' },
                 'tecnico': { label: 'Técnico', origem: 'Gerente' },
-                'coordenador-tecnico': { label: 'Coordenador Técnico', origem: 'Coordenadora de Operações' }
+                'coordenador-tecnico': { label: 'Coordenador Técnico', origem: 'Coordenadora Administrativo' }
             };
 
             try {
@@ -2903,8 +2903,10 @@ Isso também excluirá todos os seus eventos!`)) return;
             const [deTipo, deId] = de.value.split('|');
             const today = getTodayStr();
             const elogiosHoje = elogios.filter(e => {
-                const d = e.data ? new Date(e.data).toISOString().split('T')[0] : '';
-                return d === today;
+                if (!e.data) return false;
+                const d = getBRDate(e.data);
+                const todayDate = getBRDate(today);
+                return isSameDay(d, todayDate);
             });
             const jaEnviou = elogiosHoje.filter(e => e.deId === deId && e.deTipo === deTipo).length;
 
@@ -2967,8 +2969,10 @@ Isso também excluirá todos os seus eventos!`)) return;
 
             const today = getTodayStr();
             const elogiosHoje = elogios.filter(e => {
-                const d = e.data ? new Date(e.data).toISOString().split('T')[0] : '';
-                return d === today;
+                if (!e.data) return false;
+                const d = getBRDate(e.data);
+                const todayDate = getBRDate(today);
+                return isSameDay(d, todayDate);
             });
 
             const jaEnviou = elogiosHoje.filter(e => e.deId === deId && e.deTipo === deTipo).length;
