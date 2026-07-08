@@ -2968,18 +2968,44 @@ Isso também excluirá todos os seus eventos!`)) return;
             }
 
             const today = getTodayStr();
+            const todayDate = getBRDate(today);
+
+            // DEBUG: Mostrar no console o estado atual
+            console.log('=== DEBUG enviarElogio ===');
+            console.log('deId:', deId, 'deTipo:', deTipo);
+            console.log('paraId:', paraId, 'paraTipo:', paraTipo);
+            console.log('today:', today);
+            console.log('Total elogios no array:', elogios.length);
+
             const elogiosHoje = elogios.filter(e => {
                 if (!e.data) return false;
                 const d = getBRDate(e.data);
-                const todayDate = getBRDate(today);
-                return isSameDay(d, todayDate);
+                const isToday = isSameDay(d, todayDate);
+                if (isToday) {
+                    console.log('Elogio de hoje encontrado:', e.deId, '->', e.paraId, 'data:', e.data);
+                }
+                return isToday;
             });
 
+            console.log('elogiosHoje count:', elogiosHoje.length);
+
             const jaEnviou = elogiosHoje.filter(e => e.deId === deId && e.deTipo === deTipo).length;
-            if (jaEnviou >= 1) { showToast('Você já enviou seu elogio hoje', 'error'); return; }
+            console.log('jaEnviou:', jaEnviou);
+
+            if (jaEnviou >= 1) { 
+                console.log('BLOQUEADO: já enviou hoje');
+                showToast('Você já enviou seu elogio hoje', 'error'); 
+                return; 
+            }
 
             const jaRecebeu = elogiosHoje.filter(e => e.paraId === paraId && e.paraTipo === paraTipo).length;
-            if (jaRecebeu >= 1) { showToast('Esta pessoa já recebeu 1 elogio hoje', 'error'); return; }
+            console.log('jaRecebeu:', jaRecebeu);
+
+            if (jaRecebeu >= 1) { 
+                console.log('BLOQUEADO: receptor já recebeu hoje');
+                showToast('Esta pessoa já recebeu 1 elogio hoje', 'error'); 
+                return; 
+            }
 
             const weekStart = getWeekStart(today);
             const weekEnd = getWeekEnd(today);
@@ -2987,7 +3013,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 const d = e.data ? new Date(e.data) : null;
                 return d && d >= weekStart && d <= weekEnd;
             });
-
 
             // REGRA 1: Limite de 2 elogios por semana da mesma pessoa para a mesma pessoa
             const elogiosDeParaSemana = elogiosSemana.filter(e => 
@@ -3009,7 +3034,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                     e.deId === paraId && e.deTipo === paraTipo && 
                     e.paraId === deId && e.paraTipo === deTipo
                 );
-                // Se já existe A→B e B→A na semana, a Dupla de Ouro já foi atingida
                 if (aParaB && bParaA) {
                     showToast('Dupla de Ouro já atingiu o limite de 1x esta semana', 'error'); 
                     return;
@@ -3017,6 +3041,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             }
 
             try {
+                console.log('Enviando elogio...');
                 await window.addDoc(window.collection(window.db, 'elogios'), {
                     deId, deTipo, deNome,
                     paraId, paraTipo, paraNome,
