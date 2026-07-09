@@ -560,6 +560,7 @@
                                     <option value="42k">42.000 pt (+2)</option>
                                     <option value="15k">15.000 pt (+1)</option>
                                     <option value="c+">C+ Diamante (+1)</option>
+                                    <option value="30k">30.000 pt (+1)</option>
                                 </select>
                             </div>
                             <div id="del-preview" class="hidden mb-4 p-4 rounded-xl bg-red-900/10 border border-red-500/20">
@@ -593,6 +594,7 @@
                                     <option value="42k">42.000 pt (+2)</option>
                                     <option value="15k">15.000 pt (+1)</option>
                                     <option value="c+">C+ Diamante (+1)</option>
+                                    <option value="30k">30.000 pt (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -641,6 +643,7 @@
                                     <option value="42k">42.000 pt (+2)</option>
                                     <option value="15k">15.000 pt (+1)</option>
                                     <option value="c+">C+ Diamante (+1)</option>
+                                    <option value="30k">30.000 pt (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -669,6 +672,7 @@
                                     <option value="42k">42.000 pt (+2)</option>
                                     <option value="15k">15.000 pt (+1)</option>
                                     <option value="c+">C+ Diamante (+1)</option>
+                                    <option value="30k">30.000 pt (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -851,6 +855,7 @@
                                     <option value="42k">42.000 pt (+2)</option>
                                     <option value="15k">15.000 pt (+1)</option>
                                     <option value="c+">C+ Diamante (+1)</option>
+                                    <option value="30k">30.000 pt (+1)</option>
                                 </select>
                             </div>
                             <div id="corr-info" class="player-select-info rounded-xl p-4 mb-4 hidden">
@@ -1817,7 +1822,7 @@
                 const currentYear = now.getFullYear();
                 const currentMonth = now.getMonth();
                 pe.forEach(e => {
-                    const d = new Date(e.data);
+                    const d = getBRDate(e.data);
                     const dk = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
                     const wk = getWeekRange(d);
                     const wkKey = wk.monday.getFullYear() + '-' + wk.monday.getMonth() + '-' + wk.monday.getDate();
@@ -1905,7 +1910,7 @@
                 'luxo-salta': 'luxo-salta.png', 'luxo-alta': 'luxo-alta.png',
                 'luxo-media': 'luxo-media.png', '125k': '125k.png',
                 '100k': '100k.png', '75k': '75k.png', '60k': '60k.png',
-                '42k': '42k.png', '15k': '15k.png', 'c+': 'c+.png'
+                '42k': '42k.png', '15k': '15k.png', 'c+': 'c+.png', '30k': '30k.png'
             };
             stickerEvents.forEach(e => {
                 const key = e.subtipo || 'figurinha';
@@ -2488,7 +2493,8 @@ Isso também excluirá todos os seus eventos!`)) return;
                 '60k': { label: '60.000 pt', val: 2, img: '60k.png' },
                 '42k': { label: '42.000 pt', val: 2, img: '42k.png' },
                 '15k': { label: '15.000 pt', val: 1, img: '15k.png' },
-                'c+': { label: 'C+ Diamante', val: 1, img: 'c+.png' }
+                'c+': { label: 'C+ Diamante', val: 1, img: 'c+.png' },
+                '30k': { label: '30.000 pt', val: 1, img: '30k.png' }
             };
 
             try {
@@ -2904,7 +2910,7 @@ Isso também excluirá todos os seus eventos!`)) return;
             const today = getTodayStr();
             const elogiosHoje = elogios.filter(e => {
                 if (!e.data) return false;
-                const d = new Date(e.data);
+                const d = getBRDate(e.data);
                 const todayDate = getBRDate(today);
                 return isSameDay(d, todayDate);
             });
@@ -2968,34 +2974,18 @@ Isso também excluirá todos os seus eventos!`)) return;
             }
 
             const today = getTodayStr();
-
-            console.log('DEBUG enviarElogio: deId='+deId+' deTipo='+deTipo+' today='+today);
-            console.log('DEBUG: Total elogios='+elogios.length);
-
             const elogiosHoje = elogios.filter(e => {
                 if (!e.data) return false;
-                const d = new Date(e.data);
+                const d = getBRDate(e.data);
                 const todayDate = getBRDate(today);
-                const isToday = isSameDay(d, todayDate);
-                console.log('DEBUG: checando elogio data='+e.data+' de='+e.deId+' para='+e.paraId+' isToday='+isToday);
-                return isToday;
+                return isSameDay(d, todayDate);
             });
 
-            console.log('DEBUG: elogiosHoje='+elogiosHoje.length);
-
             const jaEnviou = elogiosHoje.filter(e => e.deId === deId && e.deTipo === deTipo).length;
-            console.log('DEBUG: jaEnviou='+jaEnviou);
-            if (jaEnviou >= 1) { 
-                console.log('DEBUG: BLOQUEADO - já enviou hoje');
-                showToast('Você já enviou seu elogio hoje', 'error'); return; 
-            }
+            if (jaEnviou >= 1) { showToast('Você já enviou seu elogio hoje', 'error'); return; }
 
             const jaRecebeu = elogiosHoje.filter(e => e.paraId === paraId && e.paraTipo === paraTipo).length;
-            console.log('DEBUG: jaRecebeu='+jaRecebeu);
-            if (jaRecebeu >= 1) { 
-                console.log('DEBUG: BLOQUEADO - receptor já recebeu hoje');
-                showToast('Esta pessoa já recebeu 1 elogio hoje', 'error'); return; 
-            }
+            if (jaRecebeu >= 1) { showToast('Esta pessoa já recebeu 1 elogio hoje', 'error'); return; }
 
             const weekStart = getWeekStart(today);
             const weekEnd = getWeekEnd(today);
