@@ -2961,11 +2961,16 @@ Isso também excluirá todos os seus eventos!`)) return;
         // Helper: extrair o dia no fuso de Brasília (GMT-3) de qualquer data
         function getDiaBrasilia(dateStr) {
             if (!dateStr) return '';
+            // Check if it's a plain date string (YYYY-MM-DD without time)
+            // These should be treated as ALREADY in Brasilia timezone
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateStr; // Return as-is, it's already YYYY-MM-DD in Brasilia
+            }
             // Check if it's a date-only ISO string (midnight UTC = date picker save)
             if (dateStr.match(/^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/)) {
                 return dateStr.substring(0, 10); // Extract YYYY-MM-DD directly
             }
-            // For other times, convert to Brasilia timezone
+            // For other times with actual time component, convert to Brasilia timezone
             const d = new Date(dateStr);
             const parts = new Intl.DateTimeFormat('en-US', { 
                 timeZone: 'America/Sao_Paulo', 
