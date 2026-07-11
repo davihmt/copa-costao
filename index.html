@@ -1821,34 +1821,41 @@
                 const now = new Date();
                 const currentYear = now.getFullYear();
                 const currentMonth = now.getMonth();
+                const hoje = getHojeBrasilia();
+                const todayKey = hoje;
+                const currentWeek = getWeekRangeBrasilia(hoje);
+                const currentWeekKey = currentWeek.monday.toISOString().split('T')[0];
+
                 pe.forEach(e => {
                     if (!e.data) return;
-                    // Use proper date parsing for ISO strings
                     const d = new Date(e.data);
                     const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
                     const dk = dBrasilia.getFullYear() + '-' + dBrasilia.getMonth() + '-' + dBrasilia.getDate();
-                    const wk = getWeekRangeBrasilia(e.data);
+                    const wk = getWeekRangeBrasilia(getDiaBrasilia(e.data));
                     const wkKey = wk.monday.toISOString().split('T')[0];
                     days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
                     weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
                     if (dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
                 });
+
                 return {
                     diaCount: Object.values(days).filter(g => g >= 14).length,
                     semanaCount: Object.values(weeks).filter(g => g >= 30).length,
-                    monthTotal: monthTotal
+                    monthTotal: monthTotal,
+                    currentDayTotal: days[todayKey] || 0,
+                    currentWeekTotal: weeks[currentWeekKey] || 0
                 };
             }
             const conqMural = calcConquistas(playerId);
 
             const CONQUISTAS = [
-                { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', repeatable: true, img: '+14.png', current: conqMural.diaCount },
-                { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', repeatable: true, img: '+30.png', current: conqMural.semanaCount },
-                { id: 'premio-mes-50', name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-60', name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: '+60.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-80', name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-120', name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', repeatable: false, img: '+120.png', current: conqMural.monthTotal },
-                { id: 'premio-mes-150', name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', repeatable: false, img: '+150.png', current: conqMural.monthTotal }
+                { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', repeatable: true, img: '+14.png', current: conqMural.diaCount, progressCurrent: conqMural.currentDayTotal },
+                { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', repeatable: true, img: '+30.png', current: conqMural.semanaCount, progressCurrent: conqMural.currentWeekTotal },
+                { id: 'premio-mes-50', name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
+                { id: 'premio-mes-60', name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: '+60.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
+                { id: 'premio-mes-80', name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
+                { id: 'premio-mes-120', name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', repeatable: false, img: '+120.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
+                { id: 'premio-mes-150', name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', repeatable: false, img: '+150.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal }
             ];
 
             let rewardsHtml = '';
@@ -1861,8 +1868,12 @@
                 const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-lock text-gray-500 text-xl"></i>';
 
                 let progressHtml = '';
-                if (!c.repeatable && !isUnlocked) {
-                    progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${c.current}/${c.goals} gols</p>`;
+                const progressVal = Math.min(100, (c.progressCurrent / c.goals) * 100);
+                const progressText = c.repeatable ? `${c.progressCurrent}/${c.goals} gols` : `${c.current}/${c.goals} gols`;
+                if (!isUnlocked) {
+                    progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progressVal}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${progressText}</p>`;
+                } else if (c.repeatable) {
+                    progressHtml = `<p class="text-xs text-green-400 mt-1 text-center font-bold">✅ ${c.progressCurrent}/${c.goals} gols</p>`;
                 }
 
                 if (isUnlocked) {
@@ -2883,7 +2894,6 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         function getWeekStart(dateStr) {
-            // Convert to Brasilia timezone (GMT-3)
             const d = new Date(dateStr + 'T00:00:00-03:00');
             const day = d.getDay();
             const diff = d.getDate() - day + (day === 0 ? -6 : 1);
@@ -2940,25 +2950,36 @@ Isso também excluirá todos os seus eventos!`)) return;
         // Helper: extrair o dia no fuso de Brasília (GMT-3) de qualquer data
         function getDiaBrasilia(dateStr) {
             if (!dateStr) return '';
-            const d = new Date(dateStr);
-            // Use toLocaleString with Brasilia timezone to get correct date
-            const brasiliaStr = d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' });
-            const match = brasiliaStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if (match) {
-                return match[3] + '-' + match[1] + '-' + match[2]; // YYYY-MM-DD
+            // Check if it's a date-only ISO string (midnight UTC = date picker save)
+            if (dateStr.match(/^\d{4}-\d{2}-\d{2}T00:00:00\.000Z$/)) {
+                return dateStr.substring(0, 10); // Extract YYYY-MM-DD directly
             }
-            // Fallback
-            return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
+            // For other times, convert to Brasilia timezone
+            const d = new Date(dateStr);
+            const parts = new Intl.DateTimeFormat('en-US', { 
+                timeZone: 'America/Sao_Paulo', 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            }).formatToParts(d);
+            const year = parts.find(p => p.type === 'year').value;
+            const month = parts.find(p => p.type === 'month').value;
+            const day = parts.find(p => p.type === 'day').value;
+            return year + '-' + month + '-' + day;
         }
 
         function getHojeBrasilia() {
             const now = new Date();
-            const brasiliaStr = now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' });
-            const match = brasiliaStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-            if (match) {
-                return match[3] + '-' + match[1] + '-' + match[2]; // YYYY-MM-DD
-            }
-            return now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
+            const parts = new Intl.DateTimeFormat('en-US', { 
+                timeZone: 'America/Sao_Paulo', 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit' 
+            }).formatToParts(now);
+            const year = parts.find(p => p.type === 'year').value;
+            const month = parts.find(p => p.type === 'month').value;
+            const day = parts.find(p => p.type === 'day').value;
+            return year + '-' + month + '-' + day;
         }
 document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
@@ -3025,7 +3046,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const elogiosSemana = elogios.filter(e => {
                 if (!e.data) return false;
                 const d = new Date(e.data);
-                // Compare in Brasilia timezone
                 const dBrasilia = new Date(d.getTime() + (d.getTimezoneOffset() - (-3*60)) * 60 * 1000);
                 return dBrasilia >= weekStart && dBrasilia <= weekEnd;
             });
