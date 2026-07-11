@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Copa Costão 2026</title>
+    <title>Copa Costão 2026 - v2.2</title>
     <meta name="version" content="v2.1">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -1828,15 +1828,26 @@
 
                 pe.forEach(e => {
                     if (!e.data) return;
-                    const d = new Date(e.data);
-                    const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-                    const dk = dBrasilia.getFullYear() + '-' + dBrasilia.getMonth() + '-' + dBrasilia.getDate();
-                    const wk = getWeekRangeBrasilia(getDiaBrasilia(e.data));
+                    const dk = getDiaBrasilia(e.data);
+                    const wk = getWeekRangeBrasilia(dk);
                     const wkKey = wk.monday.toISOString().split('T')[0];
                     days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
                     weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
+                    const d = new Date(e.data);
+                    const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
                     if (dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
                 });
+
+                // DEBUG: log the keys for this player
+                if (pid === 'diana') {
+                    console.log('DEBUG calcConquistas Diana:');
+                    console.log('  todayKey:', todayKey);
+                    console.log('  currentWeekKey:', currentWeekKey);
+                    console.log('  days keys:', Object.keys(days));
+                    console.log('  weeks keys:', Object.keys(weeks));
+                    console.log('  days[todayKey]:', days[todayKey] || 0);
+                    console.log('  weeks[currentWeekKey]:', weeks[currentWeekKey] || 0);
+                }
 
                 return {
                     diaCount: Object.values(days).filter(g => g >= 14).length,
