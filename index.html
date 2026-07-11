@@ -1822,17 +1822,20 @@
                 const currentYear = now.getFullYear();
                 const currentMonth = now.getMonth();
                 pe.forEach(e => {
-                    const d = getBRDate(e.data);
-                    const dk = d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
-                    const wk = getWeekRange(d);
-                    const wkKey = wk.monday.getFullYear() + '-' + wk.monday.getMonth() + '-' + wk.monday.getDate();
+                    if (!e.data) return;
+                    // Use proper date parsing for ISO strings
+                    const d = new Date(e.data);
+                    const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+                    const dk = dBrasilia.getFullYear() + '-' + dBrasilia.getMonth() + '-' + dBrasilia.getDate();
+                    const wk = getWeekRangeBrasilia(e.data);
+                    const wkKey = wk.monday.toISOString().split('T')[0];
                     days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
                     weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
-                    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
+                    if (dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
                 });
                 return {
-                    diaCount: Object.values(days).filter(g => g >= 12).length,
-                    semanaCount: Object.values(weeks).filter(g => g >= 20).length,
+                    diaCount: Object.values(days).filter(g => g >= 14).length,
+                    semanaCount: Object.values(weeks).filter(g => g >= 30).length,
                     monthTotal: monthTotal
                 };
             }
@@ -2895,6 +2898,18 @@ Isso também excluirá todos os seus eventos!`)) return;
             end.setDate(start.getDate() + 6);
             end.setHours(23, 59, 59, 999);
             return end;
+        }
+
+        function getWeekRangeBrasilia(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00-03:00');
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(d.setDate(diff));
+            monday.setHours(0, 0, 0, 0);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(23, 59, 59, 999);
+            return { monday, sunday };
         }
 
         function atualizarContadorElogio() {
