@@ -1949,18 +1949,24 @@
             } else {
                 stickersDiv.innerHTML = Object.entries(stickerTypes).map(([key, data]) => {
                     const imgUrl = data.img ? REPO_BASE + data.img : '';
-                    return `
-                    <div class="sticker-card rounded-xl p-3 flex items-center gap-3">
-                        <div style="width:140px;height:140px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
-                            <span style="font-size:48px;position:absolute;z-index:1;">🎴</span>
+                    // Generate repeated sticker images
+                    const stickerImages = Array.from({length: data.count}, (_, i) => `
+                        <div style="width:100px;height:100px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;transform:rotate(${(i * 3 - (data.count-1)*1.5)}deg);margin-left:${i > 0 ? '-30px' : '0'};z-index:${i+1};box-shadow:0 4px 12px rgba(0,0,0,0.3);border:2px solid rgba(29,188,184,0.3);">
+                            <span style="font-size:32px;position:absolute;z-index:1;">🎴</span>
                             <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${data.label}">
                         </div>
-                        <div style="flex:1;min-width:0;">
-                            <p class="font-bold text-sm text-yellow-400">${data.label}</p>
-                            <p class="text-xs text-gray-400">+${data.total} gols totais</p>
+                    `).join('');
+
+                    return `
+                    <div class="sticker-card rounded-xl p-4">
+                        <div style="display:flex;align-items:center;justify-content:center;padding:10px 0;overflow-x:auto;">
+                            <div style="display:flex;align-items:center;padding:0 20px;">
+                                ${stickerImages}
+                            </div>
                         </div>
-                        <div style="text-align:right;flex-shrink:0;">
-                            <p style="font-size:24px;font-weight:800;color:#f59e0b;">${data.count}x</p>
+                        <div style="text-align:center;margin-top:8px;">
+                            <p class="font-bold text-sm text-yellow-400">${data.label}</p>
+                            <p class="text-xs text-gray-400">${data.count} figurinha${data.count > 1 ? 's' : ''} · +${data.total} gols</p>
                         </div>
                     </div>
                 `;
