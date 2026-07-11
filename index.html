@@ -2926,24 +2926,24 @@ Isso também excluirá todos os seus eventos!`)) return;
         function getDiaBrasilia(dateStr) {
             if (!dateStr) return '';
             const d = new Date(dateStr);
-            const brasiliaOffset = -3 * 60;
-            const localOffset = d.getTimezoneOffset();
-            const diffMinutes = localOffset - brasiliaOffset;
-            const dBrasilia = new Date(d.getTime() + diffMinutes * 60 * 1000);
-            return dBrasilia.getFullYear() + '-' + 
-                   String(dBrasilia.getMonth()+1).padStart(2,'0') + '-' + 
-                   String(dBrasilia.getDate()).padStart(2,'0');
+            // Use toLocaleString with Brasilia timezone to get correct date
+            const brasiliaStr = d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const match = brasiliaStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (match) {
+                return match[3] + '-' + match[1] + '-' + match[2]; // YYYY-MM-DD
+            }
+            // Fallback
+            return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
         }
 
         function getHojeBrasilia() {
             const now = new Date();
-            const brasiliaOffset = -3 * 60;
-            const localOffset = now.getTimezoneOffset();
-            const diffMinutes = localOffset - brasiliaOffset;
-            const dBrasilia = new Date(now.getTime() + diffMinutes * 60 * 1000);
-            return dBrasilia.getFullYear() + '-' + 
-                   String(dBrasilia.getMonth()+1).padStart(2,'0') + '-' + 
-                   String(dBrasilia.getDate()).padStart(2,'0');
+            const brasiliaStr = now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' });
+            const match = brasiliaStr.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+            if (match) {
+                return match[3] + '-' + match[1] + '-' + match[2]; // YYYY-MM-DD
+            }
+            return now.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).split('/').reverse().join('-');
         }
 document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
