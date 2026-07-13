@@ -953,18 +953,25 @@
         // ===== PERIOD HELPERS =====
         function getBRDate(dateStr) {
             if (!dateStr) return new Date();
-            const [y, m, d] = dateStr.split('-').map(Number);
-            return new Date(y, m - 1, d, 12, 0, 0);
+            const d = getDiaBrasilia(dateStr);
+            return new Date(d + 'T12:00:00-03:00');
         }
 
         function isSameDay(d1, d2) {
-            return d1.getFullYear() === d2.getFullYear() && 
-                   d1.getMonth() === d2.getMonth() && 
-                   d1.getDate() === d2.getDate();
+            // Convert both dates to YYYY-MM-DD in GMT-3 using toLocaleDateString
+            const s1 = d1.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+            const s2 = d2.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+            return s1 === s2;
         }
 
         function getWeekRange(date) {
-            const d = new Date(date);
+            let dateStr;
+            if (date instanceof Date) {
+                dateStr = date.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+            } else {
+                dateStr = String(date);
+            }
+            const d = new Date(dateStr + 'T00:00:00-03:00');
             const day = d.getDay();
             const diff = d.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(d.setDate(diff));
@@ -982,12 +989,22 @@
         }
 
         function isSameMonth(d1, d2) {
-            return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+            const s1 = d1.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+            const s2 = d2.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+            const p1 = s1.split('-').map(Number);
+            const p2 = s2.split('-').map(Number);
+            return p1[0] === p2[0] && p1[1] === p2[1];
         }
 
         function getTodayStr() {
-            const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            const parts = new Intl.DateTimeFormat('en-CA', { 
+                timeZone: 'America/Sao_Paulo',
+                year: 'numeric', month: '2-digit', day: '2-digit'
+            }).formatToParts(new Date());
+            const year = parts.find(p => p.type === 'year').value;
+            const month = parts.find(p => p.type === 'month').value;
+            const day = parts.find(p => p.type === 'day').value;
+            return year + '-' + month + '-' + day;
         }
 
         // ===== INIT =====
@@ -1271,9 +1288,27 @@
         }
 
         function getPlayerStats(playerId) {
-            const playerEvents = events.filter(e => e.jogadorId === playerId);
-            const today = new Date();
-            today.setHours(12, 0, 0, 0);
+            // Find player by ID to get their name
+            const player = players.find(p => p.id === playerId);
+            const playerName = player ? (player.nome || player.id) : playerId;
+            // Filter events by either ID or name (Firebase stores name in jogadorId)
+            const playerEvents = events.filter(e => 
+                e.jogadorId === playerId || 
+                e.jogadorId === playerName ||
+                (player && e.jogadorId === player.sobrenome) ||
+                (player && e.jogadorId === (player.nome + ' ' + player.sobrenome).trim())
+            );
+            const todayStr = getTodayStr();
+            const today = new Date(todayStr + 'T12:00:00-03:00');
+
+            // DEBUG
+            if (playerId === 'diana' || playerId === 'quevedo') {
+                console.log('DEBUG getPlayerStats ' + playerId + ':');
+                console.log('  todayStr:', todayStr);
+                console.log('  today:', today);
+                console.log('  events count:', playerEvents.length);
+                console.log('  rankingPeriod:', typeof rankingPeriod !== 'undefined' ? rankingPeriod : 'not defined');
+            }
 
             let baseTotal = 0, baseDay = 0, baseWeek = 0, baseMonth = 0;
             let stickersTotal = 0, stickersDay = 0, stickersWeek = 0, stickersMonth = 0;
@@ -1283,6 +1318,13 @@
             playerEvents.forEach(ev => {
                 const evDate = getBRDate(ev.data);
                 const val = Number(ev.valor) || 0;
+
+                // DEBUG for Diana
+                if (playerId === 'diana' && ev.tipo === 'gol' && !ev.subtipo?.includes('elogio')) {
+                    const sameDay = isSameDay(evDate, today);
+                    const sameWeek = isSameWeek(evDate, today);
+                    console.log('  event:', ev.data, 'val:', val, 'sameDay:', sameDay, 'sameWeek:', sameWeek);
+                }
 
                 if (ev.tipo === 'gol') {
                     if (ev.subtipo === 'elogio-recebido') {
@@ -1308,7 +1350,7 @@
                 }
             });
 
-            return {
+            const result = {
                 baseTotal, baseDay, baseWeek, baseMonth,
                 stickersTotal, stickersDay, stickersWeek, stickersMonth,
                 punishTotal, punishDay, punishWeek, punishMonth,
@@ -1318,14 +1360,27 @@
                 totalWeek: baseWeek + stickersWeek + elogiosRecebidos + elogiosDados - punishWeek,
                 totalMonth: baseMonth + stickersMonth + elogiosRecebidos + elogiosDados - punishMonth
             };
+            if (playerId === 'diana' || playerId === 'quevedo') {
+                console.log('DEBUG result ' + playerId + ':', JSON.stringify(result));
+            }
+            return result;
         }
 
 
         // ===== COMISSAO STATS (inclui cartões + elogios históricos) =====
         function getComissaoStats(comissaoId) {
-            const comissaoEvents = events.filter(e => e.jogadorId === comissaoId);
-            const today = new Date();
-            today.setHours(12, 0, 0, 0);
+            // Find comissao by ID to get their name
+            const comissaoMember = comissao.find(c => c.id === comissaoId);
+            const comissaoName = comissaoMember ? (comissaoMember.nome || comissaoMember.id) : comissaoId;
+            // Filter events by either ID or name
+            const comissaoEvents = events.filter(e => 
+                e.jogadorId === comissaoId || 
+                e.jogadorId === comissaoName ||
+                (comissaoMember && e.jogadorId === comissaoMember.sobrenome) ||
+                (comissaoMember && e.jogadorId === (comissaoMember.nome + ' ' + comissaoMember.sobrenome).trim())
+            );
+            const todayStr = getTodayStr();
+            const today = new Date(todayStr + 'T12:00:00-03:00');
 
             let baseTotal = 0, baseDay = 0, baseWeek = 0, baseMonth = 0;
             let punishTotal = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
@@ -1407,24 +1462,24 @@
         }
 
         // ===== RENDER PLAYERS (HOME) =====
-        // ===== NOTIFICAÇAO DE ELOGIO =====
-function temElogioHoje(playerId, tipo) {
-    const hoje = getHojeBrasilia();
-    return elogios.some(e =>
-        e.paraId === playerId &&
-        e.paraTipo === tipo &&
-        getDiaBrasilia(e.data) === hoje
-    );
-}
+                // ===== NOTIFICAÇAO DE ELOGIO =====
+        function temElogioHoje(playerId, tipo) {
+            const hoje = getHojeBrasilia();
+            return elogios.some(e =>
+                e.paraId === playerId &&
+                e.paraTipo === tipo &&
+                getDiaBrasilia(e.data) === hoje
+            );
+        }
 
-function getElogiosRecebidosHoje(playerId, tipo) {
-    const hoje = getHojeBrasilia();
-    return elogios.filter(e =>
-        e.paraId === playerId &&
-        e.paraTipo === tipo &&
-        getDiaBrasilia(e.data) === hoje
-    );
-}
+        function getElogiosRecebidosHoje(playerId, tipo) {
+            const hoje = getHojeBrasilia();
+            return elogios.filter(e =>
+                e.paraId === playerId &&
+                e.paraTipo === tipo &&
+                getDiaBrasilia(e.data) === hoje
+            );
+        }
 
 function renderPlayers() {
             const grid = document.getElementById('players-grid');
@@ -1459,15 +1514,8 @@ function renderPlayers() {
                         const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
                         const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
 
-                        const elogiosHoje = getElogiosRecebidosHoje(p.id, 'jogador');
-                        const temElogio = elogiosHoje.length > 0;
-                        const elogioBadge = temElogio 
-                            ? '<div class="elogio-badge"><i class="fas fa-heart"></i> ' + elogiosHoje.length + '</div>' 
-                            : '';
-
                         return `
                             <div class="player-card card-hover relative" style="border-color: ${borderColor};" onclick="window.showAlbum('${p.id}')">
-                            ${elogioBadge}
                             ${getPatenteBadge(p.id, 'home')}
                             <div class="photo-area mx-auto">
                                 <img src="${photoUrl}" alt="${p.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -1506,15 +1554,8 @@ function renderPlayers() {
                                        c.funcao === 'nutricionista' ? '#FFD700' :
                                        c.funcao === 'olheiro' ? '#22c55e' : '#3b82f6';
 
-                    const comElogiosHoje = getElogiosRecebidosHoje(c.id, 'comissao');
-                    const comTemElogio = comElogiosHoje.length > 0;
-                    const comElogioBadge = comTemElogio 
-                        ? '<div class="elogio-badge"><i class="fas fa-heart"></i> ' + comElogiosHoje.length + '</div>' 
-                        : '';
-
                     return `
                         <div class="player-card card-hover relative" style="border-color: ${borderColor};" onclick="window.showAlbumComissao('${c.id}')">
-                        ${comElogioBadge}
                             ${getPatenteBadgeComissao(c.id, 'home')}
                             <div class="photo-area mx-auto" style="border-color: ${borderColor};">
                                 <img src="${photoUrl}" alt="${c.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -1637,6 +1678,9 @@ function renderPlayers() {
             geral.innerHTML = sorted.map((p, idx) => {
                 const stats = getPlayerStats(p.id);
                 const total = getPeriodTotal(stats);
+                if (p.id === 'quevedo' || p.id === 'diana') {
+                    console.log('DEBUG renderRanking ' + p.id + ' period=' + rankingPeriod + ' total=' + total + ' totalDay=' + stats.totalDay + ' totalWeek=' + stats.totalWeek + ' totalReal=' + stats.totalReal);
+                }
                 const rank = idx + 1;
                 let medal = '';
                 if (rank === 1) medal = '🥇';
@@ -1867,27 +1911,33 @@ function renderPlayers() {
             const rewardsGrid = document.getElementById('album-rewards-grid');
 
             function calcConquistas(pid) {
-                const pe = events.filter(e => e.jogadorId === pid && (e.tipo === 'gol' || e.tipo === 'figurinha'));
+                const player = players.find(p => p.id === pid);
+            const playerName = player ? (player.nome || player.id) : pid;
+            const pe = events.filter(e => 
+                (e.jogadorId === pid || e.jogadorId === playerName) && 
+                (e.tipo === 'gol' || e.tipo === 'figurinha')
+            );
                 const days = {}, weeks = {};
                 let monthTotal = 0;
-                const now = new Date();
-                const currentYear = now.getFullYear();
-                const currentMonth = now.getMonth();
+                const nowStr = getTodayStr();
+                const nowParts = nowStr.split('-').map(Number);
+                const currentYear = nowParts[0];
+                const currentMonth = nowParts[1] - 1;
                 const hoje = getHojeBrasilia();
                 const todayKey = hoje;
                 const currentWeek = getWeekRangeBrasilia(hoje);
-                const currentWeekKey = currentWeek.monday.toISOString().split('T')[0];
+                const currentWeekKey = getDiaBrasilia(currentWeek.monday.toISOString());
 
                 pe.forEach(e => {
                     if (!e.data) return;
                     const dk = getDiaBrasilia(e.data);
                     const wk = getWeekRangeBrasilia(dk);
-                    const wkKey = wk.monday.toISOString().split('T')[0];
+                    const wkKey = getDiaBrasilia(wk.monday.toISOString());
                     days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
                     weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
-                    const d = new Date(e.data);
-                    const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-                    if (dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
+                    const dBrasilia = getDiaBrasilia(e.data);
+                    const dParts = dBrasilia.split('-').map(Number);
+                    if (dParts[0] === currentYear && (dParts[1] - 1) === currentMonth) monthTotal += (Number(e.valor) || 1);
                 });
 
                 // DEBUG: log the keys for this player
@@ -1913,7 +1963,7 @@ function renderPlayers() {
 
             const CONQUISTAS = [
                 { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', repeatable: true, img: '+14.png', current: conqMural.diaCount, progressCurrent: conqMural.currentDayTotal },
-                { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', repeatable: true, img: '+30.png', current: conqMural.semanaCount, progressCurrent: conqMural.currentWeekTotal },
+                { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', repeatable: true, img: '+30.png', current: conqMural.currentWeekTotal >= 30 ? 1 : 0, progressCurrent: conqMural.currentWeekTotal },
                 { id: 'premio-mes-50', name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
                 { id: 'premio-mes-60', name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: '+60.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
                 { id: 'premio-mes-80', name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', repeatable: false, img: '+80.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
@@ -2980,7 +3030,11 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         function getWeekRangeBrasilia(dateStr) {
-            const d = new Date(dateStr + 'T00:00:00-03:00');
+            let dStr = String(dateStr);
+            if (dateStr instanceof Date) {
+                dStr = dateStr.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+            }
+            const d = new Date(dStr + 'T00:00:00-03:00');
             const day = d.getDay();
             const diff = d.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(d.setDate(diff));
