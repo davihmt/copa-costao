@@ -939,9 +939,10 @@
         }
 
         function isSameDay(d1, d2) {
-            return d1.getFullYear() === d2.getFullYear() && 
-                   d1.getMonth() === d2.getMonth() && 
-                   d1.getDate() === d2.getDate();
+            // Convert both dates to YYYY-MM-DD strings for reliable comparison
+            const s1 = d1.getFullYear() + '-' + String(d1.getMonth() + 1).padStart(2, '0') + '-' + String(d1.getDate()).padStart(2, '0');
+            const s2 = d2.getFullYear() + '-' + String(d2.getMonth() + 1).padStart(2, '0') + '-' + String(d2.getDate()).padStart(2, '0');
+            return s1 === s2;
         }
 
         function getWeekRange(date) {
@@ -959,7 +960,10 @@
         function isSameWeek(d1, d2) {
             const w1 = getWeekRange(d1);
             const w2 = getWeekRange(d2);
-            return w1.monday.getTime() === w2.monday.getTime();
+            // Compare Monday dates as strings to avoid millisecond issues
+            const s1 = w1.monday.getFullYear() + '-' + String(w1.monday.getMonth() + 1).padStart(2, '0') + '-' + String(w1.monday.getDate()).padStart(2, '0');
+            const s2 = w2.monday.getFullYear() + '-' + String(w2.monday.getMonth() + 1).padStart(2, '0') + '-' + String(w2.monday.getDate()).padStart(2, '0');
+            return s1 === s2;
         }
 
         function isSameMonth(d1, d2) {
@@ -1225,6 +1229,19 @@
             let verdes = 0;
 
             playerEvents.forEach(ev => {
+                // DEBUG: Show first event for each player
+                if (playerEvents.indexOf(ev) === 0) {
+                    console.log('Player:', playerId, 'Event date:', ev.data, 'Today:', getTodayStr());
+                }
+
+                // DEBUG for Laura: show all events and comparison
+                if (playerId === 'laura') {
+                    const evDate = getBRDate(ev.data);
+                    const today = new Date();
+                    today.setHours(12, 0, 0, 0);
+                    const sameDay = isSameDay(evDate, today);
+                    console.log('LAURA event:', ev.data, 'tipo:', ev.tipo, 'val:', Number(ev.valor)||0, 'sameDay:', sameDay, 'evDate:', evDate.toDateString(), 'today:', today.toDateString());
+                }
                 const evDate = getBRDate(ev.data);
                 const isThisMonth = isSameMonth(evDate, today);
                 const subtipo = ev.subtipo || '';
@@ -1260,16 +1277,38 @@
             let stickersTotal = 0, stickersDay = 0, stickersWeek = 0, stickersMonth = 0;
             let punishTotal = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
             let elogiosRecebidos = 0, elogiosDados = 0;
+            let elogiosRecebidosDay = 0, elogiosDadosDay = 0;
+            let elogiosRecebidosWeek = 0, elogiosDadosWeek = 0;
+            let elogiosRecebidosMonth = 0, elogiosDadosMonth = 0;
 
             playerEvents.forEach(ev => {
+                // DEBUG: Show first event for each player
+                if (playerEvents.indexOf(ev) === 0) {
+                    console.log('Player:', playerId, 'Event date:', ev.data, 'Today:', getTodayStr());
+                }
+
+                // DEBUG for Laura: show all events and comparison
+                if (playerId === 'laura') {
+                    const evDate = getBRDate(ev.data);
+                    const today = new Date();
+                    today.setHours(12, 0, 0, 0);
+                    const sameDay = isSameDay(evDate, today);
+                    console.log('LAURA event:', ev.data, 'tipo:', ev.tipo, 'val:', Number(ev.valor)||0, 'sameDay:', sameDay, 'evDate:', evDate.toDateString(), 'today:', today.toDateString());
+                }
                 const evDate = getBRDate(ev.data);
                 const val = Number(ev.valor) || 0;
 
                 if (ev.tipo === 'gol') {
                     if (ev.subtipo === 'elogio-recebido') {
                         elogiosRecebidos += val;
+                        if (isSameDay(evDate, today)) elogiosRecebidosDay += val;
+                        if (isSameWeek(evDate, today)) elogiosRecebidosWeek += val;
+                        if (isSameMonth(evDate, today)) elogiosRecebidosMonth += val;
                     } else if (ev.subtipo === 'elogio-dado') {
                         elogiosDados += val;
+                        if (isSameDay(evDate, today)) elogiosDadosDay += val;
+                        if (isSameWeek(evDate, today)) elogiosDadosWeek += val;
+                        if (isSameMonth(evDate, today)) elogiosDadosMonth += val;
                     } else {
                         baseTotal += val;
                         if (isSameDay(evDate, today)) baseDay += val;
@@ -1295,9 +1334,9 @@
                 punishTotal, punishDay, punishWeek, punishMonth,
                 elogiosRecebidos, elogiosDados,
                 totalReal: baseTotal + stickersTotal + elogiosRecebidos + elogiosDados - punishTotal,
-                totalDay: baseDay + stickersDay + elogiosRecebidos + elogiosDados - punishDay,
-                totalWeek: baseWeek + stickersWeek + elogiosRecebidos + elogiosDados - punishWeek,
-                totalMonth: baseMonth + stickersMonth + elogiosRecebidos + elogiosDados - punishMonth
+                totalDay: baseDay + stickersDay + elogiosRecebidosDay + elogiosDadosDay - punishDay,
+                totalWeek: baseWeek + stickersWeek + elogiosRecebidosWeek + elogiosDadosWeek - punishWeek,
+                totalMonth: baseMonth + stickersMonth + elogiosRecebidosMonth + elogiosDadosMonth - punishMonth
             };
         }
 
@@ -1520,6 +1559,7 @@
 
         // ===== RENDER RANKING =====
         function renderRanking() {
+            console.log('RENDER RANKING - Period:', rankingPeriod, 'Today:', new Date().toDateString());
             const geral = document.getElementById('ranking-geral');
             const porTime = document.getElementById('ranking-por-time');
             if (!geral || !porTime) return;
