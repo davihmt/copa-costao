@@ -46,8 +46,10 @@
     <style>
         * { font-family: 'Montserrat', sans-serif; }
         body { background: #0f172a; color: white; }
-        .glass { background: rgba(30, 41, 59, 0.8); -webkit-backdrop-filter: blur(12px);
-            backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .glass { background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255,255,255,0.1); }
+        @media (min-width: 769px) {
+            .glass { background: rgba(30, 41, 59, 0.8); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+        }
         .gradient-text { background: linear-gradient(135deg, #1DBCB8, #0B4F6C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-hover { transition: all 0.3s ease; cursor: pointer; }
         .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(29, 188, 184, 0.3); }
@@ -129,12 +131,12 @@
             font-weight: 700;
             box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
             z-index: 30;
-            animation: elogioPulse 2s ease-in-out infinite;
+            animation: elogioPulse 3s ease-in-out 2;
             border: 2px solid rgba(255,255,255,0.2);
         }
         @keyframes elogioPulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+            50% { transform: scale(1.05); }
         }
 @media (max-width: 768px) {
             .desktop-layout { flex-direction: column !important; }
@@ -469,7 +471,7 @@
         </section>
 
         <!-- ADMIN LOGIN MODAL -->
-        <div id="admin-login-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div id="admin-login-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
             <div class="glass rounded-2xl p-8 max-w-md w-full text-center">
                 <i class="fas fa-shield-alt text-5xl text-[#1DBCB8] mb-4"></i>
                 <h3 class="text-2xl font-bold mb-2">Área do Gerente</h3>
@@ -939,6 +941,12 @@
         
         
 
+        // ===== THROTTLE UTILS (iOS memory fix) =====
+        let _renderThrottle = null;
+        function throttleRender(fn) {
+            if (_renderThrottle) clearTimeout(_renderThrottle);
+            _renderThrottle = setTimeout(fn, 100);
+        }
         // ===== STATE =====
         let players = [];
         let events = [];
@@ -1198,14 +1206,16 @@
                     snapshot.forEach(doc => {
                         players.push({ id: doc.id, ...doc.data() });
                     });
-                    renderPlayers();
-                    renderRanking();
-                    updateAdminSelects();
-                    updateDeleteSelect();
-                    renderFigPlayersGrid(); // NOVO: atualizar grid de seleção múltipla
-                    if (inAdmin) {
-                        showAdminTab(currentAdminTab);
-                    }
+                    throttleRender(function() {
+                        renderPlayers();
+                        renderRanking();
+                        updateAdminSelects();
+                        updateDeleteSelect();
+                        renderFigPlayersGrid();
+                        if (inAdmin) {
+                            showAdminTab(currentAdminTab);
+                        }
+                    });
                 });
             } catch (e) {
                 console.error('Erro ao carregar jogadores:', e);
@@ -1220,14 +1230,16 @@
                     snapshot.forEach(doc => {
                         events.push({ id: doc.id, ...doc.data() });
                     });
-                    renderPlayers();
-                    renderRanking();
-                    if (!inAdmin && currentAlbumPlayer) {
-                        showAlbum(currentAlbumPlayer);
-                    }
-                    if (inAdmin && document.getElementById('corr-jogador').value) {
-                        carregarCorrecaoUnificada();
-                    }
+                    throttleRender(function() {
+                        renderPlayers();
+                        renderRanking();
+                        if (!inAdmin && currentAlbumPlayer) {
+                            showAlbum(currentAlbumPlayer);
+                        }
+                        if (inAdmin && document.getElementById('corr-jogador').value) {
+                            carregarCorrecaoUnificada();
+                        }
+                    });
                 });
             } catch (e) {
                 console.error('Erro ao carregar eventos:', e);
@@ -2857,9 +2869,11 @@ Isso também excluirá todos os seus eventos!`)) return;
                     snapshot.forEach(doc => {
                         comissao.push({ id: doc.id, ...doc.data() });
                     });
-                    renderPlayers();
-                    updateElogioSelects();
-                    updateDeleteComissaoSelect();
+                    throttleRender(function() {
+                        renderPlayers();
+                        updateElogioSelects();
+                        updateDeleteComissaoSelect();
+                    });
                 });
             } catch (e) {
                 console.error('Erro ao carregar comissão:', e);
@@ -2874,8 +2888,10 @@ Isso também excluirá todos os seus eventos!`)) return;
                     snapshot.forEach(doc => {
                         corpoTecnico.push({ id: doc.id, ...doc.data() });
                     });
-                    renderPlayers();
-                    updateDeleteCorpoSelect();
+                    throttleRender(function() {
+                        renderPlayers();
+                        updateDeleteCorpoSelect();
+                    });
                 });
             } catch (e) {
                 console.error('Erro ao carregar corpo técnico:', e);
@@ -2891,7 +2907,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                         elogios.push({ id: doc.id, ...doc.data() });
                     });
                     if (document.getElementById('section-mural') && !document.getElementById('section-mural').classList.contains('hidden')) {
-                        renderMural();
+                        throttleRender(renderMural);
                     }
                 });
             } catch (e) {
@@ -3377,7 +3393,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         muralFotos.push({ id: doc.id, ...doc.data() });
                     });
                     if (currentAlbumPlayer) {
-                        renderMuralFotosAlbum(currentAlbumPlayer);
+                        throttleRender(function() {
+                            renderMuralFotosAlbum(currentAlbumPlayer);
+                        });
                     }
                 });
             } catch (e) {
