@@ -1887,9 +1887,12 @@ function renderPlayers() {
 
             // Calcular conquistas
             const conq = calcConquistas(playerId);
-            let conquistasCount = conq.diaCount + conq.semanaCount;
+            console.log('DEBUG calcConquistas for', playerId, ':', JSON.stringify(conq));
+            let conquistasCount = 0;
+            if (conq.currentDayTotal >= 14) conquistasCount++;
+            if (conq.currentWeekTotal >= 30) conquistasCount++;
             // Contar conquistas mensais conquistadas
-            const CONQUISTAS_METAS = [30, 40, 50, 80, 100];
+            const CONQUISTAS_METAS = [50, 60, 80, 120, 150];
             CONQUISTAS_METAS.forEach(meta => {
                 if (conq.monthTotal >= meta) conquistasCount++;
             });
@@ -1966,7 +1969,7 @@ function renderPlayers() {
             const conqMural = calcConquistas(playerId);
 
             const CONQUISTAS = [
-                { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', repeatable: true, img: '+14.png', current: conqMural.diaCount, progressCurrent: conqMural.currentDayTotal },
+                { id: 'premio-dia', name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', repeatable: true, img: '+14.png', current: conqMural.currentDayTotal >= 14 ? 1 : 0, progressCurrent: conqMural.currentDayTotal },
                 { id: 'premio-semana', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', repeatable: true, img: '+30.png', current: conqMural.currentWeekTotal >= 30 ? 1 : 0, progressCurrent: conqMural.currentWeekTotal },
                 { id: 'premio-mes-50', name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', repeatable: false, img: '+50.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
                 { id: 'premio-mes-60', name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', repeatable: false, img: '+60.png', current: conqMural.monthTotal, progressCurrent: conqMural.monthTotal },
@@ -2602,6 +2605,11 @@ Isso também excluirá todos os seus eventos!`)) return;
                     createdAt: new Date().toISOString()
                 });
                 showToast(`${qtd} gol(s) lançado(s)!`, 'success');
+                // Force refresh after saving
+                setTimeout(() => {
+                    renderPlayers();
+                    renderRanking();
+                }, 500);
                 document.getElementById('gols-qtd').value = '';
                 document.getElementById('gols-obs').value = '';
             } catch (e) {
