@@ -46,7 +46,8 @@
     <style>
         * { font-family: 'Montserrat', sans-serif; }
         body { background: #0f172a; color: white; }
-        .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .glass { background: rgba(30, 41, 59, 0.8); -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
         .gradient-text { background: linear-gradient(135deg, #1DBCB8, #0B4F6C); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-hover { transition: all 0.3s ease; cursor: pointer; }
         .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(29, 188, 184, 0.3); }
@@ -143,15 +144,13 @@
             .player-card .photo-area { width: 100px; height: 100px; }
             .celebration-photo-container img { max-height: 350px; }
             .logo-img-main { max-height: 85px; }
-        @media (max-width: 768px) {
-            .logo-img-main { max-height: 60px; width: auto; }
+        .logo-img-main { max-height: 60px; width: auto; }
             header { padding-top: 6px; padding-bottom: 6px; }
             header .max-w-7xl { padding-left: 8px; padding-right: 8px; }
             header .flex { align-items: center !important; flex-wrap: wrap; }
             header nav { gap: 4px; flex-wrap: wrap; justify-content: center; }
             header nav button { padding: 6px 8px; font-size: 10px; flex: 1 1 auto; min-width: 65px; max-width: 100px; }
             header nav button i { margin-right: 2px !important; font-size: 10px; }
-        }
             header { padding-top: 8px; padding-bottom: 8px; }
             header .max-w-7xl { padding-left: 8px; padding-right: 8px; }
             header .flex { align-items: center !important; }
