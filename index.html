@@ -1066,14 +1066,14 @@
         function setRankingType(type) {
             rankingType = type;
             document.querySelectorAll('#ranking-type-jogadores, #ranking-type-comissao').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('ranking-type-' + type)?.classList.add('active');
+            var _el1 = document.getElementById('ranking-type-' + type); if (_el1) _el1.classList.add('active');
             renderRanking();
         }
 
         function setRankingPeriod(period) {
             rankingPeriod = period;
             document.querySelectorAll('#filter-day, #filter-week, #filter-month, #filter-total').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('filter-' + period)?.classList.add('active');
+            var _el2 = document.getElementById('filter-' + period); if (_el2) _el2.classList.add('active');
             renderRanking();
         }
     let lightboxPhotos = [];
@@ -1511,7 +1511,7 @@ function renderPlayers() {
                         const borderColor = funcColors[func] || '#1DBCB8';
 
                         const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
-                        const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+                        const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
                         const elogiosHoje = getElogiosRecebidosHoje(p.id, 'jogador');
                         const temElogio = elogiosHoje.length > 0;
                         const elogioBadge = temElogio 
@@ -1553,7 +1553,7 @@ function renderPlayers() {
                 html += '<div class="col-span-full mb-4 mt-8"><h3 class="text-2xl font-bold text-yellow-400"><i class="fas fa-users mr-2"></i>Comissão Técnica</h3></div>';
                 html += comissaoSorted.map(c => {
                     const photoUrl = c.foto ? REPO_BASE + c.foto + CACHE_VERSION : '';
-                    const initials = c.nome?.[0] || '?';
+                    const initials = (c.nome && c.nome[0]) || '?';
                     const borderColor = c.funcao === 'preparador-campo' ? '#FFD700' : 
                                        c.funcao === 'analista-operacional' ? '#22c55e' :
                                        c.funcao === 'nutricionista' ? '#FFD700' :
@@ -1600,7 +1600,7 @@ function renderPlayers() {
                 html += '<div class="col-span-full mb-4 mt-8"><h3 class="text-2xl font-bold text-gray-300"><i class="fas fa-user-tie mr-2"></i>Corpo Técnico</h3></div>';
                 html += corpoSorted.map(c => {
                     const photoUrl = c.foto ? REPO_BASE + c.foto + CACHE_VERSION : '';
-                    const initials = c.nome?.[0] || '?';
+                    const initials = (c.nome && c.nome[0]) || '?';
 
                     return `
                         <div class="player-card cursor-pointer hover:opacity-80 transition-all" style="border-color: #6b7280; opacity: 0.9;" onclick="window.showAlbumCorpo('${c.id}')">
@@ -1907,7 +1907,7 @@ function renderPlayers() {
             } else {
                 profilePhoto.style.display = 'none';
                 profileFallback.style.display = 'flex';
-                profileFallback.textContent = (player.nome?.[0] || '') + (player.sobrenome?.[0] || '');
+                profileFallback.textContent = ((player.nome && player.nome[0]) || '') + ((player.sobrenome && player.sobrenome[0]) || '');
             }
 
             const celebPhoto = document.getElementById('album-celebration-photo');
@@ -2156,14 +2156,14 @@ function renderPlayers() {
         function showAdminTab(tab) {
             currentAdminTab = tab;
             document.querySelectorAll('.admin-panel').forEach(p => p.classList.add('hidden'));
-            document.getElementById('admin-panel-' + tab)?.classList.remove('hidden');
+            var _el3 = document.getElementById('admin-panel-' + tab); if (_el3) _el3.classList.remove('hidden');
 
             document.querySelectorAll('.admin-tab-btn').forEach(btn => {
                 btn.classList.remove('bg-white/10', 'text-white');
                 btn.classList.add('text-white/60');
             });
-            document.getElementById('admin-tab-' + tab)?.classList.add('bg-white/10', 'text-white');
-            document.getElementById('admin-tab-' + tab)?.classList.remove('text-white/60');
+            var _el4 = document.getElementById('admin-tab-' + tab); if (_el4) _el4.classList.add('bg-white/10', 'text-white');
+            var _el5 = document.getElementById('admin-tab-' + tab); if (_el5) _el5.classList.remove('text-white/60');
 
             if (tab !== 'cadastrar' && tab !== 'comissao' && tab !== 'corpo-tecnico') updateAdminSelects();
             if (tab === 'figurinhas') renderFigPlayersGrid();
@@ -2254,7 +2254,7 @@ function renderPlayers() {
                         html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#1DBCB8] uppercase tracking-wider">${func} <span class="text-green-400">✓ Selecionado</span></h4></div>`;
                         html += selectedFromFunc.map(p => {
                             const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
-                            const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+                            const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
                             return `
                                 <div class="multi-select-player selected" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
                                     <div class="check-circle">
@@ -2276,7 +2276,7 @@ function renderPlayers() {
                     html += members.map(p => {
                         const isSelected = selectedFigPlayers.has(p.id);
                         const photoUrl = p.fotoPerfil ? REPO_BASE + p.fotoPerfil + CACHE_VERSION : '';
-                        const initials = (p.nome?.[0] || '') + (p.sobrenome?.[0] || '');
+                        const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
 
                         return `
                             <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
@@ -2401,7 +2401,7 @@ function renderPlayers() {
                 } else {
                     photo.style.display = 'none';
                     fallback.style.display = 'flex';
-                    fallback.textContent = c.nome?.[0] || '?';
+                    fallback.textContent = (c.nome && c.nome[0]) || '?';
                 }
             }
 
@@ -2520,7 +2520,7 @@ function renderPlayers() {
             } else {
                 photo.style.display = 'none';
                 fallback.style.display = 'flex';
-                fallback.textContent = c.nome?.[0] || '?';
+                fallback.textContent = (c.nome && c.nome[0]) || '?';
             }
 
             // Mostrar álbum corpo
@@ -2590,8 +2590,7 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         async function lancarGols() {
-            const jogadorValue = document.getElementById('gols-jogador').value;
-            const jogadorId = jogadorValue.includes('|') ? jogadorValue.split('|')[1] : jogadorValue;
+            const jogadorId = document.getElementById('gols-jogador').value;
             const qtd = parseInt(document.getElementById('gols-qtd').value) || 0;
             const data = document.getElementById('gols-data').value;
             const obs = document.getElementById('gols-obs').value.trim();
@@ -2625,11 +2624,6 @@ Isso também excluirá todos os seus eventos!`)) return;
 
             if (selectedFigPlayers.size === 0) { showToast('Selecione pelo menos um jogador', 'error'); return; }
 
-            const cleanSelectedIds = new Set();
-            selectedFigPlayers.forEach(id => {
-                cleanSelectedIds.add(id.includes('|') ? id.split('|')[1] : id);
-            });
-
             const map = {
                 'master-verao': { label: 'Master Verão', val: 7, img: 'master-verao.png' },
                 'master-inverno': { label: 'Master Inverno', val: 5, img: 'master-inverno.png' },
@@ -2650,7 +2644,7 @@ Isso também excluirá todos os seus eventos!`)) return;
 
             try {
                 const promises = [];
-                cleanSelectedIds.forEach(jogadorId => {
+                selectedFigPlayers.forEach(jogadorId => {
                     promises.push(
                         window.addDoc(window.collection(window.db, 'eventos'), {
                             jogadorId, tipo: 'figurinha', subtipo: tipo, subtipoLabel: map[tipo].label,
@@ -2661,7 +2655,7 @@ Isso também excluirá todos os seus eventos!`)) return;
                 });
 
                 await Promise.all(promises);
-                showToast(`${map[tipo].label} (+${map[tipo].val}) lançada para ${cleanSelectedIds.size} jogador(es)!`, 'success');
+                showToast(`${map[tipo].label} (+${map[tipo].val}) lançada para ${selectedFigPlayers.size} jogador(es)!`, 'success');
                 selectedFigPlayers.clear();
                 renderFigPlayersGrid();
             } catch (e) {
