@@ -3304,11 +3304,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function renderMuralFotosAlbum(jogadorId) {
+            console.log('=== MURAL FOTOS v2.2 FIX === USING ABSOLUTE URL');
             const container = document.getElementById('album-mural-fotos');
             const grid = document.getElementById('album-mural-fotos-grid');
             if (!container || !grid) return;
 
             const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
+            console.log('renderMuralFotosAlbum called for:', jogadorId, 'Found', fotos.length, 'photos');
 
             if (fotos.length === 0) {
                 container.classList.add('hidden');
@@ -3317,14 +3319,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             container.classList.remove('hidden');
             grid.innerHTML = fotos.map(f => {
-                const rawUrl = f.url ? FOTOS_BASE + f.url : '';
-                const photoUrl = buildPhotoUrl(rawUrl);
-                const baseNoExt = getBaseWithoutExt(rawUrl);
+                // Use absolute URL from REPO_BASE instead of relative FOTOS_BASE
+                const fileName = f.url || '';
+                // If filename already has extension, use as-is; otherwise add .jpeg
+                const hasExt = /\.(jpeg|jpg|png)$/i.test(fileName);
+                const photoUrl = REPO_BASE + 'Fotos/' + fileName + (hasExt ? '' : '.jpeg');
+                const baseNoExt = REPO_BASE + 'Fotos/' + fileName.replace(/\.(jpeg|jpg|png)$/i, '');
                 const data = f.data ? formatDate(f.data) : '';
+
+                console.log('Mural photo URL:', photoUrl, 'baseNoExt:', baseNoExt);
+
                 return `
                     <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${photoUrl}')">
-                        <div style="padding-bottom:100%;height:0; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
-                            <img src="${photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
+                        <div style="padding-bottom:100%;height:0; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center; position: relative;">
+                            <img src="${photoUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
                                 onerror="tryNextExtension(this, '${baseNoExt}')">
                         </div>
                         ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
@@ -3403,33 +3411,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function renderMuralFotosAlbum(jogadorId) {
-            const container = document.getElementById('album-mural-fotos');
-            const grid = document.getElementById('album-mural-fotos-grid');
-            if (!container || !grid) return;
-
-            const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
-
-            if (fotos.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-
-            container.classList.remove('hidden');
-            grid.innerHTML = fotos.map(f => {
-                const baseUrl = f.url ? FOTOS_BASE + f.url : '';
-                const data = f.data ? formatDate(f.data) : '';
-                return `
-                    <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${baseUrl}.jpeg')">
-                        <div style="padding-bottom:100%;height:0; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
-                            <img src="${baseUrl}.jpeg" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
-                                onerror="tryNextExtension(this, '${baseUrl}')">
-                        </div>
-                        ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
-                    </div>
-                `;
-            }).join('');
-        }
+        
 
         async function adicionarFotoMural() {
             const jogadorId = document.getElementById('mural-fotos-jogador').value;
@@ -3471,9 +3453,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             container.innerHTML = fotos.map(f => {
-                const rawUrl = f.url ? FOTOS_BASE + f.url : '';
-                const photoUrl = buildPhotoUrl(rawUrl);
-                const baseNoExt = getBaseWithoutExt(rawUrl);
+                const fileName = f.url || '';
+                const hasExt = /\.(jpeg|jpg|png)$/i.test(fileName);
+                const photoUrl = REPO_BASE + 'Fotos/' + fileName + (hasExt ? '' : '.jpeg');
+                const baseNoExt = REPO_BASE + 'Fotos/' + fileName.replace(/\.(jpeg|jpg|png)$/i, '');
                 const data = f.data ? formatDate(f.data) : '';
                 return `
                     <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
