@@ -333,12 +333,7 @@
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-medal mr-2 text-yellow-400"></i>Mural de Conquistas</h3>
                             <div id="album-rewards-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
                         </div>
-                        <div 
-                        <div id="album-historico-conquistas" class="player-card hidden">
-                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-medal mr-2 text-yellow-400"></i>Histórico de Conquistas</h3>
-                            <div id="album-historico-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
-                        </div>
-class="player-card">
+                        <div class="player-card">
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-stamp mr-2 text-[#1DBCB8]"></i>Figurinhas</h3>
                             <div id="album-stickers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                         </div>
@@ -350,14 +345,14 @@ class="player-card">
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-comments mr-2 text-[#1DBCB8]"></i>Mural de Elogios Recebidos</h3>
                             <div id="album-elogios-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
                         </div>
-                        <div id="album-mural-fotos" class="player-card hidden">
+                        <div id="album-mural-fotos" class="player-card">
                             <div class="flex items-center justify-between mb-4">
                                 <h3 class="text-xl font-bold"><i class="fas fa-images mr-2 text-[#1DBCB8]"></i>Mural de Fotos</h3>
                                 <button id="btn-upload-foto" onclick="abrirUploadFoto()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] text-white text-sm font-semibold hover:shadow-lg transition-all">
                                     <i class="fas fa-camera mr-1"></i>Adicionar Foto
                                 </button>
                             </div>
-                            <input type="file" id="input-foto-upload" accept="image/*" capture="environment" class="hidden" onchange="handleFotoUpload(this)">
+                            <input type="file" id="input-foto-upload" accept="image/*" class="hidden" onchange="handleFotoUpload(this)">
                             <div id="upload-progress" class="hidden mb-3">
                                 <div class="w-full bg-gray-700 rounded-full h-2">
                                     <div id="upload-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] transition-all" style="width: 0%"></div>
@@ -1029,9 +1024,7 @@ class="player-card">
             ['gols-data', 'fig-data', 'pun-data', 'mural-foto-data'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = today;
-            
-            loadConquistasHistorico();
-        });
+            });
 
             // Load data in correct order: dependencies first
             loadComissao();
@@ -1489,78 +1482,6 @@ class="player-card">
             if (rankingPeriod === 'month') return stats.totalMonth;
             return stats.totalReal;
         }
-
-        // ===== CONQUISTAS HISTORICO =====
-        let conquistasHistorico = [];
-
-        async function loadConquistasHistorico() {
-            try {
-                const q = window.query(window.collection(window.db, 'conquistasHistorico'), window.orderBy('data', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
-                    conquistasHistorico = [];
-                    snapshot.forEach(doc => {
-                        conquistasHistorico.push({ id: doc.id, ...doc.data() });
-                    });
-                    if (currentAlbumPlayer && !document.getElementById('section-album').classList.contains('hidden')) {
-                        showAlbum(currentAlbumPlayer);
-                    }
-                });
-            } catch (e) {
-                console.error('Erro ao carregar conquistas historico:', e);
-            }
-        }
-
-        function getConquistasDoJogador(jogadorId) {
-            return conquistasHistorico.filter(c => c.jogadorId === jogadorId);
-        }
-
-        function jaTemConquista(jogadorId, conquistaId) {
-            return conquistasHistorico.some(c => c.jogadorId === jogadorId && c.conquistaId === conquistaId);
-        }
-
-        async function registrarConquista(jogadorId, conquistaId, nome, golsNaData) {
-            if (jaTemConquista(jogadorId, conquistaId)) return;
-            try {
-                await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
-                    jogadorId, conquistaId, nome, golsNaData,
-                    data: getTodayStr(),
-                    createdAt: new Date().toISOString()
-                });
-                console.log('Conquista registrada:', nome, 'para', jogadorId);
-            } catch (e) {
-                console.error('Erro ao registrar conquista:', e);
-            }
-        }
-
-        async function checkAndRecordConquistas(jogadorId, conqMural) {
-            const conquistasParaVerificar = [
-                { id: 'premio-dia', nome: 'HAT-TRICK!!!', meta: 14, tipo: 'day' },
-                { id: 'premio-semana', nome: 'IMPARÁVEL!!!', meta: 30, tipo: 'week' },
-                { id: 'premio-mes-50', nome: 'CRAQUE!', meta: 50, tipo: 'month' },
-                { id: 'premio-mes-60', nome: 'MONSTRO!', meta: 60, tipo: 'month' },
-                { id: 'premio-mes-80', nome: 'ARTILHEIRO!', meta: 80, tipo: 'month' },
-                { id: 'premio-mes-120', nome: 'MÁQUINAAA!!', meta: 120, tipo: 'month' },
-                { id: 'premio-mes-150', nome: 'FENÔMENO!!!', meta: 150, tipo: 'month' }
-            ];
-
-            for (const c of conquistasParaVerificar) {
-                let atingiu = false;
-                let golsNaData = 0;
-
-                if (c.tipo === 'day' && conqMural.currentDayTotal >= c.meta) {
-                    atingiu = true; golsNaData = conqMural.currentDayTotal;
-                } else if (c.tipo === 'week' && conqMural.currentWeekTotal >= c.meta) {
-                    atingiu = true; golsNaData = conqMural.currentWeekTotal;
-                } else if (c.tipo === 'month' && conqMural.monthTotal >= c.meta) {
-                    atingiu = true; golsNaData = conqMural.monthTotal;
-                }
-
-                if (atingiu && !jaTemConquista(jogadorId, c.id)) {
-                    await registrarConquista(jogadorId, c.id, c.nome, golsNaData);
-                }
-            }
-        }
-
 
         // ===== RENDER PLAYERS (HOME) =====
                 // ===== NOTIFICAÇAO DE ELOGIO =====
@@ -2026,50 +1947,45 @@ function renderPlayers() {
             const rewardsGrid = document.getElementById('album-rewards-grid');
 
             function calcConquistas(pid) {
-                // Calculate true "gols validos" for each period, accounting for VAR
-                const playerEvents = events.filter(e => e.jogadorId === pid);
+                const pe = events.filter(e => e.jogadorId === pid && (e.tipo === 'gol' || e.tipo === 'figurinha'));
+                const days = {}, weeks = {};
+                let monthTotal = 0;
                 const now = new Date();
                 const currentYear = now.getFullYear();
                 const currentMonth = now.getMonth();
                 const hoje = getHojeBrasilia();
+                const todayKey = hoje;
                 const currentWeek = getWeekRangeBrasilia(hoje);
                 const currentWeekKey = getDiaBrasilia(currentWeek.monday.toISOString());
 
-                const days = {}, weeks = {};
-                let monthTotal = 0;
-
-                playerEvents.forEach(e => {
+                pe.forEach(e => {
                     if (!e.data) return;
                     const dk = getDiaBrasilia(e.data);
                     const wk = getWeekRangeBrasilia(dk);
                     const wkKey = getDiaBrasilia(wk.monday.toISOString());
-                    const val = Number(e.valor) || 0;
-
-                    // Only count events from current month for monthTotal
+                    days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
+                    weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
                     const d = new Date(e.data);
                     const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-                    const isThisMonth = dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth;
-
-                    if (e.tipo === 'gol' || e.tipo === 'figurinha') {
-                        // Skip elogio-dado (doesn't count for conquistas)
-                        if (e.subtipo === 'elogio-dado') return;
-
-                        days[dk] = (days[dk] || 0) + val;
-                        weeks[wkKey] = (weeks[wkKey] || 0) + val;
-                        if (isThisMonth) monthTotal += val;
-                    } else if (e.tipo === 'punicao') {
-                        // Subtract punishments (VAR)
-                        days[dk] = (days[dk] || 0) - Math.abs(val);
-                        weeks[wkKey] = (weeks[wkKey] || 0) - Math.abs(val);
-                        if (isThisMonth) monthTotal -= Math.abs(val);
-                    }
+                    if (dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
                 });
+
+                // DEBUG: log the keys for this player
+                if (pid === 'diana') {
+                    console.log('DEBUG calcConquistas Diana:');
+                    console.log('  todayKey:', todayKey);
+                    console.log('  currentWeekKey:', currentWeekKey);
+                    console.log('  days keys:', Object.keys(days));
+                    console.log('  weeks keys:', Object.keys(weeks));
+                    console.log('  days[todayKey]:', days[todayKey] || 0);
+                    console.log('  weeks[currentWeekKey]:', weeks[currentWeekKey] || 0);
+                }
 
                 return {
                     diaCount: Object.values(days).filter(g => g >= 14).length,
                     semanaCount: Object.values(weeks).filter(g => g >= 30).length,
                     monthTotal: monthTotal,
-                    currentDayTotal: days[hoje] || 0,
+                    currentDayTotal: days[todayKey] || 0,
                     currentWeekTotal: weeks[currentWeekKey] || 0
                 };
             }
@@ -2086,37 +2002,21 @@ function renderPlayers() {
             ];
 
             let rewardsHtml = '';
-
-            // Check and record any newly achieved conquistas
-            checkAndRecordConquistas(playerId, conqMural);
-
-            // Get historical conquistas for this player
-            const historicoJogador = getConquistasDoJogador(playerId);
-
             CONQUISTAS.forEach(c => {
-                // Check if currently achieved
-                const currentlyUnlocked = c.repeatable ? c.current > 0 : c.current >= c.goals;
-                // Check if historically achieved
-                const historicoEntry = historicoJogador.find(h => h.conquistaId === c.id);
-                const wasAchieved = !!historicoEntry;
-                // Show badge if currently achieved OR historically achieved
-                const isUnlocked = currentlyUnlocked || wasAchieved;
+                const isUnlocked = c.repeatable ? c.current > 0 : c.current >= c.goals;
                 const progress = c.repeatable ? 0 : Math.min(100, (c.current / c.goals) * 100);
                 const imgUrl = REPO_BASE + c.img;
                 const borderColor = isUnlocked ? 'rgba(255, 215, 0, 0.5)' : 'rgba(255,255,255,0.1)';
                 const bgColor = isUnlocked ? 'rgba(255, 215, 0, 0.08)' : 'rgba(255,255,255,0.03)';
                 const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-lock text-gray-500 text-xl"></i>';
 
-                // Build status text
-                let statusText = '';
-                if (wasAchieved && !currentlyUnlocked) {
-                    statusText = `<p class="text-xs text-yellow-400 mt-1 text-center font-bold">🏆 Conquistado em ${formatDate(historicoEntry.data)} (${historicoEntry.golsNaData} gols)</p>`;
-                } else if (currentlyUnlocked && c.repeatable) {
-                    statusText = `<p class="text-xs text-green-400 mt-1 text-center font-bold">✅ ${c.progressCurrent}/${c.goals} gols</p>`;
-                } else if (!isUnlocked) {
-                    const progressVal = Math.min(100, (c.progressCurrent / c.goals) * 100);
-                    const progressText = `${c.progressCurrent}/${c.goals} gols`;
-                    statusText = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progressVal}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${progressText}</p>`;
+                let progressHtml = '';
+                const progressVal = Math.min(100, (c.progressCurrent / c.goals) * 100);
+                const progressText = c.repeatable ? `${c.progressCurrent}/${c.goals} gols` : `${c.current}/${c.goals} gols`;
+                if (!isUnlocked) {
+                    progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progressVal}%; background: linear-gradient(90deg, #1DBCB8, #0B4F6C)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${progressText}</p>`;
+                } else if (c.repeatable) {
+                    progressHtml = `<p class="text-xs text-green-400 mt-1 text-center font-bold">✅ ${c.progressCurrent}/${c.goals} gols</p>`;
                 }
 
                 if (isUnlocked) {
@@ -2131,8 +2031,12 @@ function renderPlayers() {
                                 <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
                                 <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
                             </div>
-                            <div class="w-full">${statusText}</div>
-                            <div class="mt-2">${statusIcon}</div>
+                            <div class="w-full">
+                                ${progressHtml}
+                            </div>
+                            <div class="mt-2">
+                                ${statusIcon}
+                            </div>
                         </div>`;
                     }
                 } else {
@@ -2145,40 +2049,16 @@ function renderPlayers() {
                             <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
                             <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${c.name}" onload="this.previousElementSibling.style.display='none'">
                         </div>
-                        <div class="w-full">${statusText}</div>
-                        <div class="mt-2">${statusIcon}</div>
+                        <div class="w-full">
+                            ${progressHtml}
+                        </div>
+                        <div class="mt-2">
+                            ${statusIcon}
+                        </div>
                     </div>`;
                 }
             });
-            rewardsGrid.innerHTML = rewardsHtml;
-
-            // Render historical conquistas
-            const historicoList = document.getElementById('album-historico-list');
-            const historicoContainer = document.getElementById('album-historico-conquistas');
-            const histJogador = getConquistasDoJogador(playerId);
-
-            if (historicoContainer) {
-                if (histJogador.length === 0) {
-                    historicoContainer.classList.add('hidden');
-                } else {
-                    historicoContainer.classList.remove('hidden');
-                    if (historicoList) {
-                        historicoList.innerHTML = histJogador.map(h => {
-                            return `
-                                <div class="flex items-center gap-3 p-3 rounded-lg bg-yellow-900/10 border border-yellow-500/20">
-                                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center text-black font-bold text-xs flex-shrink-0">
-                                        🏆
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="font-bold text-yellow-400 text-sm">${h.nome}</p>
-                                        <p class="text-xs text-gray-400">${formatDate(h.data)} · ${h.golsNaData} gols válidos</p>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-                    }
-                }
-            }Div = document.getElementById('album-stickers');
+            rewardsGrid.innerHTML = rewardsHtml;const stickersDiv = document.getElementById('album-stickers');
             const stickerEvents = playerEvents.filter(e => e.tipo === 'figurinha');
             const stickerTypes = {};
             const STICKER_IMG_MAP = {
@@ -3435,29 +3315,68 @@ document.addEventListener('DOMContentLoaded', () => {
             return baseUrl.replace(/\.(jpeg|jpg|png)$/i, '');
         }
 
+        function handlePhotoError(img, isFullUrl, baseNoExt) {
+            // isFullUrl comes as string from HTML attribute, convert properly
+            const isFull = isFullUrl === true || isFullUrl === 'true';
+            console.log('handlePhotoError called. isFullUrl:', isFullUrl, 'converted:', isFull, 'src:', img.src);
+            if (isFull) {
+                // For Cloudinary URLs, try once more with a cache-buster before giving up
+                if (!img.dataset.retried) {
+                    img.dataset.retried = 'true';
+                    const retryUrl = img.src + (img.src.includes('?') ? '&' : '?') + 'retry=1';
+                    console.log('Retrying Cloudinary URL:', retryUrl);
+                    img.src = retryUrl;
+                    return;
+                }
+                img.style.display = 'none';
+                if (img.parentElement) img.parentElement.innerHTML = '<span style="font-size:40px">📷</span>';
+            } else {
+                tryNextExtension(img, baseNoExt);
+            }
+        }
+
         function renderMuralFotosAlbum(jogadorId) {
             const container = document.getElementById('album-mural-fotos');
             const grid = document.getElementById('album-mural-fotos-grid');
             if (!container || !grid) return;
 
             const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
+            console.log('=== MURAL FOTOS v2.3 === fotos count:', fotos.length, 'for player:', jogadorId);
 
-            if (fotos.length === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-
+            // Always show the section, even if empty (for upload button)
             container.classList.remove('hidden');
             grid.innerHTML = fotos.map(f => {
-                const rawUrl = f.url ? FOTOS_BASE + f.url : '';
-                const photoUrl = buildPhotoUrl(rawUrl);
-                const baseNoExt = getBaseWithoutExt(rawUrl);
+                // Handle different URL formats
+                let photoUrl = '';
+                let isFullUrl = false;
+                let baseNoExt = '';
+
+                if (!f.url) {
+                    photoUrl = '';
+                } else if (f.url.startsWith('http://') || f.url.startsWith('https://')) {
+                    // Cloudinary or other full URL
+                    photoUrl = f.url;
+                    isFullUrl = true;
+                } else if (f.url.startsWith('./') || f.url.startsWith('/')) {
+                    // Already a relative path
+                    photoUrl = f.url;
+                    isFullUrl = false;
+                    baseNoExt = getBaseWithoutExt(f.url);
+                } else {
+                    // Old format: just filename, prepend FOTOS_BASE
+                    const rawUrl = FOTOS_BASE + f.url;
+                    photoUrl = buildPhotoUrl(rawUrl);
+                    isFullUrl = false;
+                    baseNoExt = getBaseWithoutExt(rawUrl);
+                }
+
                 const data = f.data ? formatDate(f.data) : '';
+                console.log('Photo URL:', photoUrl, 'isFullUrl:', isFullUrl, 'legenda:', f.legenda);
                 return `
                     <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${photoUrl}')">
-                        <div style="padding-bottom:100%;height:0; overflow: hidden; background: #0f172a; display: flex; align-items: center; justify-content: center;">
-                            <img src="${photoUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
-                                onerror="tryNextExtension(this, '${baseNoExt}')">
+                        <div style="position:relative; width:100%; padding-bottom:100%; background: #0f172a;">
+                            <img src="${photoUrl}" style="position:absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
+                                onerror="console.log('IMG ERROR:', this.src); handlePhotoError(this, ${isFullUrl}, '${baseNoExt}')">
                         </div>
                         ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
                     </div>
@@ -3575,15 +3494,32 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             container.innerHTML = fotos.map(f => {
-                const rawUrl = f.url ? FOTOS_BASE + f.url : '';
-                const photoUrl = buildPhotoUrl(rawUrl);
-                const baseNoExt = getBaseWithoutExt(rawUrl);
+                let photoUrl = '';
+                let isFullUrl = false;
+                let baseNoExt = '';
+
+                if (!f.url) {
+                    photoUrl = '';
+                } else if (f.url.startsWith('http://') || f.url.startsWith('https://')) {
+                    photoUrl = f.url;
+                    isFullUrl = true;
+                } else if (f.url.startsWith('./') || f.url.startsWith('/')) {
+                    photoUrl = f.url;
+                    isFullUrl = false;
+                    baseNoExt = getBaseWithoutExt(f.url);
+                } else {
+                    const rawUrl = FOTOS_BASE + f.url;
+                    photoUrl = buildPhotoUrl(rawUrl);
+                    isFullUrl = false;
+                    baseNoExt = getBaseWithoutExt(rawUrl);
+                }
+
                 const data = f.data ? formatDate(f.data) : '';
                 return `
                     <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
                         <div class="flex items-center gap-3">
                             <img src="${photoUrl}" class="w-12 h-12 rounded-lg object-cover border border-gray-600" 
-                                onerror="tryNextExtension(this, '${baseNoExt}')">
+                                onerror="handlePhotoError(this, ${isFullUrl}, '${baseNoExt}')">
                             <div class="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center hidden"><span class="text-lg">📷</span></div>
                             <div>
                                 <p class="text-sm font-semibold text-white">${f.legenda || 'Sem legenda'}</p>
@@ -3631,6 +3567,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ===== UPLOAD DE FOTOS VIA CLOUDINARY =====
         let currentUploadPlayerId = null;
+        let currentUploadFile = null;
+        let currentUploadCompressed = null;
 
         function abrirUploadFoto() {
             currentUploadPlayerId = currentAlbumPlayer;
@@ -3657,16 +3595,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const progressDiv = document.getElementById('upload-progress');
-            const progressBar = document.getElementById('upload-progress-bar');
-            const statusText = document.getElementById('upload-status');
+            currentUploadFile = file;
+
+            // Show preview modal
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview-img').src = e.target.result;
+                document.getElementById('preview-data').value = getTodayStr();
+                document.getElementById('preview-legenda').value = '';
+                document.getElementById('upload-preview-modal').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+
+            input.value = '';
+        }
+
+        function fecharPreviewModal() {
+            document.getElementById('upload-preview-modal').classList.add('hidden');
+            currentUploadFile = null;
+            currentUploadCompressed = null;
+        }
+
+        async function confirmarUpload() {
+            if (!currentUploadFile || !currentUploadPlayerId) return;
+
+            const legenda = document.getElementById('preview-legenda').value.trim();
+            const data = document.getElementById('preview-data').value;
+            const progressDiv = document.getElementById('preview-upload-progress');
+            const progressBar = document.getElementById('preview-progress-bar');
+            const statusText = document.getElementById('preview-status');
 
             progressDiv.classList.remove('hidden');
             progressBar.style.width = '10%';
             statusText.textContent = 'Comprimindo imagem...';
 
             try {
-                const compressedFile = await comprimirImagem(file);
+                const compressedFile = await comprimirImagem(currentUploadFile);
                 progressBar.style.width = '30%';
                 statusText.textContent = 'Enviando...';
 
@@ -3684,17 +3648,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error('Erro no upload: ' + response.status);
                 }
 
-                const data = await response.json();
+                const result = await response.json();
                 progressBar.style.width = '90%';
                 statusText.textContent = 'Salvando...';
 
-                const today = getTodayStr();
                 await window.addDoc(window.collection(window.db, 'muralFotos'), {
                     jogadorId: currentUploadPlayerId,
-                    url: data.secure_url,
-                    publicId: data.public_id,
-                    legenda: '',
-                    data: today,
+                    url: result.secure_url,
+                    publicId: result.public_id,
+                    legenda: legenda,
+                    data: data,
                     createdAt: new Date().toISOString()
                 });
 
@@ -3702,19 +3665,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusText.textContent = 'Pronto!';
                 showToast('Foto enviada com sucesso!', 'success');
 
-                renderMuralFotosAlbum(currentUploadPlayerId);
-
+                // Close modal and refresh
                 setTimeout(() => {
+                    fecharPreviewModal();
                     progressDiv.classList.add('hidden');
                     progressBar.style.width = '0%';
-                    input.value = '';
-                }, 1500);
+                }, 800);
 
             } catch (e) {
                 console.error('Erro no upload:', e);
                 progressDiv.classList.add('hidden');
                 showToast('Erro ao enviar foto: ' + e.message, 'error');
-                input.value = '';
             }
         }
 
@@ -3758,6 +3719,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Expor funcoes
         window.abrirUploadFoto = abrirUploadFoto;
         window.handleFotoUpload = handleFotoUpload;
+        window.fecharPreviewModal = fecharPreviewModal;
+        window.confirmarUpload = confirmarUpload;
+        window.handlePhotoError = handlePhotoError;
         window.cadastrarComissao = cadastrarComissao;
         window.cadastrarCorpoTecnico = cadastrarCorpoTecnico;
         window.excluirComissao = excluirComissao;
@@ -3775,13 +3739,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.carregarFotosMural = carregarFotosMural;
         window.excluirFotoMural = excluirFotoMural;
 
-                window.loadConquistasHistorico = loadConquistasHistorico;
-        window.getConquistasDoJogador = getConquistasDoJogador;
-        window.jaTemConquista = jaTemConquista;
-        window.registrarConquista = registrarConquista;
-        window.checkAndRecordConquistas = checkAndRecordConquistas;
-
-// Defensive alias for cached/old references
+        // Defensive alias for cached/old references
         window.carregarCorrecao = carregarCorrecaoUnificada;
         window.getComissaoStats = getComissaoStats;
 
@@ -3823,6 +3781,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+        window.tryNextExtension = tryNextExtension;
     </script>
+
+    <!-- PREVIEW UPLOAD MODAL -->
+    <div id="upload-preview-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div class="glass rounded-2xl p-6 max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4 text-center"><i class="fas fa-camera mr-2 text-[#1DBCB8]"></i>Preview da Foto</h3>
+            <div class="rounded-xl overflow-hidden mb-4 bg-gray-800 flex items-center justify-center" style="max-height:300px;">
+                <img id="preview-img" src="" alt="Preview" style="max-width:100%; max-height:300px; object-fit:contain;">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-400 mb-2">Legenda (opcional)</label>
+                <input type="text" id="preview-legenda" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: Cliente Silva - Master Verão">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-400 mb-2">Data</label>
+                <input type="date" id="preview-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+            </div>
+            <div id="preview-upload-progress" class="hidden mb-4">
+                <div class="w-full bg-gray-700 rounded-full h-2">
+                    <div id="preview-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] transition-all" style="width: 0%"></div>
+                </div>
+                <p id="preview-status" class="text-xs text-gray-400 mt-1 text-center">Enviando...</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="fecharPreviewModal()" class="flex-1 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-all font-semibold">
+                    Cancelar
+                </button>
+                <button onclick="confirmarUpload()" class="flex-1 py-3 rounded-xl btn-primary text-white font-semibold">
+                    <i class="fas fa-upload mr-2"></i>Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
