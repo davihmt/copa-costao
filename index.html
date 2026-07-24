@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Copa Costão 2026 - v2.2</title>
-    <meta name="version" content="v2.1">
+    <meta name="version" content="v2.2">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -169,7 +169,7 @@
         (function() {
             if (!window.location.search.includes('v=')) {
                 var url = new URL(window.location.href);
-                url.searchParams.set('v', '2.1');
+                url.searchParams.set('v', '2.2');
                 window.history.replaceState({}, '', url);
             }
         })();
@@ -203,7 +203,7 @@
         </div>
         <div class="text-center mt-1">
             <button onclick="location.reload(true)" class="text-xs text-gray-500 hover:text-[#1DBCB8] transition-all" title="Forçar atualização">
-                <i class="fas fa-sync-alt mr-1"></i>Atualizar página
+                <i class="fas fa-sync-alt mr-1"></i>Atualizar Dados
             </button>
         </div>
     </header>
@@ -332,6 +332,11 @@
                         <div id="album-rewards-mural" class="player-card">
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-medal mr-2 text-yellow-400"></i>Mural de Conquistas</h3>
                             <div id="album-rewards-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+                        </div>
+                        <div id="album-conquistas-historico" class="player-card">
+                            <h3 class="text-xl font-bold mb-4"><i class="fas fa-trophy mr-2 text-yellow-400"></i>Histórico de Conquistas</h3>
+                            <p class="text-xs text-gray-400 mb-3">Conquistas alcançadas permanentemente, mesmo após o reset do período.</p>
+                            <div id="album-conquistas-historico-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
                         </div>
                         <div class="player-card">
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-stamp mr-2 text-[#1DBCB8]"></i>Figurinhas</h3>
@@ -531,6 +536,9 @@
                     </button>
                     <button onclick="showAdminTab('mural-fotos')" id="admin-tab-mural-fotos" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-images mr-2"></i>Mural de Fotos
+                    </button>
+                    <button onclick="showAdminTab('conquistas')" id="admin-tab-conquistas" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
+                        <i class="fas fa-trophy mr-2"></i>Conquistas
                     </button>
                     <button onclick="showAdminTab('corrigir')" id="admin-tab-corrigir" class="admin-tab-btn px-4 py-3 rounded-xl text-left font-semibold transition-all text-white/60 hover:bg-white/5">
                         <i class="fas fa-edit mr-2"></i>Corrigir
@@ -870,6 +878,83 @@
                         </div>
                     </div>
 
+                    <!-- Conquistas -->
+                    <div id="admin-panel-conquistas" class="admin-panel hidden">
+                        <h3 class="text-2xl font-bold mb-6"><i class="fas fa-trophy mr-2 text-yellow-400"></i>Gerenciar Conquistas</h3>
+
+                        <!-- CONCEDER CONQUISTA MANUAL -->
+                        <div class="glass rounded-2xl p-6 max-w-2xl mb-6">
+                            <h4 class="text-xl font-bold mb-4"><i class="fas fa-plus-circle mr-2 text-green-400"></i>Conceder Conquista</h4>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
+                                <select id="conq-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="">Selecione um jogador</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Conquista</label>
+                                <select id="conq-tipo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="hat-trick">HAT-TRICK!!! (14+ gols no dia)</option>
+                                    <option value="imparavel">IMPARÁVEL!!! (30+ gols na semana)</option>
+                                    <option value="craque-50">CRAQUE! (50+ gols no mês)</option>
+                                    <option value="monstro-60">MONSTRO! (60+ gols no mês)</option>
+                                    <option value="artilheiro-80">ARTILHEIRO! (80+ gols no mês)</option>
+                                    <option value="maquina-120">MÁQUINAAA!! (120+ gols no mês)</option>
+                                    <option value="fenomeno-150">FENÔMENO!!! (150+ gols no mês)</option>
+                                    <option value="spiff">🏆 SPIFF (Brinde Personalizado)</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Data da Conquista</label>
+                                <input type="date" id="conq-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Valor Atingido (gols)</label>
+                                <input type="number" id="conq-valor" min="1" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: 65">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Observação (opcional)</label>
+                                <input type="text" id="conq-obs" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: Prêmio entregue na reunião">
+                            </div>
+                            <button onclick="concederConquista()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-trophy mr-2"></i>Conceder Conquista
+                            </button>
+                        </div>
+
+                        <!-- CONQUISTAS RETROATIVAS -->
+                        <div class="glass rounded-2xl p-6 max-w-2xl mb-6">
+                            <h4 class="text-xl font-bold mb-4"><i class="fas fa-history mr-2 text-[#1DBCB8]"></i>Conquistas Retroativas</h4>
+                            <p class="text-gray-400 text-sm mb-4">Processa e adiciona automaticamente todas as conquistas alcançadas desde <strong>01/07/2026</strong> até hoje. Verifica dia a dia, semana a semana e mês a mês.</p>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Data Inicial</label>
+                                <input type="date" id="ret-data-inicio" value="2026-07-01" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                            </div>
+                            <button onclick="processarConquistasRetroativas()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
+                                <i class="fas fa-magic mr-2"></i>Processar Conquistas Retroativas
+                            </button>
+                            <div id="ret-progress" class="hidden mt-4">
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div id="ret-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] transition-all" style="width: 0%"></div>
+                                </div>
+                                <p id="ret-status" class="text-xs text-gray-400 mt-1 text-center">Processando...</p>
+                            </div>
+                        </div>
+
+                        <!-- GERENCIAR CONQUISTAS EXISTENTES -->
+                        <h4 class="text-xl font-bold mb-4"><i class="fas fa-list mr-2 text-yellow-400"></i>Conquistas no Histórico</h4>
+                        <div class="glass rounded-2xl p-6 max-w-3xl">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Filtrar por Jogador</label>
+                                <select id="conq-filter-jogador" onchange="renderAdminConquistas()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                    <option value="">Todos os jogadores</option>
+                                </select>
+                            </div>
+                            <div id="conq-admin-list" class="space-y-2 max-h-96 overflow-y-auto">
+                                <p class="text-gray-500 text-center py-4">Carregando conquistas...</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Corrigir -->
                     <div id="admin-panel-corrigir" class="admin-panel hidden">
                         <h3 class="text-2xl font-bold mb-6">Corrigir / Excluir Eventos</h3>
@@ -930,7 +1015,7 @@
     </main>
 
     <footer class="glass mt-8 py-4 text-center">
-        <p class="text-gray-500 text-xs">Copa Costão 2026 — v2.1 | Atualizado: <span id="last-updated">carregando...</span></p>
+        <p class="text-gray-500 text-xs">Copa Costão 2026 — v2.2 | Atualizado: <span id="last-updated">carregando...</span></p>
         <script>
             document.getElementById('last-updated').textContent = new Date().toLocaleString('pt-BR');
         </script>
@@ -941,7 +1026,7 @@
         // ===== CONFIG =====
         const ADMIN_PASSWORD = 'costao2026';
         const REPO_BASE = 'https://davihmt.github.io/copa-costao/';
-        const CACHE_VERSION = '?v=2.1_' + new Date().toISOString().split('T')[0]; // Daily cache bust
+        const CACHE_VERSION = '?v=2.2_' + new Date().toISOString().split('T')[0]; // Daily cache bust
         const FOTOS_BASE = './Fotos/';
         
         
@@ -958,6 +1043,17 @@
         function throttleRender(fn) {
             if (_renderThrottle) clearTimeout(_renderThrottle);
             _renderThrottle = setTimeout(fn, 100);
+        }
+
+        // ===== MANUAL REFRESH =====
+        async function refreshData() {
+            showToast('Atualizando dados...', 'info');
+            // Force re-read from Firebase via onSnapshot will auto-update
+            // Just trigger a re-render to ensure consistency
+            renderPlayers();
+            renderRanking();
+            if (!inAdmin && currentAlbumPlayer) showAlbum(currentAlbumPlayer);
+            showToast('Dados atualizados!', 'success');
         }
         // ===== STATE =====
         let players = [];
@@ -1018,6 +1114,28 @@
         let corpoTecnico = [];
         let elogios = [];
         let muralFotos = [];
+        let conquistasHistorico = [];
+
+        
+
+                async function loadConquistasHistorico() {
+            try {
+                const q = window.query(window.collection(window.db, 'conquistasHistorico'), window.orderBy('dataConquista', 'desc'));
+                window.onSnapshot(q, (snapshot) => {
+                    conquistasHistorico = [];
+                    snapshot.forEach(doc => {
+                        conquistasHistorico.push({ id: doc.id, ...doc.data() });
+                    });
+                    if (currentAlbumPlayer) {
+                        throttleRender(function() {
+                            renderConquistasHistorico(currentAlbumPlayer);
+                        });
+                    }
+                });
+            } catch (e) {
+                // Silently fail
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const today = getTodayStr();
@@ -1031,6 +1149,7 @@
             loadCorpoTecnico();
             loadElogios();
             loadMuralFotos();
+            loadConquistasHistorico();
             loadPlayers();
             loadEvents();
 
@@ -1230,7 +1349,6 @@
                     });
                 });
             } catch (e) {
-                console.error('Erro ao carregar jogadores:', e);
             }
         }
 
@@ -1254,7 +1372,6 @@
                     });
                 });
             } catch (e) {
-                console.error('Erro ao carregar eventos:', e);
             }
         }
 
@@ -1273,7 +1390,6 @@
             playerEvents.forEach(ev => {
                 // DEBUG: Show first event for each player
                 if (playerEvents.indexOf(ev) === 0) {
-                    console.log('Player:', playerId, 'Event date:', ev.data, 'Today:', getTodayStr());
                 }
 
                 // DEBUG for Laura: show all events and comparison
@@ -1282,7 +1398,6 @@
                     const today = new Date();
                     today.setHours(12, 0, 0, 0);
                     const sameDay = isSameDay(evDate, today);
-                    console.log('LAURA event:', ev.data, 'tipo:', ev.tipo, 'val:', Number(ev.valor)||0, 'sameDay:', sameDay, 'evDate:', evDate.toDateString(), 'today:', today.toDateString());
                 }
                 const evDate = getBRDate(ev.data);
                 const isThisMonth = isSameMonth(evDate, today);
@@ -1327,7 +1442,6 @@
             playerEvents.forEach(ev => {
                 // DEBUG: Show first event for each player
                 if (playerEvents.indexOf(ev) === 0) {
-                    console.log('Player:', playerId, 'Event date:', ev.data, 'Today:', getTodayStr());
                 }
 
                 // DEBUG for Laura: show all events and comparison
@@ -1336,7 +1450,6 @@
                     const today = new Date();
                     today.setHours(12, 0, 0, 0);
                     const sameDay = isSameDay(evDate, today);
-                    console.log('LAURA event:', ev.data, 'tipo:', ev.tipo, 'val:', Number(ev.valor)||0, 'sameDay:', sameDay, 'evDate:', evDate.toDateString(), 'today:', today.toDateString());
                 }
                 const evDate = getBRDate(ev.data);
                 const val = Number(ev.valor) || 0;
@@ -1648,7 +1761,6 @@ function renderPlayers() {
 
         // ===== RENDER RANKING =====
         function renderRanking() {
-            console.log('RENDER RANKING - Period:', rankingPeriod, 'Today:', new Date().toDateString());
             const geral = document.getElementById('ranking-geral');
             const porTime = document.getElementById('ranking-por-time');
             if (!geral || !porTime) return;
@@ -1871,8 +1983,177 @@ function renderPlayers() {
             }).join('');
         }
 
-        function showAlbum(playerId) {
-            console.log('showAlbum chamado com:', playerId);
+        function calcConquistas(pid) {
+                const playerEvents = events.filter(e => e.jogadorId === pid);
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth();
+                const hoje = getHojeBrasilia();
+                const todayKey = hoje;
+                const currentWeek = getWeekRangeBrasilia(hoje);
+                const currentWeekKey = getDiaBrasilia(currentWeek.monday.toISOString());
+
+                const days = {}, weeks = {};
+                let monthTotal = 0;
+
+                playerEvents.forEach(e => {
+                    if (!e.data) return;
+                    const val = Number(e.valor) || 0;
+
+                    const d = new Date(e.data);
+                    const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+                    const isCurrentMonth = dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth;
+
+                    let score = 0;
+
+                    if (e.tipo === 'gol') {
+                        if (e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado') {
+                            score = val;
+                        } else if (e.subtipo === 'cartao-verde') {
+                            score = val;
+                        } else {
+                            score = val;
+                        }
+                    } else if (e.tipo === 'figurinha') {
+                        score = val;
+                    } else if (e.tipo === 'punicao') {
+                        score = -Math.abs(val);
+                    }
+
+                    if (score !== 0) {
+                        const dk = getDiaBrasilia(e.data);
+                        const wk = getWeekRangeBrasilia(dk);
+                        const wkKey = getDiaBrasilia(wk.monday.toISOString());
+
+                        days[dk] = (days[dk] || 0) + score;
+                        weeks[wkKey] = (weeks[wkKey] || 0) + score;
+
+                        if (isCurrentMonth) monthTotal += score;
+                    }
+                });
+
+                return {
+                    diaCount: Object.values(days).filter(g => g >= 14).length,
+                    semanaCount: Object.values(weeks).filter(g => g >= 30).length,
+                    monthTotal: monthTotal,
+                    currentDayTotal: days[todayKey] || 0,
+                    currentWeekTotal: weeks[currentWeekKey] || 0
+                };
+            }
+
+            // ===== CONQUISTAS TRACKER =====
+            async function checkAndSaveConquistas(pid) {
+                const conq = calcConquistas(pid);
+                const player = players.find(p => p.id === pid);
+                if (!player) return;
+
+                const conquistasConfig = [
+                    { id: 'hat-trick', name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', img: '+14.png' },
+                    { id: 'imparavel', name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', img: '+30.png' },
+                    { id: 'craque-50', name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', img: '+50.png' },
+                    { id: 'monstro-60', name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', img: '+60.png' },
+                    { id: 'artilheiro-80', name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', img: '+80.png' },
+                    { id: 'maquina-120', name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', img: '+120.png' },
+                    { id: 'fenomeno-150', name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', img: '+150.png' }
+                ];
+
+                const hoje = getHojeBrasilia();
+                const hojeDate = new Date();
+
+                for (const cfg of conquistasConfig) {
+                    let isUnlocked = false;
+                    let valorAtual = 0;
+
+                    if (cfg.period === 'day') {
+                        isUnlocked = conq.currentDayTotal >= cfg.goals;
+                        valorAtual = conq.currentDayTotal;
+                    } else if (cfg.period === 'week') {
+                        isUnlocked = conq.currentWeekTotal >= cfg.goals;
+                        valorAtual = conq.currentWeekTotal;
+                    } else if (cfg.period === 'month') {
+                        isUnlocked = conq.monthTotal >= cfg.goals;
+                        valorAtual = conq.monthTotal;
+                    }
+
+                    if (isUnlocked) {
+                        // Check if already saved for this period
+                        const jaExiste = conquistasHistorico.some(ch =>
+                            ch.jogadorId === pid &&
+                            ch.conquistaId === cfg.id &&
+                            ch.periodo === cfg.period &&
+                            ch.dataConquista && ch.dataConquista.startsWith(hoje.substring(0, 7)) // Same month
+                        );
+
+                        if (!jaExiste) {
+                            try {
+                                await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
+                                    jogadorId: pid,
+                                    jogadorNome: `${player.nome} ${player.sobrenome || ''}`,
+                                    conquistaId: cfg.id,
+                                    conquistaNome: cfg.name,
+                                    conquistaImg: cfg.img,
+                                    periodo: cfg.period,
+                                    meta: cfg.goals,
+                                    valorAtingido: valorAtual,
+                                    dataConquista: hoje,
+                                    pago: false,
+                                    dataPagamento: null,
+                                    observacao: '',
+                                    createdAt: new Date().toISOString()
+                                });
+                            } catch (e) {
+                                // Silently fail
+                            }
+                        }
+                    }
+                }
+            }
+
+            function renderConquistasHistorico(pid) {
+                const container = document.getElementById('album-conquistas-historico-list');
+                if (!container) return;
+
+                const historico = conquistasHistorico.filter(ch => ch.jogadorId === pid)
+                    .sort((a, b) => new Date(b.dataConquista) - new Date(a.dataConquista));
+
+                if (historico.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhuma conquista registrada ainda</p>';
+                    return;
+                }
+
+                container.innerHTML = historico.map(ch => {
+                    const data = ch.dataConquista ? formatDate(ch.dataConquista) : '';
+                    const imgUrl = ch.conquistaImg ? REPO_BASE + ch.conquistaImg : '';
+                    const periodoLabel = ch.periodo === 'day' ? 'Dia' : ch.periodo === 'week' ? 'Semana' : 'Mês';
+                    const pagoBadge = ch.pago 
+                        ? '<span class="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">PAGO</span>'
+                        : '<span class="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold">PENDENTE</span>';
+                    const obsHtml = ch.observacao ? `<p class="text-xs text-gray-500 italic">${ch.observacao}</p>` : '';
+
+                    return `
+                        <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/30 border border-yellow-500/20">
+                            <div style="width:50px;height:50px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
+                                <span style="font-size:24px;">🏆</span>
+                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${ch.conquistaNome}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <p class="font-bold text-yellow-400 text-sm truncate">${ch.conquistaNome}</p>
+                                    ${pagoBadge}
+                                </div>
+                                <p class="text-xs text-gray-400">${ch.meta}+ gols no ${periodoLabel.toLowerCase()} · ${data}</p>
+                                <p class="text-xs text-green-400">Atingiu: ${ch.valorAtingido} gols</p>
+                                ${obsHtml}
+                            </div>
+                            <div class="text-green-400 text-xl flex-shrink-0">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function showAlbum(playerId) {
             const player = players.find(p => p.id === playerId);
             if (!player) return;
 
@@ -1910,15 +2191,52 @@ function renderPlayers() {
 
             // Calcular conquistas
             const conq = calcConquistas(playerId);
-            console.log('DEBUG calcConquistas for', playerId, ':', JSON.stringify(conq));
-            let conquistasCount = 0;
-            if (conq.currentDayTotal >= 14) conquistasCount++;
-            if (conq.currentWeekTotal >= 30) conquistasCount++;
-            // Contar conquistas mensais conquistadas
-            const CONQUISTAS_METAS = [50, 60, 80, 120, 150];
-            CONQUISTAS_METAS.forEach(meta => {
-                if (conq.monthTotal >= meta) conquistasCount++;
+            checkAndSaveConquistas(playerId);
+
+            // Count ALL conquistas: each historico entry is a unique achievement
+            // Plus current period achievements not yet saved to historico
+            const hoje = getHojeBrasilia();
+            const mesAtual = hoje.substring(0, 7);
+
+            // Start with all historico entries for this player
+            let conquistasCount = conquistasHistorico.filter(ch => ch.jogadorId === playerId).length;
+
+            // Add current period achievements that are NOT already in historico
+            // Diária (hat-trick) - check if exists for TODAY
+            if (conq.currentDayTotal >= 14) {
+                const jaExiste = conquistasHistorico.some(ch =>
+                    ch.jogadorId === playerId && ch.conquistaId === 'hat-trick' && ch.dataConquista === hoje
+                );
+                if (!jaExiste) conquistasCount++;
+            }
+
+            // Semanal (imparavel) - check if exists for THIS WEEK
+            if (conq.currentWeekTotal >= 30) {
+                const semanaAtual = getWeekRangeBrasilia(hoje);
+                const wkKey = getDiaBrasilia(semanaAtual.monday.toISOString());
+                const jaExiste = conquistasHistorico.some(ch =>
+                    ch.jogadorId === playerId && ch.conquistaId === 'imparavel' && ch.dataConquista === wkKey
+                );
+                if (!jaExiste) conquistasCount++;
+            }
+
+            // Mensais - check if exists for THIS MONTH
+            const mensais = [
+                { id: 'craque-50', meta: 50 },
+                { id: 'monstro-60', meta: 60 },
+                { id: 'artilheiro-80', meta: 80 },
+                { id: 'maquina-120', meta: 120 },
+                { id: 'fenomeno-150', meta: 150 }
+            ];
+            mensais.forEach(m => {
+                if (conq.monthTotal >= m.meta) {
+                    const jaExiste = conquistasHistorico.some(ch =>
+                        ch.jogadorId === playerId && ch.conquistaId === m.id && ch.dataConquista.startsWith(mesAtual)
+                    );
+                    if (!jaExiste) conquistasCount++;
+                }
             });
+
             document.getElementById('album-conquistas-count').textContent = conquistasCount;
 
             const profilePhoto = document.getElementById('album-player-photo');
@@ -1946,49 +2264,7 @@ function renderPlayers() {
 
             const rewardsGrid = document.getElementById('album-rewards-grid');
 
-            function calcConquistas(pid) {
-                const pe = events.filter(e => e.jogadorId === pid && (e.tipo === 'gol' || e.tipo === 'figurinha'));
-                const days = {}, weeks = {};
-                let monthTotal = 0;
-                const now = new Date();
-                const currentYear = now.getFullYear();
-                const currentMonth = now.getMonth();
-                const hoje = getHojeBrasilia();
-                const todayKey = hoje;
-                const currentWeek = getWeekRangeBrasilia(hoje);
-                const currentWeekKey = getDiaBrasilia(currentWeek.monday.toISOString());
-
-                pe.forEach(e => {
-                    if (!e.data) return;
-                    const dk = getDiaBrasilia(e.data);
-                    const wk = getWeekRangeBrasilia(dk);
-                    const wkKey = getDiaBrasilia(wk.monday.toISOString());
-                    days[dk] = (days[dk] || 0) + (Number(e.valor) || 1);
-                    weeks[wkKey] = (weeks[wkKey] || 0) + (Number(e.valor) || 1);
-                    const d = new Date(e.data);
-                    const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-                    if (dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth) monthTotal += (Number(e.valor) || 1);
-                });
-
-                // DEBUG: log the keys for this player
-                if (pid === 'diana') {
-                    console.log('DEBUG calcConquistas Diana:');
-                    console.log('  todayKey:', todayKey);
-                    console.log('  currentWeekKey:', currentWeekKey);
-                    console.log('  days keys:', Object.keys(days));
-                    console.log('  weeks keys:', Object.keys(weeks));
-                    console.log('  days[todayKey]:', days[todayKey] || 0);
-                    console.log('  weeks[currentWeekKey]:', weeks[currentWeekKey] || 0);
-                }
-
-                return {
-                    diaCount: Object.values(days).filter(g => g >= 14).length,
-                    semanaCount: Object.values(weeks).filter(g => g >= 30).length,
-                    monthTotal: monthTotal,
-                    currentDayTotal: days[todayKey] || 0,
-                    currentWeekTotal: weeks[currentWeekKey] || 0
-                };
-            }
+            
             const conqMural = calcConquistas(playerId);
 
             const CONQUISTAS = [
@@ -2108,6 +2384,7 @@ function renderPlayers() {
 
             // Render Mural de Elogios
             renderElogiosAlbum(playerId);
+            renderConquistasHistorico(playerId);
 
             const eventsDiv = document.getElementById('album-events');
             if (playerEvents.length === 0) {
@@ -2213,6 +2490,21 @@ function renderPlayers() {
             if (tab === 'mural-fotos') {
                 updateMuralFotosSelects();
                 document.getElementById('mural-foto-data').value = getTodayStr();
+            }
+            if (tab === 'conquistas') {
+                // Populate jogador selects
+                const sel = document.getElementById('conq-jogador');
+                if (sel) {
+                    sel.innerHTML = '<option value="">Selecione um jogador</option>' +
+                        players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''}</option>`).join('');
+                }
+                const filterSel = document.getElementById('conq-filter-jogador');
+                if (filterSel) {
+                    filterSel.innerHTML = '<option value="">Todos os jogadores</option>' +
+                        players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''}</option>`).join('');
+                }
+                document.getElementById('conq-data').value = getTodayStr();
+                renderAdminConquistas();
             }
         }
 
@@ -2579,7 +2871,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 document.getElementById('del-jogador').value = '';
                 document.getElementById('del-preview').classList.add('hidden');
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao excluir jogador', 'error');
             }
         }
@@ -2607,7 +2898,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 document.getElementById('cad-foto-perfil').value = '';
                 document.getElementById('cad-foto-comemoracao').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao cadastrar', 'error');
             }
         }
@@ -2636,7 +2926,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 document.getElementById('gols-qtd').value = '';
                 document.getElementById('gols-obs').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao lançar gols', 'error');
             }
         }
@@ -2682,7 +2971,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 selectedFigPlayers.clear();
                 renderFigPlayersGrid();
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao lançar figurinha', 'error');
             }
         }
@@ -2722,7 +3010,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 showToast(`${map[tipo].label} aplicada!`, 'success');
                 document.getElementById('pun-qtd').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao aplicar punição', 'error');
             }
         }
@@ -2827,7 +3114,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 showToast('Evento excluído!', 'success');
                 carregarCorrecaoUnificada();
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao excluir', 'error');
             }
         }
@@ -2888,7 +3174,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                     });
                 });
             } catch (e) {
-                console.error('Erro ao carregar comissão:', e);
             }
         }
 
@@ -2906,7 +3191,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                     });
                 });
             } catch (e) {
-                console.error('Erro ao carregar corpo técnico:', e);
             }
         }
 
@@ -2923,7 +3207,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                     }
                 });
             } catch (e) {
-                console.error('Erro ao carregar elogios:', e);
             }
         }
 
@@ -2952,7 +3235,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 document.getElementById('comissao-nome').value = '';
                 document.getElementById('comissao-foto').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao cadastrar', 'error');
             }
         }
@@ -2980,7 +3262,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 document.getElementById('corpo-nome').value = '';
                 document.getElementById('corpo-foto').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao cadastrar', 'error');
             }
         }
@@ -2994,7 +3275,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 showToast('Excluído com sucesso!', 'success');
                 document.getElementById('del-comissao').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao excluir', 'error');
             }
         }
@@ -3008,7 +3288,6 @@ Isso também excluirá todos os seus eventos!`)) return;
                 showToast('Excluído com sucesso!', 'success');
                 document.getElementById('del-corpo').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao excluir', 'error');
             }
         }
@@ -3283,9 +3562,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (comSnap.exists()) {
                         const recs = (comSnap.data().reconhecimentos || 0) + 1;
                         await window.updateDoc(comRef, { reconhecimentos: recs });
-                        console.log('Comissão', deId, 'reconhecimentos atualizado para', recs);
                     } else {
-                        console.log('Comissão', deId, 'NÃO ENCONTRADA no Firebase');
                     }
                 }
 
@@ -3297,7 +3574,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     renderPlayers();
                 }
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao enviar elogio', 'error');
             }
         }
@@ -3318,13 +3594,11 @@ document.addEventListener('DOMContentLoaded', () => {
         function handlePhotoError(img, isFullUrl, baseNoExt) {
             // isFullUrl comes as string from HTML attribute, convert properly
             const isFull = isFullUrl === true || isFullUrl === 'true';
-            console.log('handlePhotoError called. isFullUrl:', isFullUrl, 'converted:', isFull, 'src:', img.src);
             if (isFull) {
                 // For Cloudinary URLs, try once more with a cache-buster before giving up
                 if (!img.dataset.retried) {
                     img.dataset.retried = 'true';
                     const retryUrl = img.src + (img.src.includes('?') ? '&' : '?') + 'retry=1';
-                    console.log('Retrying Cloudinary URL:', retryUrl);
                     img.src = retryUrl;
                     return;
                 }
@@ -3341,7 +3615,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!container || !grid) return;
 
             const fotos = muralFotos.filter(f => f.jogadorId === jogadorId);
-            console.log('=== MURAL FOTOS v2.3 === fotos count:', fotos.length, 'for player:', jogadorId);
 
             // Always show the section, even if empty (for upload button)
             container.classList.remove('hidden');
@@ -3371,12 +3644,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const data = f.data ? formatDate(f.data) : '';
-                console.log('Photo URL:', photoUrl, 'isFullUrl:', isFullUrl, 'legenda:', f.legenda);
                 return `
                     <div class="rounded-xl overflow-hidden bg-gray-800/50 border border-gray-700/50 cursor-pointer hover:border-[#1DBCB8] transition-all" onclick="openLightbox('${photoUrl}')">
                         <div style="position:relative; width:100%; padding-bottom:100%; background: #0f172a;">
                             <img src="${photoUrl}" style="position:absolute; top:0; left:0; width: 100%; height: 100%; object-fit: cover;" alt="${f.legenda || 'Foto'}" 
-                                onerror="console.log('IMG ERROR:', this.src); handlePhotoError(this, ${isFullUrl}, '${baseNoExt}')">
+                                onerror=" handlePhotoError(this, ${isFullUrl}, '${baseNoExt}')">
                         </div>
                         ${f.legenda ? `<div class="p-2"><p class="text-xs text-gray-300 truncate">${f.legenda}</p><p class="text-xs text-gray-500">${data}</p></div>` : ''}
                     </div>
@@ -3400,7 +3672,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 await window.deleteDoc(window.doc(window.db, 'elogios', elogioId));
                 showToast('Elogio excluído!', 'success');
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao excluir elogio', 'error');
             }
         }
@@ -3450,7 +3721,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             } catch (e) {
-                console.error('Erro ao carregar mural de fotos:', e);
             }
         }
 
@@ -3472,7 +3742,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('mural-foto-url').value = '';
                 document.getElementById('mural-foto-legenda').value = '';
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao adicionar foto', 'error');
             }
         }
@@ -3540,7 +3809,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Foto excluída!', 'success');
                 carregarFotosMural();
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao excluir foto', 'error');
             }
         }
@@ -3673,7 +3941,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 800);
 
             } catch (e) {
-                console.error('Erro no upload:', e);
                 progressDiv.classList.add('hidden');
                 showToast('Erro ao enviar foto: ' + e.message, 'error');
             }
@@ -3716,6 +3983,295 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+
+        // ===== ADMIN CONQUISTAS FUNCTIONS =====
+        const CONQUISTAS_CONFIG = {
+            'hat-trick': { name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', img: '+14.png' },
+            'imparavel': { name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', img: '+30.png' },
+            'craque-50': { name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', img: '+50.png' },
+            'monstro-60': { name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', img: '+60.png' },
+            'artilheiro-80': { name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', img: '+80.png' },
+            'maquina-120': { name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', img: '+120.png' },
+            'fenomeno-150': { name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', img: '+150.png' },
+            'spiff': { name: 'SPIFF', rule: 'Brinde Personalizado', goals: 0, period: 'custom', img: 'spiff.png' }
+        };
+
+        async function concederConquista() {
+            const jogadorId = document.getElementById('conq-jogador').value;
+            const tipo = document.getElementById('conq-tipo').value;
+            const data = document.getElementById('conq-data').value;
+            const valor = parseInt(document.getElementById('conq-valor').value) || 0;
+            const obs = document.getElementById('conq-obs').value.trim();
+
+            if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
+            if (!data) { showToast('Informe a data da conquista', 'error'); return; }
+
+            const cfg = CONQUISTAS_CONFIG[tipo];
+            const player = players.find(p => p.id === jogadorId);
+            if (!player) { showToast('Jogador não encontrado', 'error'); return; }
+
+            // Spiff requer observação obrigatória
+            if (tipo === 'spiff' && !obs) {
+                showToast('SPIFF requer uma descrição do brinde na observação', 'error');
+                return;
+            }
+            // Conquistas normais requerem valor > 0
+            if (tipo !== 'spiff' && valor <= 0) {
+                showToast('Informe o valor atingido', 'error');
+                return;
+            }
+
+            try {
+                await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
+                    jogadorId: jogadorId,
+                    jogadorNome: `${player.nome} ${player.sobrenome || ''}`,
+                    conquistaId: tipo,
+                    conquistaNome: cfg.name,
+                    conquistaImg: cfg.img,
+                    periodo: cfg.period,
+                    meta: cfg.goals,
+                    valorAtingido: tipo === 'spiff' ? 0 : valor,
+                    dataConquista: data,
+                    pago: false,
+                    dataPagamento: null,
+                    observacao: obs,
+                    createdAt: new Date().toISOString()
+                });
+                showToast(`Conquista "${cfg.name}" concedida a ${player.nome}!`, 'success');
+                document.getElementById('conq-valor').value = '';
+                document.getElementById('conq-obs').value = '';
+                renderAdminConquistas();
+            } catch (e) {
+                showToast('Erro ao conceder conquista', 'error');
+            }
+        }
+
+        async function marcarConquistaPaga(conquistaId) {
+            if (!confirm('Marcar esta conquista como PAGA?')) return;
+            try {
+                await window.updateDoc(window.doc(window.db, 'conquistasHistorico', conquistaId), {
+                    pago: true,
+                    dataPagamento: getTodayStr()
+                });
+                showToast('Conquista marcada como paga!', 'success');
+                renderAdminConquistas();
+            } catch (e) {
+                showToast('Erro ao marcar como paga', 'error');
+            }
+        }
+
+        async function excluirConquistaHistorico(conquistaId) {
+            if (!confirm('Tem certeza que deseja excluir esta conquista do histórico?')) return;
+            try {
+                await window.deleteDoc(window.doc(window.db, 'conquistasHistorico', conquistaId));
+                showToast('Conquista excluída!', 'success');
+                renderAdminConquistas();
+            } catch (e) {
+                showToast('Erro ao excluir conquista', 'error');
+            }
+        }
+
+        function renderAdminConquistas() {
+            const container = document.getElementById('conq-admin-list');
+            const filtroJogador = document.getElementById('conq-filter-jogador').value;
+            if (!container) return;
+
+            let lista = [...conquistasHistorico].sort((a, b) => new Date(b.dataConquista) - new Date(a.dataConquista));
+            if (filtroJogador) {
+                lista = lista.filter(ch => ch.jogadorId === filtroJogador);
+            }
+
+            if (lista.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma conquista no histórico</p>';
+                return;
+            }
+
+            container.innerHTML = lista.map(ch => {
+                const data = ch.dataConquista ? formatDate(ch.dataConquista) : '';
+                const pagoBadge = ch.pago
+                    ? '<span class="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">PAGO</span>'
+                    : '<span class="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold">PENDENTE</span>';
+                const pagamentoBtn = ch.pago
+                    ? `<span class="text-green-400 text-xs">Pago em ${ch.dataPagamento ? formatDate(ch.dataPagamento) : '-'}</span>`
+                    : `<button onclick="marcarConquistaPaga('${ch.id}')" class="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition-all">
+                        <i class="fas fa-check mr-1"></i>Marcar Pago
+                       </button>`;
+
+                // Conquista image
+                const imgUrl = ch.conquistaImg ? REPO_BASE + ch.conquistaImg : '';
+
+                return `
+                    <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <div class="w-10 h-10 rounded-lg overflow-hidden border border-yellow-500/30 flex-shrink-0 bg-gray-900 flex items-center justify-center relative">
+                                <span style="font-size:20px;">🏆</span>
+                                <img src="${imgUrl}" class="w-full h-full object-contain absolute top-0 left-0 z-10" onerror="this.style.display='none'" alt="${ch.conquistaNome}">
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <p class="font-bold text-sm text-yellow-400 truncate">${ch.conquistaNome}</p>
+                                    ${pagoBadge}
+                                </div>
+                                <p class="text-xs text-gray-400">${ch.jogadorNome} · ${data} · ${ch.valorAtingido} gols</p>
+                                ${ch.observacao ? `<p class="text-xs text-gray-500 italic">${ch.observacao}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            ${pagamentoBtn}
+                            <button onclick="excluirConquistaHistorico('${ch.id}')" class="text-red-400 hover:text-red-300 transition-all px-2">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function processarConquistasRetroativas() {
+            const dataInicio = document.getElementById('ret-data-inicio').value;
+            if (!dataInicio) { showToast('Informe a data inicial', 'error'); return; }
+
+            const progressDiv = document.getElementById('ret-progress');
+            const progressBar = document.getElementById('ret-progress-bar');
+            const statusText = document.getElementById('ret-status');
+            progressDiv.classList.remove('hidden');
+            progressBar.style.width = '10%';
+            statusText.textContent = 'Analisando jogadores...';
+
+            const inicio = new Date(dataInicio + 'T00:00:00');
+            const hoje = new Date();
+            hoje.setHours(23, 59, 59, 999);
+
+            let totalAdicionadas = 0;
+            const configs = [
+                { id: 'hat-trick', name: 'HAT-TRICK!!!', goals: 14, period: 'day', img: '+14.png' },
+                { id: 'imparavel', name: 'IMPARÁVEL!!!', goals: 30, period: 'week', img: '+30.png' },
+                { id: 'craque-50', name: 'CRAQUE!', goals: 50, period: 'month', img: '+50.png' },
+                { id: 'monstro-60', name: 'MONSTRO!', goals: 60, period: 'month', img: '+60.png' },
+                { id: 'artilheiro-80', name: 'ARTILHEIRO!', goals: 80, period: 'month', img: '+80.png' },
+                { id: 'maquina-120', name: 'MÁQUINAAA!!', goals: 120, period: 'month', img: '+120.png' },
+                { id: 'fenomeno-150', name: 'FENÔMENO!!!', goals: 150, period: 'month', img: '+150.png' }
+            ];
+
+            for (let pi = 0; pi < players.length; pi++) {
+                const player = players[pi];
+                const pct = Math.round(((pi + 1) / players.length) * 100);
+                progressBar.style.width = pct + '%';
+                statusText.textContent = `Processando ${player.nome}... (${pi + 1}/${players.length})`;
+
+                const playerEvents = events.filter(e => e.jogadorId === player.id);
+                const days = {};
+                const weeks = {};
+                const months = {};
+
+                playerEvents.forEach(e => {
+                    if (!e.data) return;
+                    const evDate = new Date(e.data + 'T12:00:00');
+                    if (evDate < inicio || evDate > hoje) return;
+
+                    const val = Number(e.valor) || 0;
+                    let score = 0;
+                    if (e.tipo === 'gol' || e.tipo === 'figurinha') score = val;
+                    else if (e.tipo === 'punicao') score = -Math.abs(val);
+
+                    if (score === 0) return;
+
+                    const dk = e.data;
+                    const wk = getWeekRangeBrasilia(dk);
+                    const wkKey = getDiaBrasilia(wk.monday.toISOString());
+                    const mk = e.data.substring(0, 7);
+
+                    days[dk] = (days[dk] || 0) + score;
+                    weeks[wkKey] = (weeks[wkKey] || 0) + score;
+                    months[mk] = (months[mk] || 0) + score;
+                });
+
+                for (const [dk, total] of Object.entries(days)) {
+                    if (total >= 14) {
+                        const jaExiste = conquistasHistorico.some(ch =>
+                            ch.jogadorId === player.id && ch.conquistaId === 'hat-trick' && ch.dataConquista === dk
+                        );
+                        if (!jaExiste) {
+                            await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
+                                jogadorId: player.id, jogadorNome: `${player.nome} ${player.sobrenome || ''}`,
+                                conquistaId: 'hat-trick', conquistaNome: 'HAT-TRICK!!!', conquistaImg: '+14.png',
+                                periodo: 'day', meta: 14, valorAtingido: total, dataConquista: dk,
+                                pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', createdAt: new Date().toISOString()
+                            });
+                            totalAdicionadas++;
+                        }
+                    }
+                }
+
+                for (const [wk, total] of Object.entries(weeks)) {
+                    if (total >= 30) {
+                        const jaExiste = conquistasHistorico.some(ch =>
+                            ch.jogadorId === player.id && ch.conquistaId === 'imparavel' && ch.dataConquista === wk
+                        );
+                        if (!jaExiste) {
+                            await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
+                                jogadorId: player.id, jogadorNome: `${player.nome} ${player.sobrenome || ''}`,
+                                conquistaId: 'imparavel', conquistaNome: 'IMPARÁVEL!!!', conquistaImg: '+30.png',
+                                periodo: 'week', meta: 30, valorAtingido: total, dataConquista: wk,
+                                pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', createdAt: new Date().toISOString()
+                            });
+                            totalAdicionadas++;
+                        }
+                    }
+                }
+
+                // Monthly conquistas - find the exact day the goal was reached
+                for (const [mk, total] of Object.entries(months)) {
+                    for (const cfg of configs.filter(c => c.period === 'month')) {
+                        if (total >= cfg.goals) {
+                            const jaExiste = conquistasHistorico.some(ch =>
+                                ch.jogadorId === player.id && ch.conquistaId === cfg.id && ch.dataConquista.startsWith(mk)
+                            );
+                            if (!jaExiste) {
+                                // Build daily cumulative totals for this month
+                                const dailyTotals = {};
+                                playerEvents.forEach(e => {
+                                    if (!e.data || !e.data.startsWith(mk)) return;
+                                    const val = Number(e.valor) || 0;
+                                    let score = 0;
+                                    if (e.tipo === 'gol' || e.tipo === 'figurinha') score = val;
+                                    else if (e.tipo === 'punicao') score = -Math.abs(val);
+                                    if (score !== 0) {
+                                        dailyTotals[e.data] = (dailyTotals[e.data] || 0) + score;
+                                    }
+                                });
+
+                                // Sort days and find when goal was reached
+                                const sortedDays = Object.keys(dailyTotals).sort();
+                                let runningTotal = 0;
+                                let dataAtingida = sortedDays.length > 0 ? sortedDays[sortedDays.length - 1] : mk + '-01';
+                                for (const day of sortedDays) {
+                                    runningTotal += dailyTotals[day];
+                                    if (runningTotal >= cfg.goals) {
+                                        dataAtingida = day;
+                                        break;
+                                    }
+                                }
+
+                                await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
+                                    jogadorId: player.id, jogadorNome: `${player.nome} ${player.sobrenome || ''}`,
+                                    conquistaId: cfg.id, conquistaNome: cfg.name, conquistaImg: cfg.img,
+                                    periodo: 'month', meta: cfg.goals, valorAtingido: total, dataConquista: dataAtingida,
+                                    pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', createdAt: new Date().toISOString()
+                                });
+                                totalAdicionadas++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            progressBar.style.width = '100%';
+            statusText.textContent = `Pronto! ${totalAdicionadas} conquistas adicionadas.`;
+            showToast(`${totalAdicionadas} conquistas retroativas processadas!`, 'success');
+            renderAdminConquistas();
+        }
+
         // Expor funcoes
         window.abrirUploadFoto = abrirUploadFoto;
         window.handleFotoUpload = handleFotoUpload;
@@ -3738,6 +4294,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.adicionarFotoMural = adicionarFotoMural;
         window.carregarFotosMural = carregarFotosMural;
         window.excluirFotoMural = excluirFotoMural;
+        window.concederConquista = concederConquista;
+        window.marcarConquistaPaga = marcarConquistaPaga;
+        window.excluirConquistaHistorico = excluirConquistaHistorico;
+        window.renderAdminConquistas = renderAdminConquistas;
+        window.processarConquistasRetroativas = processarConquistasRetroativas;
 
         // Defensive alias for cached/old references
         window.carregarCorrecao = carregarCorrecaoUnificada;
@@ -3773,7 +4334,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 // All extensions failed, show fallback
-                console.log('Foto não carregada (todas as extensões tentadas):', baseUrl);
                 imgElement.style.display = 'none';
                 const parent = imgElement.parentElement;
                 if (parent) {
