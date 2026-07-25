@@ -2903,22 +2903,23 @@ Isso também excluirá todos os seus eventos!`)) return;
         }
 
         async function lancarGols() {
-            const jogadorId = document.getElementById('gols-jogador').value;
+            const jogadorValue = document.getElementById('gols-jogador').value;
             const qtd = parseInt(document.getElementById('gols-qtd').value) || 0;
             const data = document.getElementById('gols-data').value;
             const obs = document.getElementById('gols-obs').value.trim();
 
-            if (!jogadorId) { showToast('Selecione um jogador', 'error'); return; }
+            if (!jogadorValue) { showToast('Selecione um jogador', 'error'); return; }
             if (qtd <= 0) { showToast('Quantidade inválida', 'error'); return; }
+
+            const [paraTipo, paraId] = jogadorValue.split('|');
 
             try {
                 await window.addDoc(window.collection(window.db, 'eventos'), {
-                    jogadorId, tipo: 'gol', subtipo: 'gol', subtipoLabel: 'Gol',
-                    valor: qtd, data, observacao: obs,
+                    jogadorId: paraId, tipo: 'gol', subtipo: 'gol', subtipoLabel: 'Gol',
+                    valor: qtd, data, observacao: obs, paraTipo,
                     createdAt: new Date().toISOString()
                 });
                 showToast(`${qtd} gol(s) lançado(s)!`, 'success');
-                // Force refresh after saving
                 setTimeout(() => {
                     renderPlayers();
                     renderRanking();
