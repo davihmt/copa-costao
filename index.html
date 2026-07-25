@@ -1048,11 +1048,19 @@
         // ===== MANUAL REFRESH =====
         async function refreshData() {
             showToast('Atualizando dados...', 'info');
-            // Force re-read from Firebase via onSnapshot will auto-update
-            // Just trigger a re-render to ensure consistency
+            // Reload getDocs collections (low frequency)
+            await loadComissao();
+            await loadCorpoTecnico();
+            await loadElogios();
+            await loadMuralFotos();
+            await loadConquistasHistorico();
+            // Re-render everything
             renderPlayers();
             renderRanking();
             if (!inAdmin && currentAlbumPlayer) showAlbum(currentAlbumPlayer);
+            if (document.getElementById('section-mural') && !document.getElementById('section-mural').classList.contains('hidden')) {
+                renderMural();
+            }
             showToast('Dados atualizados!', 'success');
         }
         // ===== STATE =====
@@ -1919,12 +1927,21 @@ function renderPlayers() {
             const container = document.getElementById('mural-elogios');
             if (!container) return;
 
-            if (elogios.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio ainda. Seja o primeiro!</p>';
+            // Filter to last 7 days
+            const hoje = new Date();
+            const seteDiasAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const elogiosRecentes = elogios.filter(e => {
+                if (!e.data) return false;
+                const d = new Date(e.data);
+                return d >= seteDiasAtras;
+            });
+
+            if (elogiosRecentes.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-10">Nenhum elogio nos últimos 7 dias. Seja o primeiro!</p>';
                 return;
             }
 
-            container.innerHTML = elogios.map(e => {
+            container.innerHTML = elogiosRecentes.map(e => {
                 const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
                 const tipoLabel = e.paraTipo === 'jogador' ? '⚽' : e.paraTipo === 'comissao' ? '⭐' : '👔';
                 const tipoText = e.paraTipo === 'jogador' ? 'Jogador' : e.paraTipo === 'comissao' ? 'Comissão' : 'Corpo Técnico';
@@ -3163,16 +3180,15 @@ Isso também excluirá todos os seus eventos!`)) return;
         async function loadComissao() {
             try {
                 const q = window.query(window.collection(window.db, 'comissao'), window.orderBy('nome'));
-                window.onSnapshot(q, (snapshot) => {
-                    comissao = [];
-                    snapshot.forEach(doc => {
-                        comissao.push({ id: doc.id, ...doc.data() });
-                    });
-                    throttleRender(function() {
-                        renderPlayers();
-                        updateElogioSelects();
-                        updateDeleteComissaoSelect();
-                    });
+                const snapshot = await window.getDocs(q);
+                comissao = [];
+                snapshot.forEach(doc => {
+                    comissao.push({ id: doc.id, ...doc.data() });
+                });
+                throttleRender(function() {
+                    renderPlayers();
+                    updateElogioSelects();
+                    updateDeleteComissaoSelect();
                 });
             } catch (e) {
             }
@@ -3181,15 +3197,14 @@ Isso também excluirá todos os seus eventos!`)) return;
         async function loadCorpoTecnico() {
             try {
                 const q = window.query(window.collection(window.db, 'corpoTecnico'), window.orderBy('nome'));
-                window.onSnapshot(q, (snapshot) => {
-                    corpoTecnico = [];
-                    snapshot.forEach(doc => {
-                        corpoTecnico.push({ id: doc.id, ...doc.data() });
-                    });
-                    throttleRender(function() {
-                        renderPlayers();
-                        updateDeleteCorpoSelect();
-                    });
+                const snapshot = await window.getDocs(q);
+                corpoTecnico = [];
+                snapshot.forEach(doc => {
+                    corpoTecnico.push({ id: doc.id, ...doc.data() });
+                });
+                throttleRender(function() {
+                    renderPlayers();
+                    updateDeleteCorpoSelect();
                 });
             } catch (e) {
             }
@@ -3198,15 +3213,17 @@ Isso também excluirá todos os seus eventos!`)) return;
         async function loadElogios() {
             try {
                 const q = window.query(window.collection(window.db, 'elogios'), window.orderBy('data', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
-                    elogios = [];
-                    snapshot.forEach(doc => {
-                        elogios.push({ id: doc.id, ...doc.data() });
-                    });
-                    if (document.getElementById('section-mural') && !document.getElementById('section-mural').classList.contains('hidden')) {
-                        throttleRender(renderMural);
-                    }
+                const snapshot = await window.getDocs(q);
+                elogios = [];
+                snapshot.forEach(doc => {
+                    elogios.push({ id: doc.id, ...doc.data() });
                 });
+                // Filter to last 7 days for mural display
+                const hoje = new Date();
+                const seteDiasAtras = new Date(hoje.getTime() - 7 * 24 * 60 * 60 * 1000);
+                if (document.getElementById('section-mural') && !document.getElementById('section-mural').classList.contains('hidden')) {
+                    throttleRender(renderMural);
+                }
             } catch (e) {
             }
         }
@@ -3710,17 +3727,16 @@ document.addEventListener('DOMContentLoaded', () => {
         async function loadMuralFotos() {
             try {
                 const q = window.query(window.collection(window.db, 'muralFotos'), window.orderBy('data', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
-                    muralFotos = [];
-                    snapshot.forEach(doc => {
-                        muralFotos.push({ id: doc.id, ...doc.data() });
-                    });
-                    if (currentAlbumPlayer) {
-                        throttleRender(function() {
-                            renderMuralFotosAlbum(currentAlbumPlayer);
-                        });
-                    }
+                const snapshot = await window.getDocs(q);
+                muralFotos = [];
+                snapshot.forEach(doc => {
+                    muralFotos.push({ id: doc.id, ...doc.data() });
                 });
+                if (currentAlbumPlayer) {
+                    throttleRender(function() {
+                        renderMuralFotosAlbum(currentAlbumPlayer);
+                    });
+                }
             } catch (e) {
             }
         }
