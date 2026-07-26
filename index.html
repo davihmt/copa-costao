@@ -593,14 +593,6 @@
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogador para Excluir</label>
                                 <select id="del-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-red-500 focus:outline-none">
                                     <option value="">Selecione um jogador</option>
-                                    <option value="125k">125.000 pt (+3)</option>
-                                    <option value="100k">100.000 pt (+3)</option>
-                                    <option value="75k">75.000 pt (+2)</option>
-                                    <option value="60k">60.000 pt (+2)</option>
-                                    <option value="42k">42.000 pt (+2)</option>
-                                    <option value="30k">30.000 pt (+1)</option>
-                                    <option value="15k">15.000 pt (+1)</option>
-                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div id="del-preview" class="hidden mb-4 p-4 rounded-xl bg-red-900/10 border border-red-500/20">
@@ -627,14 +619,6 @@
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Jogador</label>
                                 <select id="gols-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="">Selecione um jogador</option>
-                                    <option value="125k">125.000 pt (+3)</option>
-                                    <option value="100k">100.000 pt (+3)</option>
-                                    <option value="75k">75.000 pt (+2)</option>
-                                    <option value="60k">60.000 pt (+2)</option>
-                                    <option value="42k">42.000 pt (+2)</option>
-                                    <option value="30k">30.000 pt (+1)</option>
-                                    <option value="15k">15.000 pt (+1)</option>
-                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -704,15 +688,6 @@
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Colaborador</label>
                                 <select id="pun-jogador" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="">Selecione um colaborador</option>
-                                    <optgroup label="⚽ Jogadores">
-                                    <option value="125k">125.000 pt (+3)</option>
-                                    <option value="100k">100.000 pt (+3)</option>
-                                    <option value="75k">75.000 pt (+2)</option>
-                                    <option value="60k">60.000 pt (+2)</option>
-                                    <option value="42k">42.000 pt (+2)</option>
-                                    <option value="30k">30.000 pt (+1)</option>
-                                    <option value="15k">15.000 pt (+1)</option>
-                                    <option value="c+">C+ Diamante (+1)</option>
                                 </select>
                             </div>
                             <div class="mb-4">
@@ -964,15 +939,7 @@
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Jogador</label>
                                 <select id="corr-jogador" onchange="if(typeof carregarCorrecaoUnificada === 'function') carregarCorrecaoUnificada(); else if(typeof carregarCorrecao === 'function') carregarCorrecao();" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
-                                    <option value="">Selecione um jogador</option>
-                                    <option value="125k">125.000 pt (+3)</option>
-                                    <option value="100k">100.000 pt (+3)</option>
-                                    <option value="75k">75.000 pt (+2)</option>
-                                    <option value="60k">60.000 pt (+2)</option>
-                                    <option value="42k">42.000 pt (+2)</option>
-                                    <option value="30k">30.000 pt (+1)</option>
-                                    <option value="15k">15.000 pt (+1)</option>
-                                    <option value="c+">C+ Diamante (+1)</option>
+                                    <option value="">Selecione um colaborador</option>
                                 </select>
                             </div>
                             <div id="corr-info" class="player-select-info rounded-xl p-4 mb-4 hidden">
@@ -1123,6 +1090,7 @@
         let elogios = [];
         let muralFotos = [];
         let conquistasHistorico = [];
+        let isSendingElogio = false;
 
         
 
@@ -3457,6 +3425,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         async function enviarElogio() {
+            if (isSendingElogio) return;
+            isSendingElogio = true;
+            const btn = document.querySelector('#section-mural button[onclick="enviarElogio()"]');
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...'; }
+
             const deValue = document.getElementById('elogio-de').value;
             const paraValue = document.getElementById('elogio-para').value;
             const mensagem = document.getElementById('elogio-mensagem').value.trim();
@@ -3587,12 +3560,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Elogio enviado! +1 gol para ambos!', 'success');
                 document.getElementById('elogio-mensagem').value = '';
 
+                // Add to local arrays immediately so validation works for next send
+                const nowISO = new Date().toISOString();
+                elogios.unshift({
+                    id: 'temp-' + Date.now(),
+                    deId, deTipo, deNome,
+                    paraId, paraTipo, paraNome,
+                    mensagem, data: nowISO,
+                    createdAt: nowISO
+                });
+                events.unshift(
+                    { id: 'temp-er-' + Date.now(), jogadorId: paraId, tipo: 'gol', subtipo: 'elogio-recebido', subtipoLabel: 'Reconhecimento Recebido', valor: 1, data: today, observacao: mensagem, deId, deNome, createdAt: nowISO },
+                    { id: 'temp-ed-' + Date.now(), jogadorId: deId, tipo: 'gol', subtipo: 'elogio-dado', subtipoLabel: 'Reconhecimento Dado', valor: 1, data: today, observacao: mensagem, paraId, paraNome, createdAt: nowISO }
+                );
+
                 // Forçar atualização da home se estiver visível
                 if (!document.getElementById('section-home').classList.contains('hidden')) {
                     renderPlayers();
                 }
+                if (!document.getElementById('section-mural').classList.contains('hidden')) {
+                    renderMural();
+                }
+                atualizarContadorElogio();
             } catch (e) {
                 showToast('Erro ao enviar elogio', 'error');
+            } finally {
+                isSendingElogio = false;
+                if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar Elogio'; }
             }
         }
                 // Helper: construir URL de foto com detecção de extensão
