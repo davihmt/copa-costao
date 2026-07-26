@@ -357,7 +357,7 @@
                                     <i class="fas fa-camera mr-1"></i>Adicionar Foto
                                 </button>
                             </div>
-                            <input type="file" id="input-foto-upload" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" class="hidden" onchange="handleFotoUpload(this)">
+                            <input type="file" id="input-foto-upload" accept="image/*" capture="false" class="hidden" onchange="handleFotoUpload(this)">
                             <div id="upload-progress" class="hidden mb-3">
                                 <div class="w-full bg-gray-700 rounded-full h-2">
                                     <div id="upload-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] transition-all" style="width: 0%"></div>
@@ -3862,10 +3862,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = input.files[0];
             if (!file) return;
 
-            // Android sometimes sends empty type, check extension as fallback
-            const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name);
-            if (!isImage) {
-                showToast('Selecione uma imagem valida', 'error');
+            // Android gallery often sends empty or generic mime type
+            // Check by extension as primary method on Android
+            const ext = file.name.split('.').pop().toLowerCase();
+            const validExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif'];
+            const isImageByExt = validExts.includes(ext);
+            const isImageByType = file.type && file.type.startsWith('image/');
+
+            if (!isImageByType && !isImageByExt) {
+                showToast('Selecione uma imagem valida (' + ext + ' nao suportado)', 'error');
                 input.value = '';
                 return;
             }
@@ -3878,34 +3883,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentUploadFile = file;
 
-            // Show preview modal immediately
+            // Show preview modal
             const previewImg = document.getElementById('preview-img');
             const previewModal = document.getElementById('upload-preview-modal');
 
-            // Try URL.createObjectURL first (lighter, works better on Android)
-            let previewUrl = '';
+            previewImg.style.display = 'block';
+
+            // Use createObjectURL - fastest and most reliable on mobile
+            let objectUrl = null;
             try {
-                if (window.URL && window.URL.createObjectURL) {
-                    previewUrl = window.URL.createObjectURL(file);
-                    previewImg.src = previewUrl;
-                    previewImg.onload = function() {
-                        // Clean up object URL after image loads in memory
-                        if (previewUrl && previewUrl.startsWith('blob:')) {
-                            setTimeout(() => window.URL.revokeObjectURL(previewUrl), 5000);
-                        }
-                    };
-                } else {
-                    throw new Error('createObjectURL not available');
-                }
-            } catch (err) {
-                // Fallback to FileReader
+                objectUrl = window.URL.createObjectURL(file);
+                previewImg.src = objectUrl;
+                // Store for cleanup later
+                previewImg.dataset.objectUrl = objectUrl;
+            } catch (e) {
+                // Fallback: FileReader
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
+                reader.onload = function(evt) {
+                    previewImg.src = evt.target.result;
                 };
                 reader.onerror = function() {
-                    showToast('Erro ao carregar preview da imagem', 'error');
-                    previewImg.style.display = 'none';
+                    showToast('Erro ao ler imagem. Tente outra foto.', 'error');
                 };
                 reader.readAsDataURL(file);
             }
@@ -3919,11 +3917,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         function fecharPreviewModal() {
             const previewImg = document.getElementById('preview-img');
-            if (previewImg && previewImg.src && previewImg.src.startsWith('blob:')) {
-                window.URL.revokeObjectURL(previewImg.src);
+            if (previewImg) {
+                if (previewImg.dataset.objectUrl) {
+                    window.URL.revokeObjectURL(previewImg.dataset.objectUrl);
+                    delete previewImg.dataset.objectUrl;
+                }
+                previewImg.src = '';
+                previewImg.style.display = '';
             }
-            previewImg.src = '';
-            previewImg.style.display = '';
             document.getElementById('upload-preview-modal').classList.add('hidden');
             currentUploadFile = null;
             currentUploadCompressed = null;
