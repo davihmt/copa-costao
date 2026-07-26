@@ -357,7 +357,7 @@
                                     <i class="fas fa-camera mr-1"></i>Adicionar Foto
                                 </button>
                             </div>
-                            <input type="file" id="input-foto-upload" accept="image/*" class="hidden" onchange="handleFotoUpload(this)">
+                            <input type="file" id="input-foto-upload" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" class="hidden" onchange="handleFotoUpload(this)">
                             <div id="upload-progress" class="hidden mb-3">
                                 <div class="w-full bg-gray-700 rounded-full h-2">
                                     <div id="upload-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] transition-all" style="width: 0%"></div>
@@ -3862,7 +3862,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = input.files[0];
             if (!file) return;
 
-            if (!file.type.startsWith('image/')) {
+            // Android sometimes sends empty type, check extension as fallback
+            const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp)$/i.test(file.name);
+            if (!isImage) {
                 showToast('Selecione uma imagem valida', 'error');
                 input.value = '';
                 return;
@@ -3876,20 +3878,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
             currentUploadFile = file;
 
-            // Show preview modal
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('preview-img').src = e.target.result;
-                document.getElementById('preview-data').value = getTodayStr();
-                document.getElementById('preview-legenda').value = '';
-                document.getElementById('upload-preview-modal').classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
+            // Show preview modal immediately
+            const previewImg = document.getElementById('preview-img');
+            const previewModal = document.getElementById('upload-preview-modal');
+
+            // Try URL.createObjectURL first (lighter, works better on Android)
+            let previewUrl = '';
+            try {
+                if (window.URL && window.URL.createObjectURL) {
+                    previewUrl = window.URL.createObjectURL(file);
+                    previewImg.src = previewUrl;
+                    previewImg.onload = function() {
+                        // Clean up object URL after image loads in memory
+                        if (previewUrl && previewUrl.startsWith('blob:')) {
+                            setTimeout(() => window.URL.revokeObjectURL(previewUrl), 5000);
+                        }
+                    };
+                } else {
+                    throw new Error('createObjectURL not available');
+                }
+            } catch (err) {
+                // Fallback to FileReader
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                };
+                reader.onerror = function() {
+                    showToast('Erro ao carregar preview da imagem', 'error');
+                    previewImg.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+
+            document.getElementById('preview-data').value = getTodayStr();
+            document.getElementById('preview-legenda').value = '';
+            previewModal.classList.remove('hidden');
 
             input.value = '';
         }
 
         function fecharPreviewModal() {
+            const previewImg = document.getElementById('preview-img');
+            if (previewImg && previewImg.src && previewImg.src.startsWith('blob:')) {
+                window.URL.revokeObjectURL(previewImg.src);
+            }
+            previewImg.src = '';
+            previewImg.style.display = '';
             document.getElementById('upload-preview-modal').classList.add('hidden');
             currentUploadFile = null;
             currentUploadCompressed = null;
