@@ -4174,14 +4174,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="flex items-center gap-3 flex-1 min-w-0">
                             <div class="w-10 h-10 rounded-lg overflow-hidden border border-yellow-500/30 flex-shrink-0 bg-gray-900 flex items-center justify-center relative">
                                 <span style="font-size:20px;">🏆</span>
-                                <img src="${imgUrl}" class="w-full h-full object-contain absolute top-0 left-0 z-10" onerror="this.style.display='none'" alt="${ch.conquistaNome}">
+                                <img src="${imgUrl}" class="w-full h-full object-contain absolute top-0 left-0 z-10" onerror="this.style.display='none'" alt="${ch.premio || ch.conquistaNome}">
                             </div>
                             <div class="min-w-0">
                                 <div class="flex items-center gap-2">
-                                    <p class="font-bold text-sm text-yellow-400 truncate">${ch.conquistaNome}</p>
+                                    <p class="font-bold text-sm text-yellow-400 truncate">${ch.premio || ch.conquistaNome}</p>
                                     ${pagoBadge}
                                 </div>
                                 <p class="text-xs text-gray-400">${ch.jogadorNome} · ${data} · ${ch.valorAtingido} gols</p>
+                                ${ch.premio ? `<p class="text-xs text-yellow-500/70">${ch.conquistaNome}</p>` : ''}
                                 ${ch.observacao ? `<p class="text-xs text-gray-500 italic">${ch.observacao}</p>` : ''}
                             </div>
                         </div>
