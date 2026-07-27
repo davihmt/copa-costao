@@ -357,7 +357,7 @@
                                     <i class="fas fa-camera mr-1"></i>Adicionar Foto
                                 </button>
                             </div>
-                            <input type="file" id="input-foto-upload" accept="image/*" capture="false" class="hidden" onchange="handleFotoUpload(this)">
+                            <input type="file" id="input-foto-upload" accept="image/*" class="hidden" onchange="handleFotoUpload(this)">
                             <div id="upload-progress" class="hidden mb-3">
                                 <div class="w-full bg-gray-700 rounded-full h-2">
                                     <div id="upload-progress-bar" class="h-2 rounded-full bg-gradient-to-r from-[#1DBCB8] to-[#0B4F6C] transition-all" style="width: 0%"></div>
@@ -868,7 +868,7 @@
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Conquista</label>
-                                <select id="conq-tipo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
+                                <select id="conq-tipo" onchange="atualizarPremioSugerido()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none">
                                     <option value="hat-trick">HAT-TRICK!!! (14+ gols no dia)</option>
                                     <option value="imparavel">IMPARÁVEL!!! (30+ gols na semana)</option>
                                     <option value="craque-50">CRAQUE! (50+ gols no mês)</option>
@@ -886,6 +886,11 @@
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Valor Atingido (gols)</label>
                                 <input type="number" id="conq-valor" min="1" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: 65">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Prêmio / Brinde</label>
+                                <input type="text" id="conq-premio" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:border-[#1DBCB8] focus:outline-none" placeholder="Ex: R$ 200 SPA">
+                                <p class="text-xs text-gray-500 mt-1">Sugestão automática preenchida ao selecionar a conquista</p>
                             </div>
                             <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Observação (opcional)</label>
@@ -2084,6 +2089,7 @@ function renderPlayers() {
                                     pago: false,
                                     dataPagamento: null,
                                     observacao: '',
+                                    premio: CONQUISTAS_CONFIG[cfg.id].premioPadrao || '',
                                     createdAt: new Date().toISOString()
                                 });
                             } catch (e) {
@@ -2115,7 +2121,10 @@ function renderPlayers() {
                         : '<span class="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold">PENDENTE</span>';
                     const obsHtml = ch.observacao ? `<p class="text-xs text-gray-500 italic">${ch.observacao}</p>` : '';
 
-                    return `
+                    const premioDisplay = ch.premio || ch.conquistaNome;
+                const nomeConquistaDisplay = ch.premio ? `<p class="text-xs text-yellow-500/70">${ch.conquistaNome}</p>` : '';
+
+                return `
                         <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/30 border border-yellow-500/20">
                             <div style="width:50px;height:50px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;position:relative;">
                                 <span style="font-size:24px;">🏆</span>
@@ -2123,11 +2132,12 @@ function renderPlayers() {
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <p class="font-bold text-yellow-400 text-sm truncate">${ch.conquistaNome}</p>
+                                    <p class="font-bold text-yellow-400 text-sm truncate">${premioDisplay}</p>
                                     ${pagoBadge}
                                 </div>
                                 <p class="text-xs text-gray-400">${ch.meta}+ gols no ${periodoLabel.toLowerCase()} · ${data}</p>
                                 <p class="text-xs text-green-400">Atingiu: ${ch.valorAtingido} gols</p>
+                                ${nomeConquistaDisplay}
                                 ${obsHtml}
                             </div>
                             <div class="text-green-400 text-xl flex-shrink-0">
@@ -4032,15 +4042,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ===== ADMIN CONQUISTAS FUNCTIONS =====
         const CONQUISTAS_CONFIG = {
-            'hat-trick': { name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', img: '+14.png' },
-            'imparavel': { name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', img: '+30.png' },
-            'craque-50': { name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', img: '+50.png' },
-            'monstro-60': { name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', img: '+60.png' },
-            'artilheiro-80': { name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', img: '+80.png' },
-            'maquina-120': { name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', img: '+120.png' },
-            'fenomeno-150': { name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', img: '+150.png' },
-            'spiff': { name: 'SPIFF', rule: 'Brinde Personalizado', goals: 0, period: 'custom', img: 'spiff.png' }
+            'hat-trick': { name: 'HAT-TRICK!!!', rule: '14+ gols em um dia', goals: 14, period: 'day', img: '+14.png', premioPadrao: 'KIT PRAIA + GENUINO\'S' },
+            'imparavel': { name: 'IMPARÁVEL!!!', rule: '30+ gols em uma semana', goals: 30, period: 'week', img: '+30.png', premioPadrao: 'FOLGA + ALMOÇO COSTAO' },
+            'craque-50': { name: 'CRAQUE!', rule: '50+ gols no mês', goals: 50, period: 'month', img: '+50.png', premioPadrao: 'FOLGA + KIT VINHO' },
+            'monstro-60': { name: 'MONSTRO!', rule: '60+ gols no mês', goals: 60, period: 'month', img: '+60.png', premioPadrao: 'ALMOÇO COSTAO' },
+            'artilheiro-80': { name: 'ARTILHEIRO!', rule: '80+ gols no mês', goals: 80, period: 'month', img: '+80.png', premioPadrao: 'R$ 200 SPA' },
+            'maquina-120': { name: 'MÁQUINAAA!!', rule: '120+ gols no mês', goals: 120, period: 'month', img: '+120.png', premioPadrao: 'TOUR BC EXPERIENCE' },
+            'fenomeno-150': { name: 'FENÔMENO!!!', rule: '150+ gols no mês', goals: 150, period: 'month', img: '+150.png', premioPadrao: 'TOUR BC EXPERIENCE PLUS' },
+            'spiff': { name: 'SPIFF', rule: 'Brinde Personalizado', goals: 0, period: 'custom', img: 'spiff.png', premioPadrao: '' }
         };
+
+        function atualizarPremioSugerido() {
+            const tipo = document.getElementById('conq-tipo').value;
+            const cfg = CONQUISTAS_CONFIG[tipo];
+            const premioInput = document.getElementById('conq-premio');
+            if (cfg && cfg.premioPadrao && premioInput && !premioInput.value.trim()) {
+                premioInput.value = cfg.premioPadrao;
+            }
+        }
 
         async function concederConquista() {
             const jogadorId = document.getElementById('conq-jogador').value;
@@ -4055,6 +4074,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const cfg = CONQUISTAS_CONFIG[tipo];
             const player = players.find(p => p.id === jogadorId);
             if (!player) { showToast('Jogador não encontrado', 'error'); return; }
+
+            const premio = document.getElementById('conq-premio').value.trim() || cfg.premioPadrao || '';
 
             // Spiff requer observação obrigatória
             if (tipo === 'spiff' && !obs) {
@@ -4081,11 +4102,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     pago: false,
                     dataPagamento: null,
                     observacao: obs,
+                    premio: premio,
                     createdAt: new Date().toISOString()
                 });
-                showToast(`Conquista "${cfg.name}" concedida a ${player.nome}!`, 'success');
+                showToast(`Conquista "${premio || cfg.name}" concedida a ${player.nome}!`, 'success');
                 document.getElementById('conq-valor').value = '';
                 document.getElementById('conq-obs').value = '';
+                document.getElementById('conq-premio').value = '';
                 renderAdminConquistas();
             } catch (e) {
                 showToast('Erro ao conceder conquista', 'error');
@@ -4190,13 +4213,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let totalAdicionadas = 0;
             const configs = [
-                { id: 'hat-trick', name: 'HAT-TRICK!!!', goals: 14, period: 'day', img: '+14.png' },
-                { id: 'imparavel', name: 'IMPARÁVEL!!!', goals: 30, period: 'week', img: '+30.png' },
-                { id: 'craque-50', name: 'CRAQUE!', goals: 50, period: 'month', img: '+50.png' },
-                { id: 'monstro-60', name: 'MONSTRO!', goals: 60, period: 'month', img: '+60.png' },
-                { id: 'artilheiro-80', name: 'ARTILHEIRO!', goals: 80, period: 'month', img: '+80.png' },
-                { id: 'maquina-120', name: 'MÁQUINAAA!!', goals: 120, period: 'month', img: '+120.png' },
-                { id: 'fenomeno-150', name: 'FENÔMENO!!!', goals: 150, period: 'month', img: '+150.png' }
+                { id: 'hat-trick', name: 'HAT-TRICK!!!', goals: 14, period: 'day', img: '+14.png', premioPadrao: CONQUISTAS_CONFIG['hat-trick'].premioPadrao },
+                { id: 'imparavel', name: 'IMPARÁVEL!!!', goals: 30, period: 'week', img: '+30.png', premioPadrao: CONQUISTAS_CONFIG['imparavel'].premioPadrao },
+                { id: 'craque-50', name: 'CRAQUE!', goals: 50, period: 'month', img: '+50.png', premioPadrao: CONQUISTAS_CONFIG['craque-50'].premioPadrao },
+                { id: 'monstro-60', name: 'MONSTRO!', goals: 60, period: 'month', img: '+60.png', premioPadrao: CONQUISTAS_CONFIG['monstro-60'].premioPadrao },
+                { id: 'artilheiro-80', name: 'ARTILHEIRO!', goals: 80, period: 'month', img: '+80.png', premioPadrao: CONQUISTAS_CONFIG['artilheiro-80'].premioPadrao },
+                { id: 'maquina-120', name: 'MÁQUINAAA!!', goals: 120, period: 'month', img: '+120.png', premioPadrao: CONQUISTAS_CONFIG['maquina-120'].premioPadrao },
+                { id: 'fenomeno-150', name: 'FENÔMENO!!!', goals: 150, period: 'month', img: '+150.png', premioPadrao: CONQUISTAS_CONFIG['fenomeno-150'].premioPadrao }
             ];
 
             for (let pi = 0; pi < players.length; pi++) {
@@ -4303,7 +4326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     jogadorId: player.id, jogadorNome: `${player.nome} ${player.sobrenome || ''}`,
                                     conquistaId: cfg.id, conquistaNome: cfg.name, conquistaImg: cfg.img,
                                     periodo: 'month', meta: cfg.goals, valorAtingido: total, dataConquista: dataAtingida,
-                                    pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', createdAt: new Date().toISOString()
+                                    pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', premio: cfg.premioPadrao, createdAt: new Date().toISOString()
                                 });
                                 totalAdicionadas++;
                             }
