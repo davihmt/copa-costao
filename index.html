@@ -2503,11 +2503,11 @@ function getTodayStr() {
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
                     const val = Number(ev.valor) || 0;
-                    if (ev.tipo === 'gol' && ev.subtipo !== 'elogio-recebido' && ev.subtipo !== 'elogio-dado' && ev.subtipo !== 'cartao-verde' && ev.subtipo !== 'benção-dos-deuses') {
+                    if (ev.tipo === 'gol') {
                         total += val;
                     } else if (ev.tipo === 'figurinha') {
                         total += val;
-                    } else if (ev.tipo === 'punicao' && ev.subtipo !== 'benção-dos-deuses' && ev.subtipo !== 'cartao-verde') {
+                    } else if (ev.tipo === 'punicao') {
                         total -= Math.abs(val);
                     }
                 }
