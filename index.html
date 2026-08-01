@@ -1094,7 +1094,7 @@
                     <button onclick="lancarDesafio()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
                         <i class="fas fa-shield-halved mr-2"></i>Lançar Desafio
                     </button>
-                    <p class="text-xs text-gray-500 mt-2 text-center">Regras: diferença máxima de 10 glória · 1 duelo por semana · trégua de 2 semanas com o mesmo adversário</p>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Regras: diferença máxima de 25 glória no mês · 1 duelo por semana · trégua de 2 semanas com o mesmo adversário</p>
                 </div>
 
                 <!-- Duelos Ativos da Semana -->
@@ -1989,6 +1989,14 @@
                                 <input type="text" id="conq-config-nome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none" placeholder="MASSACRE!!!">
                             </div>
                             <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Tipo de Alvo</label>
+                                <select id="conq-config-tipo-alvo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                    <option value="guerreiro">⚔️ Guerreiro</option>
+                                    <option value="comissao">⭐ Conselho dos Sábios</option>
+                                    <option value="ambos">⚔️⭐ Ambos</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
                                 <label class="block text-sm font-semibold text-gray-400 mb-2">Meta (glória)</label>
                                 <input type="number" id="conq-config-meta" min="1" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none" placeholder="14">
                             </div>
@@ -2521,10 +2529,10 @@ function getTodayStr() {
             if (ativo2) return { ok: false, msg: 'Este guerreiro já está em um duelo ativo' };
             const pendente2 = duelos.find(d => d.status === 'pendente' && (d.desafianteId === desafiadoId || d.desafiadoId === desafiadoId));
             if (pendente2) return { ok: false, msg: 'Este guerreiro já tem um duelo pendente de aprovação' };
-            // Check difference in glória
+            // Check difference in glória (month only)
             const statsA = getPlayerStats(desafianteId);
             const statsB = getPlayerStats(desafiadoId);
-            const diff = Math.abs(statsA.totalReal - statsB.totalReal);
+            const diff = Math.abs(statsA.totalMonth - statsB.totalMonth);
             if (diff > 25) return { ok: false, msg: 'Diferença de glória maior que 25 (' + diff + ')' };
             // Check 2-week truce
             const duasSemanasAtras = new Date();
@@ -3371,7 +3379,7 @@ async function excluirDuelo(dueloId) {
                                 const p = players.find(x => x.id === d.desafianteId);
                                 const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                 const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                return `<div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-[#C8A25A] mb-1" style="box-shadow:0 0 15px rgba(200,162,90,0.3);"><img src="${url}" class="w-full h-full object-cover" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
+                                return `<div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-[#C8A25A] mb-1" style="box-shadow:0 0 15px rgba(200,162,90,0.3);"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
                             })()}
                             <p class="font-bold text-sm">${d.desafianteNome}</p>
                             <p class="text-2xl font-black text-[#C8A25A]">${gloriaA}</p>
@@ -3385,7 +3393,7 @@ async function excluirDuelo(dueloId) {
                                 const p = players.find(x => x.id === d.desafiadoId);
                                 const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                 const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                return `<div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-[#C8A25A] mb-1" style="box-shadow:0 0 15px rgba(200,162,90,0.3);"><img src="${url}" class="w-full h-full object-cover" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
+                                return `<div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-[#C8A25A] mb-1" style="box-shadow:0 0 15px rgba(200,162,90,0.3);"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
                             })()}
                             <p class="font-bold text-sm">${d.desafiadoNome}</p>
                             <p class="text-2xl font-black text-[#C8A25A]">${gloriaB}</p>
@@ -3440,13 +3448,13 @@ async function excluirDuelo(dueloId) {
                                         const pB = players.find(x => x.id === d.desafiadoId);
                                         const urlB = pB && pB.fotoPerfil ? getImageUrl(pB.fotoPerfil) : '';
                                         const iniB = pB ? ((pB.nome && pB.nome[0]) || '') + ((pB.sobrenome && pB.sobrenome[0]) || '') : '?';
-                                        return `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafianteId}')" style="flex-shrink:0;"><img src="${urlA}" class="w-full h-full object-cover" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold\'>${iniA}</div>';"></div>` +
+                                        return `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafianteId}')" style="flex-shrink:0;"><img src="${urlA}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold\'>${iniA}</div>';"></div>` +
                                             `<span class="font-bold text-sm">${d.desafianteNome}</span>` +
                                             `<span class="text-[#C8A25A] font-black">${getGlaciaDuelo(d.desafianteId, d)}</span>` +
                                             `<span class="text-gray-500">⚔️</span>` +
                                             `<span class="text-[#C8A25A] font-black">${getGlaciaDuelo(d.desafiadoId, d)}</span>` +
                                             `<span class="font-bold text-sm">${d.desafiadoNome}</span>` +
-                                            `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafiadoId}')" style="flex-shrink:0;"><img src="${urlB}" class="w-full h-full object-cover" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold\'>${iniB}</div>';"></div>`;
+                                            `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafiadoId}')" style="flex-shrink:0;"><img src="${urlB}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold\'>${iniB}</div>';"></div>`;
                                     })()}
                                 </div>
                                 <span class="text-xs text-green-400 font-bold">EM ANDAMENTO</span>
@@ -5147,8 +5155,8 @@ function renderConquistasHistorico(pid) {
                         : '<span class="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold">PENDENTE</span>';
                     const obsHtml = ch.observacao ? `<p class="text-xs text-gray-500 italic">${ch.observacao}</p>` : '';
 
-                    const premioDisplay = ch.premio || ch.conquistaNome;
-                const nomeConquistaDisplay = ch.premio ? `<p class="text-xs text-yellow-500/70">${ch.conquistaNome}</p>` : '';
+                    const nomeDisplay = ch.conquistaNome || 'Feito';
+                    const premioDisplay = ch.premio ? `<p class="text-xs text-yellow-500/70 mt-0.5">🎁 ${ch.premio}</p>` : '';
 
                 return `
                         <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/30 border border-yellow-500/20">
@@ -5158,12 +5166,12 @@ function renderConquistasHistorico(pid) {
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <p class="font-bold text-yellow-400 text-sm truncate">${premioDisplay}</p>
+                                    <p class="font-bold text-yellow-400 text-sm truncate">${nomeDisplay}</p>
                                     ${pagoBadge}
                                 </div>
                                 <p class="text-xs text-gray-400">${ch.meta}+ glória no ${periodoLabel.toLowerCase()} · ${data}</p>
                                 <p class="text-xs text-green-400">Atingiu: ${ch.valorAtingido} glória</p>
-                                ${nomeConquistaDisplay}
+                                ${premioDisplay}
                                 ${obsHtml}
                             </div>
                             <div class="text-green-400 text-xl flex-shrink-0">
@@ -5279,42 +5287,17 @@ function showAlbum(playerId) {
             const conq = calcConquistas(playerId);
             checkAndSaveConquistas(playerId);
 
-            // Count ALL conquistas: each historico entry is a unique achievement
-            // Plus current period achievements not yet saved to historico
-            const hoje = getHojeBrasilia();
-            const mesAtual = hoje.substring(0, 7);
-
-            // Start with all historico entries for this player
-            let conquistasCount = conquistasHistorico.filter(ch => ch.jogadorId === playerId).length;
-
-            // Add current period achievements that are NOT already in historico
-            const cfgListCount = conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT;
-            cfgListCount.forEach(cfg => {
-                const meta = cfg.meta || cfg.goals || 0;
-                const periodo = cfg.periodo || cfg.period || 'month';
-                let isUnlocked = false;
-                if (periodo === 'day') isUnlocked = conq.currentDayTotal >= meta;
-                else if (periodo === 'week') isUnlocked = conq.currentWeekTotal >= meta;
-                else if (periodo === 'month') isUnlocked = conq.monthTotal >= meta;
-
-                if (isUnlocked) {
-                    let jaExiste = false;
-                    if (periodo === 'day') {
-                        jaExiste = conquistasHistorico.some(ch =>
-                            ch.jogadorId === playerId && ch.meta === meta && ch.periodo === 'day' && ch.dataConquista === hoje
-                        );
-                    } else if (periodo === 'week') {
-                        const semanaAtual = getWeekRangeBrasilia(hoje);
-                        const wkKey = getDiaBrasilia(semanaAtual.monday.toISOString());
-                        jaExiste = conquistasHistorico.some(ch =>
-                            ch.jogadorId === playerId && ch.meta === meta && ch.periodo === 'week' && ch.dataConquista === wkKey
-                        );
-                    } else {
-                        jaExiste = conquistasHistorico.some(ch =>
-                            ch.jogadorId === playerId && ch.meta === meta && ch.periodo === 'month' && ch.dataConquista.startsWith(mesAtual)
-                        );
-                    }
-                    if (!jaExiste) conquistasCount++;
+            // Count unique historico entries for this player
+            // Deduplicate by (meta + periodo + month) to avoid counting duplicates
+            const seenFeitos = new Set();
+            let conquistasCount = 0;
+            conquistasHistorico.forEach(ch => {
+                if (ch.jogadorId !== playerId) return;
+                const mes = ch.dataConquista ? ch.dataConquista.substring(0, 7) : '';
+                const key = (ch.meta || 0) + '|' + (ch.periodo || 'month') + '|' + mes;
+                if (!seenFeitos.has(key)) {
+                    seenFeitos.add(key);
+                    conquistasCount++;
                 }
             });
 
@@ -8765,7 +8748,7 @@ async function salvarConquistaConfig() {
                     await window.setDoc(window.doc(window.db, 'conquistasConfig', editId), { id, nome, meta, periodo, img, premio, custo }, { merge: true });
                     showToast('Feito atualizado!', 'success');
                 } else {
-                    await window.setDoc(window.doc(window.db, 'conquistasConfig', id), { id, nome, meta, periodo, img, premio, custo, createdAt: new Date().toISOString() });
+                    await window.setDoc(window.doc(window.db, 'conquistasConfig', id), { id, nome, meta, periodo, img, premio, custo, tipoAlvo, createdAt: new Date().toISOString() });
                     showToast('Feito criado!', 'success');
                 }
                 cancelarEdicaoConquista();
