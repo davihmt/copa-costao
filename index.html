@@ -761,7 +761,7 @@
         <!-- HOME SECTION -->
         <section id="section-home" class="fade-in">
             <div class="mb-6 text-center">
-                <img src="./valhalla-logo.png" onerror="this.style.display='none';this.parentElement.innerHTML+='<h1 style=font-family:Cinzel,serif;color:#C8A25A;font-size:2.5rem;text-shadow:0 2px 10px rgba(200,162,90,0.3)>VALHALLA COSTÃO</h1>'" alt="Valhalla Costão" class="mx-auto mb-4" style="max-height: 320px; width: auto; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8));">
+                <img src="https://davihmt.github.io/copa-costao/valhalla-logo.png" onerror="var p=this.parentElement; p.innerHTML='<h1 style=font-family:Cinzel,serif;color:#C8A25A;font-size:2.5rem;text-shadow:0 2px 10px rgba(200,162,90,0.3)>VALHALLA COSTÃO</h1>'" alt="Valhalla Costão" class="mx-auto mb-4" style="max-height: 320px; width: auto; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8));">
             </div>
             <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             </div>
@@ -781,10 +781,10 @@
                     <button onclick="setRankingPeriod('week')" id="filter-week" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
                         <i class="fas fa-calendar-week mr-1"></i> Semana
                     </button>
-                    <button onclick="setRankingPeriod('month')" id="filter-month" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
+                    <button onclick="setRankingPeriod('month')" id="filter-month" class="filter-btn active px-4 py-2 rounded-lg font-semibold text-sm">
                         <i class="fas fa-calendar-alt mr-1"></i> Mês
                     </button>
-                    <button onclick="setRankingPeriod('total')" id="filter-total" class="filter-btn active px-4 py-2 rounded-lg font-semibold text-sm">
+                    <button onclick="setRankingPeriod('total')" id="filter-total" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
                         <i class="fas fa-infinity mr-1"></i> Total
                     </button>
                 </div>
@@ -1578,6 +1578,54 @@
                             </button>
                         </div>
 
+                        <h3 class="text-2xl font-bold mb-6 mt-10"><i class="fas fa-edit mr-2 text-[#C8A25A]"></i>Editar Conselho dos Sábios</h3>
+                        <div class="glass rounded-2xl p-6 max-w-2xl mb-6">
+                            <div class="mb-4">
+                                <label class="block text-sm font-semibold text-gray-400 mb-2">Selecionar Sábio</label>
+                                <select id="edit-comissao-select" onchange="carregarDadosComissao()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                    <option value="">Selecione um sábio</option>
+                                </select>
+                            </div>
+                            <div id="edit-comissao-form" class="hidden">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-400 mb-2">Nome</label>
+                                        <input type="text" id="edit-comissao-nome" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none" placeholder="Nome do sábio">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-400 mb-2">Função</label>
+                                        <select id="edit-comissao-funcao" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                            <option value="preparador-campo">Guardião do Portal (Recepcionista)</option>
+                                            <option value="analista-operacional">Escriba Real (ADM)</option>
+                                            <option value="nutricionista">Mestre dos Banquetes (Garçons)</option>
+                                            <option value="olheiro">Vidente do Reino (Confirmadora)</option>
+                                            <option value="treinador-sub6">Guardião dos Jovens Guerreiros (Recreação)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Clã / Reino</label>
+                                    <select id="edit-comissao-equipe" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                        <option value="">Sem clã</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Retrato</label>
+                                    <input type="file" id="edit-comissao-foto-file" accept="image/*" class="hidden" onchange="handleCadastroFotoUpload(this, 'edit-comissao-foto-preview', 'edit-comissao-foto-preview-container', 'edit-comissao-foto')">
+                                    <div id="edit-comissao-foto-preview-container" class="hidden mb-2 rounded-xl overflow-hidden bg-gray-800 flex items-center justify-center" style="width:80px;height:80px;border:2px dashed rgba(200,162,90,0.4);">
+                                        <img id="edit-comissao-foto-preview" src="" style="width:100%;height:100%;object-fit:cover;">
+                                    </div>
+                                    <button onclick="document.getElementById('edit-comissao-foto-file').click()" class="px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 transition-all text-sm font-semibold mb-2">
+                                        <i class="fas fa-camera mr-1"></i>Escolher do Dispositivo
+                                    </button>
+                                    <input type="text" id="edit-comissao-foto" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none" placeholder="URL ou nome do arquivo">
+                                </div>
+                                <button onclick="salvarEdicaoComissao()" class="w-full py-3 rounded-xl btn-primary text-[#ECE8E1] font-bold text-lg">
+                                    <i class="fas fa-save mr-2"></i>Salvar Alterações do Sábio
+                                </button>
+                            </div>
+                        </div>
+
                         <h3 class="text-2xl font-bold mb-6"><i class="fas fa-trash-alt mr-2 text-red-400"></i>Excluir Conselho dos Sábios</h3>
                         <div class="glass rounded-2xl p-6 max-w-2xl">
                             <div class="mb-4">
@@ -2220,7 +2268,7 @@
         let currentAlbumPlayer = null;
         let isAdmin = false;
         let currentAdminTab = 'cadastrar';
-        let rankingPeriod = 'total';
+        let rankingPeriod = 'month';
         let inAdmin = false;
         let selectedFigPlayers = new Set(); // NOVO: guerreiros selecionados para runas
 
@@ -4336,6 +4384,9 @@ function getPlayerStats(playerId) {
                 punishTotal, punishDay, punishWeek, punishMonth,
                 verdesTotal, verdesDay, verdesWeek, verdesMonth,
                 elogiosRecebidos, elogiosDados,
+                elogiosRecebidosDay, elogiosDadosDay,
+                elogiosRecebidosWeek, elogiosDadosWeek,
+                elogiosRecebidosMonth, elogiosDadosMonth,
                 totalReal: baseTotal + stickersTotal + verdesTotal + elogiosRecebidos + elogiosDados - punishTotal,
                 totalDay: baseDay + stickersDay + verdesDay + elogiosRecebidosDay + elogiosDadosDay - punishDay,
                 totalWeek: baseWeek + stickersWeek + verdesWeek + elogiosRecebidosWeek + elogiosDadosWeek - punishWeek,
@@ -4720,7 +4771,7 @@ async function renderPlayers() {
                 // Total glória = honrarias (elogios) + feitos de cartão verde
                 const comissaoWithTotals = comissao.map(c => {
                     const stats = getComissaoStats(c.id);
-                    return { ...c, totalGols: stats.totalReal };
+                    return { ...c, totalGols: getPeriodTotal(stats) };
                 });
                 const sortedComissao = comissaoWithTotals.sort((a, b) => {
                     if (b.totalGols !== a.totalGols) return b.totalGols - a.totalGols; // Mais glória primeiro
@@ -4954,6 +5005,7 @@ function calcConquistas(pid) {
 
                 const days = {}, weeks = {};
                 let monthTotal = 0;
+                let totalAcumulado = 0;
 
                 playerEvents.forEach(e => {
                     if (!e.data) return;
@@ -4987,6 +5039,7 @@ function calcConquistas(pid) {
                         days[dk] = (days[dk] || 0) + score;
                         weeks[wkKey] = (weeks[wkKey] || 0) + score;
 
+                        totalAcumulado += score;
                         if (isCurrentMonth) monthTotal += score;
                     }
                 });
@@ -4995,6 +5048,7 @@ function calcConquistas(pid) {
                     diaCount: Object.values(days).filter(g => g >= 14).length,
                     semanaCount: Object.values(weeks).filter(g => g >= 30).length,
                     monthTotal: monthTotal,
+                    totalAcumulado: totalAcumulado,
                     currentDayTotal: days[todayKey] || 0,
                     currentWeekTotal: weeks[currentWeekKey] || 0
                 };
@@ -5208,18 +5262,18 @@ function showAlbum(playerId) {
             const patentesHtml = getPatenteBadge(playerId, 'perfil');
             const patentesEl = document.getElementById('album-patentes');
             if (patentesEl) patentesEl.innerHTML = patentesHtml;
-            document.getElementById('album-player-total').textContent = `${stats.totalReal} glória`;
+            document.getElementById('album-player-total').textContent = `${stats.totalMonth} glória`;
             const blessingIndicator = document.getElementById('album-blessing-indicator');
             if (blessingIndicator) {
                 blessingIndicator.style.display = 'none'; // Removido na temática Valhalla
             }
-            document.getElementById('album-total-goals').textContent = stats.baseTotal + stats.stickersTotal;
-            const punishVal = Number(stats.punishTotal) || 0;
-            const verdesVal = Number(stats.verdesTotal) || 0;
+            document.getElementById('album-total-goals').textContent = stats.baseMonth + stats.stickersMonth;
+            const punishVal = Number(stats.punishMonth) || 0;
+            const verdesVal = Number(stats.verdesMonth) || 0;
             const julgamentoSaldo = punishVal - verdesVal;
             document.getElementById('album-punishment-goals').textContent = julgamentoSaldo > 0 ? `-${julgamentoSaldo}` : (julgamentoSaldo < 0 ? `+${Math.abs(julgamentoSaldo)}` : '0');
-            document.getElementById('album-honra-gols').textContent = stats.elogiosRecebidos + stats.elogiosDados;
-            document.getElementById('album-total-real').textContent = stats.totalReal;
+            document.getElementById('album-honra-gols').textContent = (stats.elogiosRecebidosMonth || 0) + (stats.elogiosDadosMonth || 0);
+            document.getElementById('album-total-real').textContent = stats.totalMonth;
 
             // Calcular feitos
             const conq = calcConquistas(playerId);
@@ -5309,8 +5363,8 @@ function showAlbum(playerId) {
                     progressCurrent = conqMural.currentWeekTotal;
                     repeatable = true;
                 } else {
-                    current = conqMural.monthTotal;
-                    progressCurrent = conqMural.monthTotal;
+                    current = conqMural.totalAcumulado;
+                    progressCurrent = conqMural.totalAcumulado;
                 }
                 return {
                     id: cfg.id, name: cfg.nome || cfg.name || '',
@@ -5330,12 +5384,14 @@ function showAlbum(playerId) {
                 const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-key text-gray-500 text-xl"></i>';
 
                 let progressHtml = '';
-                const progressVal = Math.min(100, (c.progressCurrent / c.goals) * 100);
-                const progressText = c.repeatable ? `${c.progressCurrent}/${c.goals} gols` : `${c.current}/${c.goals} glória`;
+                const pc = c.progressCurrent || 0;
+                const cv = c.current || 0;
+                const progressVal = Math.min(100, (pc / c.goals) * 100);
+                const progressText = c.repeatable ? `${pc}/${c.goals} gols` : `${cv}/${c.goals} glória`;
                 if (!isUnlocked) {
                     progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progressVal}%; background: linear-gradient(90deg, #C8A25A, #8C6239)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${progressText}</p>`;
                 } else if (c.repeatable) {
-                    progressHtml = `<p class="text-xs text-green-400 mt-1 text-center font-bold">✅ ${c.progressCurrent}/${c.goals} glória</p>`;
+                    progressHtml = `<p class="text-xs text-green-400 mt-1 text-center font-bold">✅ ${pc}/${c.goals} glória</p>`;
                 }
 
                 if (isUnlocked) {
@@ -8571,7 +8627,32 @@ async function loadConquistasConfig() {
             } catch (e) {}
         };
 
-function renderFigurinhasConfigList() {
+
+        // Update figurinha select in admin panel
+        function updateFigurinhaAdminSelect() {
+            const sel = document.getElementById('fig-tipo');
+            if (!sel) return;
+            const currentVal = sel.value;
+            sel.innerHTML = figurinhasConfig.map(f => `<option value="${f.id}">${f.nome} (+${f.valor})</option>`).join('');
+            if (currentVal && figurinhasConfig.find(f => f.id === currentVal)) {
+                sel.value = currentVal;
+            }
+        }
+
+        // Update conquista select in admin panel
+        function updateConquistaAdminSelect() {
+            const sel = document.getElementById('conq-tipo');
+            if (!sel) return;
+            const currentVal = sel.value;
+            const cfgList = conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT;
+            sel.innerHTML = cfgList.map(c => {
+                const periodoLabel = c.periodo === 'day' ? 'dia' : c.periodo === 'week' ? 'semana' : 'mês';
+                return `<option value="${c.id}">${c.nome || c.name} (${c.meta}+ glória no ${periodoLabel})</option>`;
+            }).join('') + `<option value="spiff">🏆 Tesouro (Tesouro Personalizado)</option>`;
+            if (currentVal) sel.value = currentVal;
+        }
+
+        function renderFigurinhasConfigList() {
             const container = document.getElementById('fig-config-list');
             if (!container) return;
             if (figurinhasConfig.length === 0) {
@@ -8649,11 +8730,18 @@ async function salvarFigurinhaConfig() {
             if (valor <= 0) { showToast('Valor deve ser maior que 0', 'error'); return; }
             try {
                 if (editId) {
-                    await window.updateDoc(window.doc(window.db, 'figurinhasConfig', editId), { id, nome, valor, img });
-                    showToast('Figurinha atualizada!', 'success');
+                    const docRef = window.doc(window.db, 'figurinhasConfig', editId);
+                    const docSnap = await window.getDoc(docRef);
+                    if (docSnap.exists()) {
+                        await window.updateDoc(docRef, { id, nome, valor, img, updatedAt: new Date().toISOString() });
+                        showToast('Runa atualizada!', 'success');
+                    } else {
+                        await window.setDoc(docRef, { id, nome, valor, img, createdAt: new Date().toISOString() });
+                        showToast('Runa criada!', 'success');
+                    }
                 } else {
                     await window.setDoc(window.doc(window.db, 'figurinhasConfig', id), { id, nome, valor, img, createdAt: new Date().toISOString() });
-                    showToast('Figurinha criada!', 'success');
+                    showToast('Runa criada!', 'success');
                 }
                 cancelarEdicaoFigurinha();
             } catch (e) {
@@ -8897,7 +8985,7 @@ function editarConquistaConfig(conqId) {
             if (!nome) { showToast('Nome é obrigatório', 'error'); return; }
             try {
                 await window.updateDoc(window.doc(window.db, 'corpoTecnico', id), {
-                    nome, funcao, foto,
+                    nome, funcao, funcaoLabel, foto,
                     updatedAt: new Date().toISOString()
                 });
                 showToast('Ancião atualizado com sucesso!', 'success');
