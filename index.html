@@ -2466,6 +2466,77 @@ function getTodayStr() {
             return d;
         }
 
+        // ===== JANELA SEMANAL DE GUERRA (Segunda 00:01 → Domingo 23:59) =====
+        function getProximaJanelaGuerra() {
+            const agora = new Date();
+            const dia = agora.getDay(); // 0=dom, 1=seg, ..., 6=sab
+
+            let diasAteSegunda;
+            if (dia === 1) {
+                diasAteSegunda = 7;
+            } else if (dia === 0) {
+                diasAteSegunda = 1;
+            } else {
+                diasAteSegunda = 8 - dia;
+            }
+
+            const inicio = new Date(agora);
+            inicio.setDate(agora.getDate() + diasAteSegunda);
+            inicio.setHours(0, 1, 0, 0);
+
+            const fim = new Date(inicio);
+            fim.setDate(inicio.getDate() + 6);
+            fim.setHours(23, 59, 59, 999);
+
+            return { inicio: inicio.toISOString(), fim: fim.toISOString() };
+        }
+
+        function getInicioEfetivoGuerra(guerra) {
+            if (!guerra || !guerra.dataInicio) return null;
+            const inicio = new Date(guerra.dataInicio);
+            const agora = new Date();
+            const amanha = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1, 0, 1, 0, 0);
+
+            if (guerra.claDesafianteId && inicio.getTime() < amanha.getTime()) {
+                return amanha.toISOString();
+            }
+            return guerra.dataInicio;
+        }
+
+        function getDiaAtualGuerra(dataInicioStr, dataFimStr) {
+            // Sempre retorna objeto válido, nunca undefined
+            if (!dataInicioStr || !dataFimStr) {
+                return { status: 'ativa', diaAtual: 1, totalDias: 7, diasRestantes: 6 };
+            }
+
+            const inicio = new Date(dataInicioStr);
+            const fim = new Date(dataFimStr);
+            const agora = new Date();
+
+            const inicioDia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+            const fimDia = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate());
+            const agoraDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+
+            // Math.ceil para arredondar PARA CIMA (semana = 7 dias)
+            const totalDias = Math.max(1, Math.ceil((fimDia - inicioDia) / (1000 * 60 * 60 * 24)) + 1);
+
+            if (agoraDia < inicioDia) {
+                return { 
+                    status: 'fila', 
+                    diasAteInicio: Math.max(0, Math.ceil((inicioDia - agoraDia) / (1000 * 60 * 60 * 24))), 
+                    totalDias,
+                    diaAtual: 0,
+                    diasRestantes: totalDias
+                };
+            }
+
+            const diasPassados = Math.max(0, Math.ceil((agoraDia - inicioDia) / (1000 * 60 * 60 * 24)));
+            const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
+            const diasRestantes = Math.max(0, totalDias - diaAtual + 1);
+
+            return { status: 'ativa', diaAtual, totalDias, diasRestantes };
+        }
+
         function getDueloAtivo(jogadorId) {
             const semana = getSemanaAtual();
             return duelos.find(d => d.semanaId === semana && d.status === 'ativo' && (d.desafianteId === jogadorId || d.desafiadoId === jogadorId));
@@ -2479,11 +2550,19 @@ function getTodayStr() {
 
             const inicio = new Date(duelo.dataInicio);
             const fim = new Date(duelo.dataFim || duelo.dataInicio);
-            const inicioTs = inicio.getTime();
+
+            // Para guerras de clã já em andamento: contar glórias a partir de amanhã
+            let inicioEfetivo = new Date(inicio);
+            const agora = new Date();
+            const amanha = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1, 0, 1, 0, 0);
+
+            if (duelo.claDesafianteId && inicio.getTime() < amanha.getTime()) {
+                inicioEfetivo = amanha;
+            }
+
+            const inicioTs = inicioEfetivo.getTime();
             const fimTs = fim.getTime();
 
-            // Se o duelo ainda não começou, retorna 0
-            const agora = new Date();
             if (agora.getTime() < inicioTs) {
                 return 0;
             }
@@ -2494,10 +2573,8 @@ function getTodayStr() {
                 let evTs = null;
 
                 if (ev.createdAt) {
-                    // Tem timestamp completo - usar diretamente
                     evTs = new Date(ev.createdAt).getTime();
                 } else if (ev.data) {
-                    // Só tem data (YYYY-MM-DD) - considerar como meio-dia do dia
                     evTs = new Date(ev.data + 'T12:00:00').getTime();
                 }
 
@@ -2578,7 +2655,7 @@ function getTodayStr() {
             try {
                 const agora = new Date();
                 const dataFim = new Date(agora);
-                dataFim.setDate(agora.getDate() + 5);
+                dataFim.setDate(agora.getDate() + 4);
                 dataFim.setHours(23, 59, 59, 999);
                 await window.updateDoc(window.doc(window.db, 'duelos', dueloId), { 
                     status: 'ativo', 
@@ -3089,17 +3166,21 @@ async function excluirDuelo(dueloId) {
             const pctB = total > 0 ? (gloriaB / total) * 100 : 50;
 
             let diasInfo = '';
-            if (duelo.dataInicio && duelo.dataFim) {
-                const inicio = new Date(duelo.dataInicio);
-                const fim = new Date(duelo.dataFim);
+            // Duelos = 5 dias corridos por horas completas (24h cada)
+            // Ex: início 02/08 16h → Dia 1 até 03/08 16h, Dia 2 até 04/08 16h...
+            const dueloInicio = duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt;
+            if (dueloInicio) {
+                const inicio = new Date(dueloInicio);
                 const agora = new Date();
-                const totalDias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24));
-                const diasPassados = Math.max(0, Math.ceil((agora - inicio) / (1000 * 60 * 60 * 24)));
+                const totalDias = 5; // Duelos sempre 5 dias corridos
+                const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
+                const diasPassados = Math.floor(horasPassadas / 24);
+                const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
                 const diasRestantes = Math.max(0, totalDias - diasPassados);
                 diasInfo = `<div class="flex justify-between text-xs text-gray-400 mt-2">
-                    <span>Início: ${inicio.toLocaleDateString('pt-BR')} às 0:01</span>
-                    <span>${diasPassados} de ${totalDias} dias passados · ${diasRestantes} restantes</span>
-                    <span>Fim: ${fim.toLocaleDateString('pt-BR')}</span>
+                    <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')}</span>
+                    <span class="font-bold text-[#C8A25A]">Dia ${diaAtual} de ${totalDias}</span>
+                    <span>${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}</span>
                 </div>`;
             }
 
@@ -3117,6 +3198,7 @@ async function excluirDuelo(dueloId) {
             const pendentes = duelos.filter(d => d.semanaId === semana && d.status === 'pendente');
             const ativos = duelos.filter(d => d.semanaId === semana && d.status === 'ativo');
             const guerrasPendentes = guerrasClas.filter(g => g.status === 'pendente');
+            const guerrasFila = guerrasClas.filter(g => g.status === 'fila');
             const guerrasAtivas = guerrasClas.filter(g => g.status === 'ativa');
 
             const pendentesEl = document.getElementById('admin-arena-pendentes');
@@ -3133,8 +3215,8 @@ async function excluirDuelo(dueloId) {
                                 <span class="font-bold">${d.desafiadoNome}</span>
                             </div>
                             <div class="flex gap-2">
-                                ${isAdmin ? `<button onclick="aprovarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm font-bold hover:bg-green-500/30"><i class="fas fa-check mr-1"></i>Aprovar</button>
-                                <button onclick="recusarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-times mr-1"></i>Recusar</button>` : '<span class="text-xs text-yellow-400 font-bold">PENDENTE</span>'}
+                                <button onclick="aprovarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm font-bold hover:bg-green-500/30"><i class="fas fa-check mr-1"></i>Aprovar</button>
+                                <button onclick="recusarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-times mr-1"></i>Recusar</button>
                             </div>
                         </div>
                     `).join('');
@@ -3146,8 +3228,6 @@ async function excluirDuelo(dueloId) {
             if (ativosEl) {
                 if (ativos.length > 0) {
                     ativosEl.innerHTML = ativos.map(d => {
-                        const statsA = getPlayerStats(d.desafianteId);
-                        const statsB = getPlayerStats(d.desafiadoId);
                         return `
                         <div class="glass rounded-xl p-4 flex items-center justify-between">
                             <div class="flex items-center gap-3">
@@ -3175,7 +3255,7 @@ async function excluirDuelo(dueloId) {
                                 <span class="text-gray-500">vs</span>
                                 <span class="font-bold">${d.desafiadoNome}</span>
                             </div>
-                            ${isAdmin ? `<button onclick="finalizarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C8A25A] to-[#8C6239] text-white text-sm font-bold"><i class="fas fa-flag-checkered mr-1"></i>Finalizar</button>` : ''}
+                            <button onclick="finalizarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C8A25A] to-[#8C6239] text-white text-sm font-bold"><i class="fas fa-flag-checkered mr-1"></i>Finalizar</button>
                         </div>
                     `).join('');
                 } else {
@@ -3183,49 +3263,77 @@ async function excluirDuelo(dueloId) {
                 }
             }
 
-            // Guerras de Clã Pendentes
-            const adminGuerrasPendentesEl = document.getElementById('admin-arena-pendentes');
-            if (adminGuerrasPendentesEl && guerrasPendentes.length > 0) {
-                let extraHtml = '<h4 class="text-lg font-bold mb-3 text-yellow-400 mt-6"><i class="fas fa-shield-halved mr-2"></i>Guerras de Clã Pendentes</h4>';
+            // GUERRAS DE CLÃ — SOLICITAÇÕES PENDENTES
+            if (pendentesEl && guerrasPendentes.length > 0) {
+                let extraHtml = '<h4 class="text-lg font-bold mb-3 text-yellow-400 mt-6"><i class="fas fa-clock mr-2"></i>Solicitações Pendentes</h4>';
                 extraHtml += guerrasPendentes.map(g => {
                     const claA = equipes.find(e => e.id === g.claDesafianteId);
                     const claB = equipes.find(e => e.id === g.claDesafiadoId);
                     return `
                         <div class="glass rounded-xl p-4 flex items-center justify-between mb-2">
                             <div class="flex items-center gap-3">
+                                ${claA && claA.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
                                 <span class="text-gray-500">⚔️</span>
+                                ${claB && claB.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                             </div>
-                            ${isAdmin ? `<div class="flex gap-2">
-                                ${isAdmin ? `<button onclick="aprovarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm font-bold hover:bg-green-500/30"><i class="fas fa-check mr-1"></i>Aprovar</button>
-                                <button onclick="recusarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-times mr-1"></i>Recusar</button>` : '<span class="text-xs text-yellow-400 font-bold">PENDENTE</span>'}
-                            </div>` : '<span class="text-xs text-yellow-400 font-bold">PENDENTE</span>'}
+                            <div class="flex gap-2">
+                                <button onclick="aprovarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm font-bold hover:bg-green-500/30"><i class="fas fa-check mr-1"></i>Aprovar p/ Fila</button>
+                                <button onclick="recusarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-times mr-1"></i>Recusar</button>
+                            </div>
                         </div>
                     `;
                 }).join('');
-                adminGuerrasPendentesEl.innerHTML += extraHtml;
+                pendentesEl.innerHTML += extraHtml;
             }
 
-            // Guerras de Clã Ativas para Finalizar
-            const adminGuerrasFinalizarEl = document.getElementById('admin-arena-finalizar');
-            if (adminGuerrasFinalizarEl && guerrasAtivas.length > 0) {
-                let extraHtml2 = '<h4 class="text-lg font-bold mb-3 text-[#C8A25A] mt-6"><i class="fas fa-shield-halved mr-2"></i>Finalizar Guerras de Clã</h4>';
-                extraHtml2 += guerrasAtivas.map(g => {
+            // GUERRAS DE CLÃ — NA FILA (com excluir)
+            if (finalizarEl && guerrasFila.length > 0) {
+                let extraHtml2 = '<h4 class="text-lg font-bold mb-3 text-orange-400 mt-6"><i class="fas fa-list mr-2"></i>Guerras na Fila</h4>';
+                extraHtml2 += `<p class="text-xs text-gray-400 mb-2">${guerrasFila.length}/3 na fila</p>`;
+                extraHtml2 += guerrasFila.map(g => {
                     const claA = equipes.find(e => e.id === g.claDesafianteId);
                     const claB = equipes.find(e => e.id === g.claDesafiadoId);
                     return `
                         <div class="glass rounded-xl p-4 flex items-center justify-between mb-2">
                             <div class="flex items-center gap-3">
+                                ${claA && claA.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
-                                <span class="text-gray-500">vs</span>
+                                <span class="text-gray-500">⚔️</span>
+                                ${claB && claB.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                             </div>
-                            ${isAdmin ? `<button onclick="finalizarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C8A25A] to-[#8C6239] text-white text-sm font-bold"><i class="fas fa-flag-checkered mr-1"></i>Finalizar</button>` : ''}
+                            <div class="flex gap-2">
+                                <span class="text-xs text-orange-400 font-bold self-center">📋 NA FILA</span>
+                                <button onclick="excluirGuerraFila('${g.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-trash-alt mr-1"></i>Excluir</button>
+                            </div>
                         </div>
                     `;
                 }).join('');
-                adminGuerrasFinalizarEl.innerHTML += extraHtml2;
+                finalizarEl.innerHTML += extraHtml2;
+            }
+
+            // GUERRAS DE CLÃ — ATIVAS PARA FINALIZAR
+            if (finalizarEl && guerrasAtivas.length > 0) {
+                let extraHtml3 = '<h4 class="text-lg font-bold mb-3 text-[#C8A25A] mt-6"><i class="fas fa-shield-halved mr-2"></i>Finalizar Guerras de Clã</h4>';
+                extraHtml3 += guerrasAtivas.map(g => {
+                    const claA = equipes.find(e => e.id === g.claDesafianteId);
+                    const claB = equipes.find(e => e.id === g.claDesafiadoId);
+                    const info = getDiaAtualGuerra(g.dataInicio, g.dataFim);
+                    return `
+                        <div class="glass rounded-xl p-4 flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
+                                <span class="text-gray-500">⚔️</span>
+                                <span class="font-bold" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
+                                <span class="text-xs text-[#C8A25A]">Dia ${info.diaAtual} de ${info.totalDias}</span>
+                            </div>
+                            <button onclick="finalizarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C8A25A] to-[#8C6239] text-white text-sm font-bold"><i class="fas fa-flag-checkered mr-1"></i>Finalizar</button>
+                        </div>
+                    `;
+                }).join('');
+                finalizarEl.innerHTML += extraHtml3;
             }
 
             // Excluir Duelos Finalizados
@@ -3260,9 +3368,11 @@ async function excluirDuelo(dueloId) {
                         return `
                             <div class="glass rounded-xl p-4 flex items-center justify-between mb-2">
                                 <div class="flex items-center gap-3">
-                                    <span class="font-bold" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
-                                    <span class="text-gray-500">${g.gloriaDesafiante || 0} vs ${g.gloriaDesafiado || 0}</span>
-                                    <span class="font-bold" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
+                                    ${claA && claA.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
+                                    <span class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
+                                    <span class="text-gray-500">${g.gloriaDesafiante || 0} ⚔️ ${g.gloriaDesafiado || 0}</span>
+                                    ${claB && claB.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
+                                    <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                                     ${g.vencedorNome ? `<span class="text-green-400 text-sm">🏆 ${g.vencedorNome}</span>` : '<span class="text-yellow-400 text-sm">🤝 Empate</span>'}
                                 </div>
                                 <button onclick="excluirGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-trash-alt mr-1"></i>Excluir</button>
@@ -3273,10 +3383,7 @@ async function excluirDuelo(dueloId) {
                     excluirGuerrasEl.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma guerra finalizada.</p>';
                 }
             }
-        }
-
-// ===== ADMIN ARENA TAB =====
-        function showAdminArenaTab() {
+        }function showAdminArenaTab() {
             // This will be called when admin clicks Arena-related admin tab
             renderArenaIndividuais();
         }
@@ -3361,15 +3468,18 @@ async function excluirDuelo(dueloId) {
                 const pctA = total > 0 ? (gloriaA / total) * 100 : 50;
                 const pctB = total > 0 ? (gloriaB / total) * 100 : 50;
 
+                // Duelos = 5 dias corridos por horas completas (24h cada)
+                let dueloInicio = d.dataInicio || d.aprovadoAt || d.createdAt;
                 let diasInfo = '';
-                if (d.dataInicio && d.dataFim) {
-                    const inicio = new Date(d.dataInicio);
-                    const fim = new Date(d.dataFim);
+                if (dueloInicio) {
+                    const inicio = new Date(dueloInicio);
                     const agora = new Date();
-                    const totalDias = Math.ceil((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
-                    const diasPassados = Math.max(0, Math.floor((agora - inicio) / (1000 * 60 * 60 * 24)));
+                    const totalDias = 5; // Duelos sempre 5 dias corridos
+                    const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
+                    const diasPassados = Math.floor(horasPassadas / 24);
+                    const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
                     const diasRestantes = Math.max(0, totalDias - diasPassados);
-                    diasInfo = `<p class="text-center text-xs text-gray-500 mt-1">Dia ${diasPassados + 1} de ${totalDias} · ${diasRestantes} restante${diasRestantes !== 1 ? 's' : ''}</p>`;
+                    diasInfo = `<p class="text-center text-xs text-gray-500 mt-1"><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')} · Dia ${diaAtual} de ${totalDias} · ${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}</p>`;
                 }
 
                 meuDueloContent.innerHTML = `
@@ -3437,6 +3547,23 @@ async function excluirDuelo(dueloId) {
                 ativosList.innerHTML = demaisAtivos.map(d => {
                     const statsA = getPlayerStats(d.desafianteId);
                     const statsB = getPlayerStats(d.desafiadoId);
+                    // Duelos = 5 dias corridos por horas completas (24h cada)
+                    let dueloInicio = d.dataInicio || d.aprovadoAt || d.createdAt;
+                    let diasInfo = '';
+                    if (dueloInicio) {
+                        const inicio = new Date(dueloInicio);
+                        const agora = new Date();
+                        const totalDias = 5; // Duelos sempre 5 dias corridos
+                        const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
+                        const diasPassados = Math.floor(horasPassadas / 24);
+                        const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
+                        const diasRestantes = Math.max(0, totalDias - diasPassados);
+                        diasInfo = `<div class="flex justify-between text-xs text-gray-400 mt-1 px-1">
+                            <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')}</span>
+                            <span class="font-bold text-[#C8A25A]">Dia ${diaAtual} de ${totalDias}</span>
+                            <span>${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}</span>
+                        </div>`;
+                    }
                     return `
                         <div class="glass rounded-xl p-4">
                             <div class="flex items-center justify-between mb-3">
@@ -3448,17 +3575,18 @@ async function excluirDuelo(dueloId) {
                                         const pB = players.find(x => x.id === d.desafiadoId);
                                         const urlB = pB && pB.fotoPerfil ? getImageUrl(pB.fotoPerfil) : '';
                                         const iniB = pB ? ((pB.nome && pB.nome[0]) || '') + ((pB.sobrenome && pB.sobrenome[0]) || '') : '?';
-                                        return `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafianteId}')" style="flex-shrink:0;"><img src="${urlA}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold\'>${iniA}</div>';"></div>` +
+                                        return `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafianteId}')" style="flex-shrink:0;"><img src="${urlA}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold'>${iniA}</div>';"></div>` +
                                             `<span class="font-bold text-sm">${d.desafianteNome}</span>` +
                                             `<span class="text-[#C8A25A] font-black">${getGlaciaDuelo(d.desafianteId, d)}</span>` +
                                             `<span class="text-gray-500">⚔️</span>` +
                                             `<span class="text-[#C8A25A] font-black">${getGlaciaDuelo(d.desafiadoId, d)}</span>` +
                                             `<span class="font-bold text-sm">${d.desafiadoNome}</span>` +
-                                            `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafiadoId}')" style="flex-shrink:0;"><img src="${urlB}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold\'>${iniB}</div>';"></div>`;
+                                            `<div class="w-10 h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${d.desafiadoId}')" style="flex-shrink:0;"><img src="${urlB}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold'>${iniB}</div>';"></div>`;
                                     })()}
                                 </div>
                                 <span class="text-xs text-green-400 font-bold">EM ANDAMENTO</span>
                             </div>
+                            ${diasInfo}
                             ${renderTorcidometro(d)}
                             <!-- Torcida -->
                             <div class="p-2 rounded-lg bg-gray-800/30 border border-[#C8A25A]/10">
@@ -3480,8 +3608,7 @@ async function excluirDuelo(dueloId) {
                                 ${d.apostas && d.apostas.length > 0 ? `<div class="mt-1 flex flex-wrap gap-1">${d.apostas.map(a => `<span class="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">✓ ${a.participanteNome || a.comissaoNome}</span>`).join('')}</div>` : ''}
                             </div>
                         </div>
-                    `;
-                }).join('');
+                    `;}).join('');
             } else {
                 ativosList.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum outro duelo ativo nesta semana.</p>';
             }
@@ -3545,33 +3672,29 @@ async function excluirDuelo(dueloId) {
             if (!claA || !claB) { showToast('Selecione ambos os clãs', 'error'); return; }
             if (claA === claB) { showToast('Um clã não pode desafiar a si mesmo', 'error'); return; }
 
-            // Regras: máximo 3 guerras totais ativas/pendentes no sistema
-            // Cada clã pode ter no máximo 2 guerras ativas/pendentes
-            const guerrasAtivasPendentes = guerrasClas.filter(g => g.status === 'ativa' || g.status === 'pendente');
-            if (guerrasAtivasPendentes.length >= 3) { showToast('Limite de 3 guerras simultâneas atingido. Finalize uma guerra antes de declarar outra.', 'error'); return; }
-
-            // Verificar se já existe guerra ativa/pendente entre os MESMOS clãs
-            const mesmaGuerra = guerrasAtivasPendentes.find(g => 
+            const guerrasExistentes = guerrasClas.filter(g => g.status !== 'finalizada' && g.status !== 'cancelado');
+            const mesmaGuerra = guerrasExistentes.find(g => 
                 (g.claDesafianteId === claA && g.claDesafiadoId === claB) || 
                 (g.claDesafianteId === claB && g.claDesafiadoId === claA)
             );
-            if (mesmaGuerra) { showToast('Estes clãs já estão em guerra um contra o outro. Finalize a guerra atual antes de declarar outra.', 'error'); return; }
+            if (mesmaGuerra) { showToast('Estes clãs já têm uma guerra pendente, na fila ou em andamento. Finalize antes de declarar outra.', 'error'); return; }
 
-            const guerrasClaA = guerrasAtivasPendentes.filter(g => g.claDesafianteId === claA || g.claDesafiadoId === claA);
-            const guerrasClaB = guerrasAtivasPendentes.filter(g => g.claDesafianteId === claB || g.claDesafiadoId === claB);
+            const guerrasClaA = guerrasExistentes.filter(g => g.claDesafianteId === claA || g.claDesafiadoId === claA);
+            const guerrasClaB = guerrasExistentes.filter(g => g.claDesafianteId === claB || g.claDesafiadoId === claB);
             if (guerrasClaA.length >= 2) { showToast('O clã desafiante já está em 2 guerras. Limite máximo atingido.', 'error'); return; }
             if (guerrasClaB.length >= 2) { showToast('O clã desafiado já está em 2 guerras. Limite máximo atingido.', 'error'); return; }
 
             try {
                 await window.addDoc(window.collection(window.db, 'guerrasClas'), {
                     claDesafianteId: claA, claDesafiadoId: claB,
-                    semanaId: getSemanaAtual(),
                     status: 'pendente',
                     gloriaDesafiante: 0, gloriaDesafiado: 0,
                     vencedorId: null,
                     createdAt: new Date().toISOString()
                 });
-                showToast('Guerra de clã declarada! Aguardando aprovação do gestor.', 'success');
+                showToast('Guerra declarada! Aguardando aprovação do gestor.', 'success');
+                document.getElementById('arena-cla-desafiante').value = '';
+                document.getElementById('arena-cla-desafiado').value = '';
             } catch (e) {
                 showToast('Erro ao declarar guerra', 'error');
             }
@@ -3580,23 +3703,60 @@ async function excluirDuelo(dueloId) {
         async function aprovarGuerraCla(guerraId) {
             if (!isAdmin) { showToast('Acesso negado. Apenas admin.', 'error'); return; }
 
-            if (!confirm('Aprovar esta guerra de clã?')) return;
+            if (!confirm('Aprovar esta guerra de clã? Ela entrará na fila de guerras.')) return;
             try {
-                const agora = new Date();
-                const dataFim = new Date(agora);
-                dataFim.setDate(agora.getDate() + 7);
-                dataFim.setHours(23, 59, 59, 999);
                 await window.updateDoc(window.doc(window.db, 'guerrasClas', guerraId), { 
-                    status: 'ativa', 
+                    status: 'fila', 
                     aprovadoPor: 'admin', 
-                    aprovadoAt: agora.toISOString(),
-                    dataInicio: agora.toISOString(),
-                    dataFim: dataFim.toISOString()
+                    aprovadoAt: new Date().toISOString()
                 });
-                showToast('Guerra de clã aprovada! Começa agora e dura 7 dias.', 'success');
+                showToast('Guerra aprovada e entrou na fila!', 'success');
+
+                await promoverGuerrasFila();
+
                 if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
             } catch (e) {
                 showToast('Erro ao aprovar', 'error');
+            }
+        }
+
+        async function promoverGuerrasFila() {
+            const ativas = guerrasClas.filter(g => g.status === 'ativa');
+            const vagas = 3 - ativas.length;
+            if (vagas <= 0) return;
+
+            const fila = guerrasClas
+                .filter(g => g.status === 'fila')
+                .sort((a, b) => new Date(a.aprovadoAt || a.createdAt) - new Date(b.aprovadoAt || b.createdAt));
+
+            const janela = getProximaJanelaGuerra();
+
+            for (let i = 0; i < Math.min(vagas, fila.length); i++) {
+                const g = fila[i];
+                try {
+                    await window.updateDoc(window.doc(window.db, 'guerrasClas', g.id), {
+                        status: 'ativa',
+                        dataInicio: janela.inicio,
+                        dataFim: janela.fim,
+                        iniciadaAt: new Date().toISOString()
+                    });
+                } catch (e) {}
+            }
+
+            if (fila.length > vagas) {
+                showToast(`${fila.length - vagas} guerra(s) na fila aguardando vaga.`, 'info');
+            }
+        }
+
+        async function excluirGuerraFila(guerraId) {
+            if (!isAdmin) { showToast('Acesso negado. Apenas admin.', 'error'); return; }
+            if (!confirm('Tem certeza que deseja remover esta guerra da fila?')) return;
+            try {
+                await window.deleteDoc(window.doc(window.db, 'guerrasClas', guerraId));
+                showToast('Guerra removida da fila.', 'success');
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+            } catch (e) {
+                showToast('Erro ao remover guerra', 'error');
             }
         }
 
@@ -3731,21 +3891,22 @@ async function excluirDuelo(dueloId) {
             const desafianteSel = document.getElementById('arena-cla-desafiante');
             const desafiadoSel = document.getElementById('arena-cla-desafiado');
 
-            const semana = getSemanaAtual();
             const pendentes = guerrasClas.filter(g => g.status === 'pendente');
+            const fila = guerrasClas.filter(g => g.status === 'fila');
             const ativas = guerrasClas.filter(g => g.status === 'ativa');
             const finalizadas = guerrasClas.filter(g => g.status === 'finalizada').slice(0, 10);
 
-            // Build combined HTML for pendentes + ativas
             let html = '';
 
-            if (isAdmin && pendentes.length > 0) {
-                html += '<h4 class="text-lg font-bold mb-3 text-yellow-400"><i class="fas fa-clock mr-2"></i>Guerras Pendentes (Aguardando Aprovação)</h4>';
+            // ===== SOLICITAÇÕES PENDENTES =====
+            if (pendentes.length > 0) {
+                html += '<h4 class="text-lg font-bold mb-3 text-yellow-400 mt-4"><i class="fas fa-clock mr-2"></i>Solicitações Pendentes</h4>';
+                html += `<p class="text-xs text-gray-400 mb-3">${pendentes.length} solicitaç${pendentes.length > 1 ? 'ões' : 'ão'} aguardando aprovação</p>`;
                 html += pendentes.map(g => {
                     const claA = equipes.find(e => e.id === g.claDesafianteId);
                     const claB = equipes.find(e => e.id === g.claDesafiadoId);
                     return `
-                        <div class="glass rounded-xl p-4 mb-3">
+                        <div class="glass rounded-xl p-4 mb-3 border border-yellow-500/20">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="flex items-center gap-3">
                                     ${claA && claA.brasao ? `<div class="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
@@ -3754,13 +3915,38 @@ async function excluirDuelo(dueloId) {
                                     ${claB && claB.brasao ? `<div class="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
                                     <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                                 </div>
-                                <span class="text-xs text-yellow-400 font-bold">PENDENTE</span>
+                                <span class="text-xs text-yellow-400 font-bold">⏳ AGUARDANDO APROVAÇÃO</span>
                             </div>
                         </div>
                     `;
                 }).join('');
             }
 
+            // ===== GUERRAS NA FILA =====
+            if (fila.length > 0) {
+                html += '<h4 class="text-lg font-bold mb-3 text-orange-400 mt-4"><i class="fas fa-list mr-2"></i>Guerras na Fila</h4>';
+                html += `<p class="text-xs text-gray-400 mb-3">${fila.length} guerra(s) aprovada(s) aguardando vaga</p>`;
+                html += fila.map(g => {
+                    const claA = equipes.find(e => e.id === g.claDesafianteId);
+                    const claB = equipes.find(e => e.id === g.claDesafiadoId);
+                    return `
+                        <div class="glass rounded-xl p-4 mb-3 border border-orange-500/20">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3">
+                                    ${claA && claA.brasao ? `<div class="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
+                                    <span class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
+                                    <span class="text-xl font-black text-[#C8A25A]">⚔️</span>
+                                    ${claB && claB.brasao ? `<div class="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-10 h-10 rounded-full flex items-center justify-center" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
+                                    <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
+                                </div>
+                                <span class="text-xs text-orange-400 font-bold">📋 NA FILA</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // ===== GUERRAS EM ANDAMENTO =====
             if (ativas.length > 0) {
                 html += '<h4 class="text-lg font-bold mb-3 text-[#C8A25A] mt-4"><i class="fas fa-fire mr-2"></i>Guerras em Andamento</h4>';
                 html += ativas.map(g => {
@@ -3771,27 +3957,36 @@ async function excluirDuelo(dueloId) {
                     const comissaoA = comissao.filter(c => c.equipeId === g.claDesafianteId);
                     const comissaoB = comissao.filter(c => c.equipeId === g.claDesafiadoId);
 
-                    // Calculate glory respecting duel period if available
                     let gloriaA = 0, gloriaB = 0;
                     if (g.dataInicio && g.dataFim) {
-                        const inicio = new Date(g.dataInicio);
-                        const fim = new Date(g.dataFim);
                         jogadoresA.forEach(p => { gloriaA += getGlaciaDuelo(p.id, g); });
                         jogadoresB.forEach(p => { gloriaB += getGlaciaDuelo(p.id, g); });
                         comissaoA.forEach(c => { gloriaA += getGlaciaDuelo(c.id, g); });
                         comissaoB.forEach(c => { gloriaB += getGlaciaDuelo(c.id, g); });
-                    } else {
-                        gloriaA = jogadoresA.reduce((s, p) => s + (getPlayerStats(p.id).totalWeek || 0), 0) + comissaoA.reduce((s, c) => s + (getComissaoStats(c.id).totalWeek || 0), 0);
-                        gloriaB = jogadoresB.reduce((s, p) => s + (getPlayerStats(p.id).totalWeek || 0), 0) + comissaoB.reduce((s, c) => s + (getComissaoStats(c.id).totalWeek || 0), 0);
                     }
 
                     const total = gloriaA + gloriaB;
                     const pctA = total > 0 ? (gloriaA / total) * 100 : 50;
+
+                    // Usar início efetivo para display
+                    const inicioEfetivo = getInicioEfetivoGuerra(g);
+                    const inicioDisplay = inicioEfetivo ? new Date(inicioEfetivo) : (g.dataInicio ? new Date(g.dataInicio) : new Date());
+                    // Guerras = 7 dias corridos fixos (segunda a domingo) — ignorar dataFim do Firebase
+                    const inicioGuerra = new Date(inicioEfetivo || g.dataInicio);
+                    const agoraGuerra = new Date();
+                    const inicioGuerraDia = new Date(inicioGuerra.getFullYear(), inicioGuerra.getMonth(), inicioGuerra.getDate());
+                    const agoraGuerraDia = new Date(agoraGuerra.getFullYear(), agoraGuerra.getMonth(), agoraGuerra.getDate());
+                    const totalDiasGuerra = 7;
+                    const diasPassadosGuerra = Math.max(0, Math.ceil((agoraGuerraDia - inicioGuerraDia) / (1000 * 60 * 60 * 24)));
+                    const diaAtualGuerra = Math.max(1, Math.min(totalDiasGuerra, diasPassadosGuerra + 1));
+                    const diasRestantesGuerra = Math.max(0, totalDiasGuerra - diaAtualGuerra + 1);
+                    const info = { status: 'ativa', diaAtual: diaAtualGuerra, totalDias: totalDiasGuerra, diasRestantes: diasRestantesGuerra };
+
                     return `
                         <div class="glass rounded-xl p-6 mb-3">
                             <div class="flex items-center justify-between gap-4 mb-4">
                                 <div class="text-center flex-1">
-                                    ${claA && claA.brasao ? `<div class="mx-auto rounded-full overflow-hidden border-4 mb-2 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" class="brasao-guerra mx-auto rounded-full overflow-hidden border-4 mb-2 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" style="border-color: ${claA.cor}; background: #0B0A0A; box-shadow: 0 0 40px ${claA.cor}60;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claA.id}');"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-2" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'font-size:64px\'>🛡️</span>';"></div>` : `<div class="mx-auto rounded-full flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition-transform" class="brasao-guerra mx-auto rounded-full flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition-transform" style="background: ${claA ? claA.cor : '#C8A25A'}; box-shadow: 0 0 40px ${claA ? claA.cor : '#C8A25A'}60;font-size:64px;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claA.id}');">🛡️</div>`}
+                                    ${claA && claA.brasao ? `<div class="mx-auto rounded-full overflow-hidden border-4 mb-2 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform brasao-guerra" style="border-color: ${claA.cor}; background: #0B0A0A; box-shadow: 0 0 40px ${claA.cor}60;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claA.id}');"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-2" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style='font-size:64px'>🛡️</span>';"></div>` : `<div class="mx-auto rounded-full flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition-transform brasao-guerra" style="background: ${claA ? claA.cor : '#C8A25A'}; box-shadow: 0 0 40px ${claA ? claA.cor : '#C8A25A'}60;font-size:64px;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claA.id}');">🛡️</div>`}
                                     <p class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</p>
                                     <p class="text-3xl font-black" style="color: ${claA ? claA.cor : '#C8A25A'}">${gloriaA}</p>
                                     <p class="text-xs text-gray-400">${jogadoresA.length} guerreiros${comissaoA.length > 0 ? ' · ' + comissaoA.length + ' sábio(s)' : ''}</p>
@@ -3801,7 +3996,7 @@ async function excluirDuelo(dueloId) {
                                     <p class="text-xs text-gray-500">GUERRA DE CLÃ</p>
                                 </div>
                                 <div class="text-center flex-1">
-                                    ${claB && claB.brasao ? `<div class="mx-auto rounded-full overflow-hidden border-4 mb-2 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" class="brasao-guerra mx-auto rounded-full overflow-hidden border-4 mb-2 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform" style="border-color: ${claB.cor}; background: #0B0A0A; box-shadow: 0 0 40px ${claB.cor}60;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claB.id}');"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-2" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\'font-size:64px\'>🛡️</span>';"></div>` : `<div class="mx-auto rounded-full flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition-transform" class="brasao-guerra mx-auto rounded-full flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition-transform" style="background: ${claB ? claB.cor : '#C8A25A'}; box-shadow: 0 0 40px ${claB ? claB.cor : '#C8A25A'}60;font-size:64px;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claB.id}');">🛡️</div>`}
+                                    ${claB && claB.brasao ? `<div class="mx-auto rounded-full overflow-hidden border-4 mb-2 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform brasao-guerra" style="border-color: ${claB.cor}; background: #0B0A0A; box-shadow: 0 0 40px ${claB.cor}60;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claB.id}');"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-2" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style='font-size:64px'>🛡️</span>';"></div>` : `<div class="mx-auto rounded-full flex items-center justify-center mb-2 cursor-pointer hover:scale-105 transition-transform brasao-guerra" style="background: ${claB ? claB.cor : '#C8A25A'}; box-shadow: 0 0 40px ${claB ? claB.cor : '#C8A25A'}60;font-size:64px;" onclick="event.stopPropagation(); window.showEquipeAlbum('${claB.id}');">🛡️</div>`}
                                     <p class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</p>
                                     <p class="text-3xl font-black" style="color: ${claB ? claB.cor : '#C8A25A'}">${gloriaB}</p>
                                     <p class="text-xs text-gray-400">${jogadoresB.length} guerreiros${comissaoB.length > 0 ? ' · ' + comissaoB.length + ' sábio(s)' : ''}</p>
@@ -3811,33 +4006,18 @@ async function excluirDuelo(dueloId) {
                                 <div class="h-full transition-all" style="width: ${pctA}%; background: ${claA ? claA.cor : '#C8A25A'}"></div>
                                 <div class="h-full transition-all" style="width: ${100 - pctA}%; background: ${claB ? claB.cor : '#8C6239'}"></div>
                             </div>
-                            
-                                                        ${(() => {
-                                let diasInfo = '';
-                                if (g.dataInicio && g.dataFim) {
-                                    const inicio = new Date(g.dataInicio);
-                                    const fim = new Date(g.dataFim);
-                                    const agora = new Date();
-                                    const duracaoDias = Math.round((fim.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
-                                    const diasPassados = Math.max(0, Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)));
-                                    const diasRestantes = Math.max(0, duracaoDias - diasPassados);
-                                    const diaAtual = Math.min(duracaoDias, diasPassados + 1);
-                                    diasInfo = `<div class="flex justify-between items-center text-xs text-gray-400 mt-1 mb-3 px-1">
-                                        <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')}</span>
-                                        <span class="font-bold text-[#C8A25A]">Dia ${diaAtual} de ${duracaoDias}</span>
-                                        <span>${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}</span>
-                                    </div>`;
-                                }
-                                return diasInfo;
-                            })()}
+                            <div class="flex justify-between items-center text-xs text-gray-400 mt-1 mb-3 px-1">
+                                <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicioDisplay.toLocaleDateString('pt-BR')}</span>
+                                <span class="font-bold text-[#C8A25A]">Dia ${info.diaAtual} de ${info.totalDias}</span>
+                                <span>${info.diasRestantes} dia${info.diasRestantes !== 1 ? 's' : ''} restante${info.diasRestantes !== 1 ? 's' : ''}</span>
+                            </div>
                             ${renderTorcidometroGuerra(g)}
-                            <!-- Torcida nas Guerras de Clã - Compact -->
                             <div class="mt-4 p-3 rounded-xl bg-gray-800/50 border border-[#C8A25A]/20">
                                 <div class="flex items-center justify-between mb-2">
                                     <h4 class="text-sm font-bold text-[#C8A25A]"><i class="fas fa-eye mr-1"></i>Torcida</h4>
                                     <span class="text-xs text-gray-400">1 glória por acerto</span>
                                 </div>
-                                                            <div class="flex items-center justify-between">
+                                <div class="flex items-center justify-between">
                                     <div class="flex flex-wrap gap-2">
                                         ${g.apostas && g.apostas.length > 0 ? g.apostas.map(a => {
                                             const claApostado = equipes.find(e => e.id === a.apostadoId);
@@ -3845,16 +4025,16 @@ async function excluirDuelo(dueloId) {
                                         }).join('') : '<span class="text-xs text-gray-500">Nenhuma torcida ainda</span>'}
                                     </div>
                                     ${(() => {
-                                    const podeTorcer = !g.dataInicio || (() => {
-                                        const inicio = new Date(g.dataInicio);
-                                        const agora = new Date();
-                                        const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
-                                        return diasPassados < 3; // Só pode torcer até o dia 3
-                                    })();
-                                    return podeTorcer ? `<button onclick="abrirModalTorcida('guerra', '${g.id}')" class="px-4 py-2 rounded-lg bg-[#C8A25A]/15 text-[#C8A25A] text-sm font-bold hover:bg-[#C8A25A]/30 border border-[#C8A25A]/20 transition-all">
-                                        <i class="fas fa-scroll mr-1"></i>Torcer
-                                    </button>` : `<span class="px-3 py-2 rounded-lg bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Apostas encerradas</span>`;
-                                })()}
+                                        const podeTorcer = !g.dataInicio || (() => {
+                                            const inicio = new Date(g.dataInicio);
+                                            const agora = new Date();
+                                            const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
+                                            return diasPassados < 3;
+                                        })();
+                                        return podeTorcer ? `<button onclick="abrirModalTorcida('guerra', '${g.id}')" class="px-4 py-2 rounded-lg bg-[#C8A25A]/15 text-[#C8A25A] text-sm font-bold hover:bg-[#C8A25A]/30 border border-[#C8A25A]/20 transition-all">
+                                            <i class="fas fa-scroll mr-1"></i>Torcer
+                                        </button>` : `<span class="px-3 py-2 rounded-lg bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Apostas encerradas</span>`;
+                                    })()}
                                 </div>
                             </div>
                         </div>
@@ -3862,8 +4042,8 @@ async function excluirDuelo(dueloId) {
                 }).join('');
             }
 
-            if (ativas.length === 0 && pendentes.length === 0) {
-                html = '<p class="text-gray-500 text-center py-4">Nenhuma guerra ativa ou pendente.</p>';
+            if (pendentes.length === 0 && fila.length === 0 && ativas.length === 0) {
+                html = '<p class="text-gray-500 text-center py-4">Nenhuma guerra ativa, na fila ou pendente.</p>';
             }
 
             if (ativasList) ativasList.innerHTML = html;
@@ -3895,9 +4075,7 @@ async function excluirDuelo(dueloId) {
                 desafianteSel.innerHTML = '<option value="">Selecione um clã</option>' + opts;
                 desafiadoSel.innerHTML = '<option value="">Selecione um clã</option>' + opts;
             }
-        }
-
-        function renderArenaRanking() {
+        }function renderArenaRanking() {
             const rankingList = document.getElementById('arena-ranking-duelistas-list');
             const hallList = document.getElementById('arena-hall-lendarios-list');
 
@@ -5546,6 +5724,7 @@ function checkAdminPassword() {
         window.lancarTorcidaGuerraCla = lancarTorcidaGuerraCla;
         window.excluirDuelo = excluirDuelo;
         window.excluirGuerraCla = excluirGuerraCla;
+        window.excluirGuerraFila = excluirGuerraFila;
 
 function logoutAdmin() {
             isAdmin = false;
