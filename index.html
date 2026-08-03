@@ -2495,17 +2495,7 @@ function getTodayStr() {
             return { inicio: inicio.toISOString(), fim: fim.toISOString() };
         }
 
-        function getInicioEfetivoGuerra(guerra) {
-            if (!guerra || !guerra.dataInicio) return null;
-            const inicio = new Date(guerra.dataInicio);
-            const agora = new Date();
-            const amanha = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1, 0, 1, 0, 0);
-
-            if (guerra.claDesafianteId && inicio.getTime() < amanha.getTime()) {
-                return amanha.toISOString();
-            }
-            return guerra.dataInicio;
-        }
+        
 
         function getDiaAtualGuerra(dataInicioStr, dataFimStr) {
             // Sempre retorna objeto válido, nunca undefined
@@ -2542,8 +2532,7 @@ function getTodayStr() {
         }
 
         function getDueloAtivo(jogadorId) {
-            const semana = getSemanaAtual();
-            return duelos.find(d => d.semanaId === semana && d.status === 'ativo' && (d.desafianteId === jogadorId || d.desafiadoId === jogadorId));
+            return duelos.find(d => d.status === 'ativo' && (d.desafianteId === jogadorId || d.desafiadoId === jogadorId));
         }
 
         function getGlaciaDuelo(jogadorId, duelo) {
@@ -2554,17 +2543,67 @@ function getTodayStr() {
 
             const inicio = new Date(duelo.dataInicio);
             const fim = new Date(duelo.dataFim || duelo.dataInicio);
-
-            // Para guerras de clã já em andamento: contar glórias a partir de amanhã
-            let inicioEfetivo = new Date(inicio);
             const agora = new Date();
-            const amanha = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1, 0, 1, 0, 0);
+            const inicioTs = inicio.getTime();
+            const fimTs = fim.getTime();
 
-            if (duelo.claDesafianteId && inicio.getTime() < amanha.getTime()) {
-                inicioEfetivo = amanha;
+            if (agora.getTime() < inicioTs) {
+                return 0;
             }
 
-            const inicioTs = inicioEfetivo.getTime();
+            const playerEvents = events.filter(e => e.jogadorId === jogadorId);
+            let total = 0;
+            playerEvents.forEach(ev => {
+                let evTs = null;
+
+                if (ev.createdAt) {
+                    evTs = new Date(ev.createdAt).getTime();
+                } else if (ev.data) {
+                    evTs = new Date(ev.data + 'T12:00:00').getTime();
+                }
+
+                if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
+                    const val = Number(ev.valor) || 0;
+                    if (ev.tipo === 'gol') {
+                        total += val;
+                    } else if (ev.tipo === 'figurinha') {
+                        total += val;
+                    } else if (ev.tipo === 'punicao') {
+                        total -= Math.abs(val);
+                    }
+                }
+            });
+            return total;
+        }
+
+        // Guerras de clã: glórias contam a partir da segunda-feira da semana de início
+        function getInicioEfetivoGuerra(dataInicioStr) {
+            if (!dataInicioStr) return null;
+            const inicio = new Date(dataInicioStr);
+            const diaSemana = inicio.getDay(); // 0=dom, 1=seg, 2=ter, ..., 6=sab
+
+            // Se já é segunda (1), retorna a própria data
+            if (diaSemana === 1) return dataInicioStr;
+
+            // Se for antes de segunda, calcular a próxima segunda
+            const diasAteSegunda = diaSemana === 0 ? 1 : 8 - diaSemana;
+            const segunda = new Date(inicio);
+            segunda.setDate(inicio.getDate() + diasAteSegunda);
+            segunda.setHours(0, 1, 0, 0);
+            return segunda.toISOString();
+        }
+
+        function getGlaciaGuerra(jogadorId, guerra) {
+            if (!guerra || !guerra.dataInicio) {
+                const stats = getPlayerStats(jogadorId);
+                return stats.totalWeek || 0;
+            }
+
+            const inicioEfetivo = getInicioEfetivoGuerra(guerra.dataInicio);
+            const inicio = new Date(inicioEfetivo || guerra.dataInicio);
+            const fim = new Date(guerra.dataFim || guerra.dataInicio);
+            const agora = new Date();
+            const inicioTs = inicio.getTime();
             const fimTs = fim.getTime();
 
             if (agora.getTime() < inicioTs) {
@@ -2598,8 +2637,6 @@ function getTodayStr() {
 
         function podeDesafiar(desafianteId, desafiadoId) {
             if (desafianteId === desafiadoId) return false;
-            const semana = getSemanaAtual();
-            // Check if desafiante already has an active duel this week
             // Check if desafiante already has any active or pending duel
             const ativo = duelos.find(d => d.status === 'ativo' && (d.desafianteId === desafianteId || d.desafiadoId === desafianteId));
             if (ativo) return { ok: false, msg: 'Você já está em um duelo ativo' };
@@ -3198,9 +3235,8 @@ async function excluirDuelo(dueloId) {
 
 // ===== ADMIN ARENA RENDER =====
         function renderAdminArena() {
-            const semana = getSemanaAtual();
-            const pendentes = duelos.filter(d => d.semanaId === semana && d.status === 'pendente');
-            const ativos = duelos.filter(d => d.semanaId === semana && d.status === 'ativo');
+            const pendentes = duelos.filter(d => d.status === 'pendente');
+            const ativos = duelos.filter(d => d.status === 'ativo');
             const guerrasPendentes = guerrasClas.filter(g => g.status === 'pendente');
             const guerrasFila = guerrasClas.filter(g => g.status === 'fila');
             const guerrasAtivas = guerrasClas.filter(g => g.status === 'ativa');
@@ -3455,9 +3491,8 @@ async function excluirDuelo(dueloId) {
             const pendentesEl = document.getElementById('arena-duelos-pendentes');
             const finalizadosList = document.getElementById('arena-duelos-finalizados-list');
 
-            const semana = getSemanaAtual();
-            const ativos = duelos.filter(d => d.semanaId === semana && d.status === 'ativo');
-            const pendentes = duelos.filter(d => d.semanaId === semana && d.status === 'pendente');
+            const ativos = duelos.filter(d => d.status === 'ativo');
+            const pendentes = duelos.filter(d => d.status === 'pendente');
             const finalizados = duelos.filter(d => d.status === 'finalizado').slice(0, 10);
 
             // Destaque: apenas o PRIMEIRO duelo ativo
@@ -3789,10 +3824,10 @@ async function excluirDuelo(dueloId) {
 
             let gloriaA = 0, gloriaB = 0;
             if (guerra.dataInicio && guerra.dataFim) {
-                jogadoresA.forEach(p => { gloriaA += getGlaciaDuelo(p.id, guerra); });
-                jogadoresB.forEach(p => { gloriaB += getGlaciaDuelo(p.id, guerra); });
-                comissaoA.forEach(c => { gloriaA += getGlaciaDuelo(c.id, guerra); });
-                comissaoB.forEach(c => { gloriaB += getGlaciaDuelo(c.id, guerra); });
+                jogadoresA.forEach(p => { gloriaA += getGlaciaGuerra(p.id, guerra); });
+                jogadoresB.forEach(p => { gloriaB += getGlaciaGuerra(p.id, guerra); });
+                comissaoA.forEach(c => { gloriaA += getGlaciaGuerra(c.id, guerra); });
+                comissaoB.forEach(c => { gloriaB += getGlaciaGuerra(c.id, guerra); });
             }
 
             let vencedorId = null;
@@ -3963,20 +3998,20 @@ async function excluirDuelo(dueloId) {
 
                     let gloriaA = 0, gloriaB = 0;
                     if (g.dataInicio && g.dataFim) {
-                        jogadoresA.forEach(p => { gloriaA += getGlaciaDuelo(p.id, g); });
-                        jogadoresB.forEach(p => { gloriaB += getGlaciaDuelo(p.id, g); });
-                        comissaoA.forEach(c => { gloriaA += getGlaciaDuelo(c.id, g); });
-                        comissaoB.forEach(c => { gloriaB += getGlaciaDuelo(c.id, g); });
+                        jogadoresA.forEach(p => { gloriaA += getGlaciaGuerra(p.id, g); });
+                        jogadoresB.forEach(p => { gloriaB += getGlaciaGuerra(p.id, g); });
+                        comissaoA.forEach(c => { gloriaA += getGlaciaGuerra(c.id, g); });
+                        comissaoB.forEach(c => { gloriaB += getGlaciaGuerra(c.id, g); });
                     }
 
                     const total = gloriaA + gloriaB;
                     const pctA = total > 0 ? (gloriaA / total) * 100 : 50;
 
                     // Usar início efetivo para display
-                    const inicioEfetivo = getInicioEfetivoGuerra(g);
-                    const inicioDisplay = inicioEfetivo ? new Date(inicioEfetivo) : (g.dataInicio ? new Date(g.dataInicio) : new Date());
-                    // Guerras = 7 dias corridos fixos (segunda a domingo) — ignorar dataFim do Firebase
-                    const inicioGuerra = new Date(inicioEfetivo || g.dataInicio);
+                    const inicioEfetivoStr = getInicioEfetivoGuerra(g.dataInicio);
+                    const inicioDisplay = inicioEfetivoStr ? new Date(inicioEfetivoStr) : (g.dataInicio ? new Date(g.dataInicio) : new Date());
+                    // Guerras = 7 dias corridos fixos (segunda a domingo)
+                    const inicioGuerra = new Date(inicioEfetivoStr || g.dataInicio);
                     const agoraGuerra = new Date();
                     const inicioGuerraDia = new Date(inicioGuerra.getFullYear(), inicioGuerra.getMonth(), inicioGuerra.getDate());
                     const agoraGuerraDia = new Date(agoraGuerra.getFullYear(), agoraGuerra.getMonth(), agoraGuerra.getDate());
