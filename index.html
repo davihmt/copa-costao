@@ -2348,13 +2348,17 @@ function getTodayStr() {
         ];
 
         const CONQUISTAS_DEFAULT = [
-            { id: 'massacre', nome: 'MASSACRE!!!', meta: 14, periodo: 'day', img: '+14.png', premio: "KIT PRAIA + GENUINO'S" },
-            { id: 'furia-de-odin', nome: 'FÚRIA DE ODIN!!!', meta: 30, periodo: 'week', img: '+30.png', premio: 'FOLGA + ALMOÇO COSTAO' },
-            { id: 'campeao-do-norte-50', nome: 'CAMPEÃO DO NORTE!', meta: 50, periodo: 'month', img: '+50.png', premio: 'FOLGA + KIT VINHO' },
-            { id: 'berserker-60', nome: 'BERSERKER!', meta: 60, periodo: 'month', img: '+60.png', premio: 'ALMOÇO COSTAO' },
-            { id: 'senhor-da-guerra-80', nome: 'SENHOR DA GUERRA!', meta: 80, periodo: 'month', img: '+80.png', premio: 'R$ 200 SPA' },
-            { id: 'lenda-de-valhalla-120', nome: 'LENDA DE VALHALLA!!', meta: 120, periodo: 'month', img: '+120.png', premio: 'TOUR BC EXPERIENCE' },
-            { id: 'lenda-de-valhalla-150', nome: 'LENDA DE VALHALLA!!!', meta: 150, periodo: 'month', img: '+150.png', premio: 'TOUR BC EXPERIENCE PLUS' }
+            { id: 'massacre', nome: 'MASSACRE!!!', meta: 14, periodo: 'day', img: '+14.png', premio: "KIT PRAIA + GENUINO'S", tipoAlvo: 'guerreiro' },
+            { id: 'furia-de-odin', nome: 'FÚRIA DE ODIN!!!', meta: 30, periodo: 'week', img: '+30.png', premio: 'FOLGA + ALMOÇO COSTAO', tipoAlvo: 'guerreiro' },
+            { id: 'campeao-do-norte-50', nome: 'CAMPEÃO DO NORTE!', meta: 50, periodo: 'month', img: '+50.png', premio: 'FOLGA + KIT VINHO', tipoAlvo: 'guerreiro' },
+            { id: 'berserker-60', nome: 'BERSERKER!', meta: 60, periodo: 'month', img: '+60.png', premio: 'ALMOÇO COSTAO', tipoAlvo: 'guerreiro' },
+            { id: 'senhor-da-guerra-80', nome: 'SENHOR DA GUERRA!', meta: 80, periodo: 'month', img: '+80.png', premio: 'R$ 200 SPA', tipoAlvo: 'guerreiro' },
+            { id: 'lenda-de-valhalla-120', nome: 'LENDA DE VALHALLA!!', meta: 120, periodo: 'month', img: '+120.png', premio: 'TOUR BC EXPERIENCE', tipoAlvo: 'guerreiro' },
+            { id: 'lenda-de-valhalla-150', nome: 'LENDA DE VALHALLA!!!', meta: 150, periodo: 'month', img: '+150.png', premio: 'TOUR BC EXPERIENCE PLUS', tipoAlvo: 'guerreiro' },
+            { id: 'mestre-dos-conselhos', nome: 'MESTRE DOS CONSELHOS', meta: 20, periodo: 'month', img: '+20.png', premio: 'KIT VINHO', tipoAlvo: 'comissao' },
+            { id: 'guardiao-da-tradicao', nome: 'GUARDIÃO DA TRADIÇÃO', meta: 30, periodo: 'month', img: '+30.png', premio: 'FOLGA + ALMOÇO COSTAO', tipoAlvo: 'comissao' },
+            { id: 'oraculo-de-valhalla', nome: 'ORÁCULO DE VALHALLA', meta: 40, periodo: 'month', img: '+40.png', premio: 'FOLGA + KIT VINHO', tipoAlvo: 'comissao' },
+            { id: 'alto-conselheiro', nome: 'ALTO CONSELHEIRO', meta: 50, periodo: 'month', img: '+50.png', premio: 'R$ 200 SPA', tipoAlvo: 'comissao' }
         ];
         var corpoTecnico = [];
         let honrarias = [];
@@ -6118,80 +6122,87 @@ function getTorcidasConsecutivas(comissaoId) {
                 }
             }
 
-            // Feitos da comissão
+            // Feitos do Conselho — puxar de conquistasConfig
             const conquistasDiv = document.getElementById('album-comissao-conquistas-grid');
             if (conquistasDiv) {
-                const CONQUISTAS_COMISSAO = [
-                    { id: 'espirito-time', name: 'Espírito de Time!', rule: '5+ glória no mês', goals: 5, img: '+5ct.png' },
-                    { id: 'rei-assistencia', name: 'Rei da Assistência!', rule: '10+ glória no mês', goals: 10, img: '+10ct.png' },
-                    { id: 'lenda-vestiario', name: 'Lenda do Vestiário!', rule: '15+ glória no mês', goals: 15, img: '+15ct.png' },
-                    { id: 'motor-time', name: 'Motor do Time!', rule: '20+ glória no mês', goals: 20, img: '+20ct.png' },
-                    { id: 'idolo-torcida', name: 'Ídolo da Torcida!', rule: '25+ glória no mês', goals: 25, img: '+25ct.png' },
-                    { id: 'embaixador-costao', name: 'Embaixador Costão!', rule: '30+ glória no mês', goals: 30, img: '+30ct.png' }
-                ];
+                const cfgListComissao = (typeof conquistasConfig !== 'undefined' && conquistasConfig && conquistasConfig.length > 0)
+                    ? conquistasConfig.filter(c => c.tipoAlvo === 'comissao' || c.tipoAlvo === 'ambos')
+                    : CONQUISTAS_DEFAULT.filter(c => c.tipoAlvo === 'comissao' || c.tipoAlvo === 'ambos');
 
-                conquistasDiv.innerHTML = CONQUISTAS_COMISSAO.map(conq => {
-                    const isUnlocked = totalGolsComissao >= conq.goals;
-                    const progress = Math.min(100, (totalGolsComissao / conq.goals) * 100);
-                    const imgUrl = getImageUrl(conq.img);
+                // Calcular glórias do sábio para progresso
+                const comissaoEvents = events.filter(e => e.jogadorId === comissaoId);
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                const currentMonth = now.getMonth();
+                const hoje = getHojeBrasilia();
+                const todayKey = hoje;
+                const currentWeek = getWeekRangeBrasilia(hoje);
+                const currentWeekKey = getDiaBrasilia(currentWeek.monday.toISOString());
 
-                    let progressHtml = '';
-                    if (!isUnlocked) {
-                        progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #C8A25A, #8C6239)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${totalGolsComissao}/${conq.goals}</p>`;
+                const days = {}, weeks = {};
+                let monthTotal = 0;
+
+                comissaoEvents.forEach(e => {
+                    if (!e.data) return;
+                    const val = Number(e.valor) || 0;
+                    const d = new Date(e.data);
+                    const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+                    const isCurrentMonth = dBrasilia.getFullYear() === currentYear && dBrasilia.getMonth() === currentMonth;
+
+                    let score = 0;
+                    if (e.tipo === 'gol') {
+                        if (e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado') score = val;
+                        else if (e.subtipo === 'benção-dos-deuses') score = val;
+                        else score = val;
+                    } else if (e.tipo === 'figurinha') score = val;
+                    else if (e.tipo === 'punicao') score = -Math.abs(val);
+
+                    if (score !== 0) {
+                        const dk = getDiaBrasilia(e.data);
+                        const wk = getWeekRangeBrasilia(dk);
+                        const wkKey = getDiaBrasilia(wk.monday.toISOString());
+                        days[dk] = (days[dk] || 0) + score;
+                        weeks[wkKey] = (weeks[wkKey] || 0) + score;
+                        if (isCurrentMonth) monthTotal += score;
                     }
+                });
+
+                conquistasDiv.innerHTML = cfgListComissao.map(conq => {
+                    const meta = conq.meta || conq.goals || 0;
+                    const periodo = conq.periodo || conq.period || 'month';
+                    let progressCurrent = 0;
+
+                    if (periodo === 'day') progressCurrent = days[todayKey] || 0;
+                    else if (periodo === 'week') progressCurrent = weeks[currentWeekKey] || 0;
+                    else progressCurrent = monthTotal;
+
+                    const isUnlocked = progressCurrent >= meta;
+                    const progress = Math.min(100, (progressCurrent / meta) * 100);
+                    const borderColor = isUnlocked ? 'rgba(200, 162, 90, 0.5)' : 'rgba(255,255,255,0.1)';
+                    const bgColor = isUnlocked ? 'rgba(200, 162, 90, 0.08)' : 'rgba(255,255,255,0.03)';
+                    const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-key text-gray-500 text-xl"></i>';
+                    const imgUrl = conq.img ? getImageUrl(conq.img) : '';
 
                     return `
-                        <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${isUnlocked ? 'rgba(200, 162, 90, 0.08)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isUnlocked ? 'rgba(200, 162, 90, 0.5)' : 'rgba(255,255,255,0.1)'};">
+                        <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${bgColor}; border: 1px solid ${borderColor};">
                             <div class="text-center mb-2 w-full">
-                                <h4 class="font-bold text-lg ${isUnlocked ? 'text-yellow-400' : 'text-gray-500'}">${conq.name}</h4>
+                                <h4 class="font-bold text-lg ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}">${conq.nome || conq.name || ''}</h4>
                             </div>
                             <div style="width:100%;padding-bottom:100%;height:0;max-width:260px;border-radius:12px;overflow:hidden;background:#0B0A0A;display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:8px;">
                                 <span style="font-size:80px;position:absolute;z-index:1;">🏆</span>
-                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${conq.name}" onload="this.previousElementSibling.style.display='none'">
+                                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;z-index:2;" alt="${conq.nome || conq.name || ''}" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'">
                             </div>
-                            <p class="text-xs text-gray-400 text-center">${conq.rule}</p>
-                            <div class="w-full">${progressHtml}</div>
+                            <div class="w-full">
+                                <p class="text-xs text-gray-500 text-center">${meta}+ glória no ${periodo === 'day' ? 'dia' : periodo === 'week' ? 'semana' : 'mês'}${conq.premio ? ' · Tesouro: ' + conq.premio : ''}</p>
+                                ${!isUnlocked ? `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progress}%; background: linear-gradient(90deg, #C8A25A, #8C6239)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${progressCurrent}/${meta} glória</p>` : ''}
+                            </div>
                             <div class="mt-2">
-                                ${isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-key text-gray-500 text-xl"></i>'}
+                                ${statusIcon}
                             </div>
                         </div>
                     `;
                 }).join('');
-            }
-
-            // Renderizar crônica de feitos
-            const comissaoEventsDiv = document.getElementById('album-comissao-events');
-            if (comissaoEventsDiv) {
-                const comissaoEvents = events.filter(e => e.jogadorId === comissaoId).sort((a, b) => {
-                    const da = getBRDate(a.data);
-                    const db = getBRDate(b.data);
-                    return db - da;
-                });
-                if (comissaoEvents.length === 0) {
-                    comissaoEventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum feito registrado</p>';
-                } else {
-                    comissaoEventsDiv.innerHTML = comissaoEvents.map(e => {
-                        let icon = '', color = '', sign = '';
-                        if (e.tipo === 'gol') { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = '+'; }
-                        else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; sign = '+'; }
-                        else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
-                        return `
-                            <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-lg">${icon}</span>
-                                    <div>
-                                        <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
-                                        <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
-                                    </div>
-                                </div>
-                                <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            }
-
-            // Mostrar álbum comissão
+            }// Mostrar álbum comissão
             const albumEl = document.getElementById('section-album-comissao');
             if (albumEl) albumEl.classList.remove('hidden');
             window.scrollTo(0, 0);
@@ -6443,13 +6454,16 @@ function getTorcidasConsecutivas(comissaoId) {
 
 
 function calcConquistasComissao(totalGolsComissao) {
+            const cfgList = conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT;
+            const comissaoConquistas = cfgList.filter(c => 
+                (c.tipoAlvo === 'comissao' || c.tipoAlvo === 'ambos') && 
+                (c.periodo || c.period) === 'month'
+            );
             let count = 0;
-            if (totalGolsComissao >= 5) count++;
-            if (totalGolsComissao >= 10) count++;
-            if (totalGolsComissao >= 15) count++;
-            if (totalGolsComissao >= 20) count++;
-            if (totalGolsComissao >= 25) count++;
-            if (totalGolsComissao >= 30) count++;
+            comissaoConquistas.forEach(c => {
+                const meta = c.meta || c.goals || 0;
+                if (totalGolsComissao >= meta) count++;
+            });
             return count;
         };
 
@@ -8858,6 +8872,8 @@ function renderConquistasConfigList() {
                 const imgUrl = c.img ? getImageUrl(c.img) : '';
                 const periodoLabel = c.periodo === 'day' ? 'Dia' : c.periodo === 'week' ? 'Semana' : 'Mês';
                 const custoLabel = c.custo && c.custo > 0 ? ` · Custo: R$ ${Number(c.custo).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '';
+                const tipoAlvoLabel = c.tipoAlvo === 'comissao' ? '⭐ Conselho' : c.tipoAlvo === 'ambos' ? '⚔️⭐ Ambos' : '⚔️ Guerreiro';
+                const tipoAlvoBadge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${c.tipoAlvo === 'comissao' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : c.tipoAlvo === 'ambos' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'}">${tipoAlvoLabel}</span>`;
                 return `
                     <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
                         <div class="flex items-center gap-3">
@@ -8865,7 +8881,10 @@ function renderConquistasConfigList() {
                                 ${c.img ? `<img src="${imgUrl}" class="w-full h-full object-contain" onerror="this.style.display='none';this.parentElement.innerHTML='<span>🏆</span>';">` : '<span>🏆</span>'}
                             </div>
                             <div>
-                                <p class="font-bold text-sm text-yellow-400">${c.nome}</p>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <p class="font-bold text-sm text-yellow-400">${c.nome}</p>
+                                    ${tipoAlvoBadge}
+                                </div>
                                 <p class="text-xs text-gray-400">${c.meta}+ glória no ${periodoLabel.toLowerCase()} · Tesouro: ${c.premio || 'N/A'}${custoLabel}</p>
                             </div>
                         </div>
@@ -8919,12 +8938,13 @@ async function salvarConquistaConfig() {
             const img = document.getElementById('conq-config-img').value.trim();
             const premio = document.getElementById('conq-config-premio').value.trim();
             const custo = parseFloat(document.getElementById('conq-config-custo').value) || 0;
+            const tipoAlvo = document.getElementById('conq-config-tipo-alvo').value;
             const editId = document.getElementById('conq-edit-id').value;
             if (!id || !nome) { showToast('ID e Nome são obrigatórios', 'error'); return; }
             if (meta <= 0) { showToast('Meta deve ser maior que 0', 'error'); return; }
             try {
                 if (editId) {
-                    await window.setDoc(window.doc(window.db, 'conquistasConfig', editId), { id, nome, meta, periodo, img, premio, custo }, { merge: true });
+                    await window.setDoc(window.doc(window.db, 'conquistasConfig', editId), { id, nome, meta, periodo, img, premio, custo, tipoAlvo }, { merge: true });
                     showToast('Feito atualizado!', 'success');
                 } else {
                     await window.setDoc(window.doc(window.db, 'conquistasConfig', id), { id, nome, meta, periodo, img, premio, custo, tipoAlvo, createdAt: new Date().toISOString() });
@@ -8961,6 +8981,7 @@ function editarConquistaConfig(conqId) {
             document.getElementById('conq-config-img').value = c.img || '';
             document.getElementById('conq-config-premio').value = c.premio || '';
             document.getElementById('conq-config-custo').value = c.custo || '';
+            document.getElementById('conq-config-tipo-alvo').value = c.tipoAlvo || 'guerreiro';
             document.getElementById('conq-form-title').innerHTML = '<i class="fas fa-edit mr-2 text-blue-400"></i>Editar Feito';
             document.getElementById('conq-btn-salvar').innerHTML = '<i class="fas fa-save mr-2"></i>Atualizar Feito';
             document.getElementById('conq-btn-cancelar').classList.remove('hidden');
