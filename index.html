@@ -5280,7 +5280,34 @@ function calcConquistas(pid) {
             }
 
             // ===== CONQUISTAS TRACKER =====
-            async function checkAndSaveConquistas(pid) {
+            // Calcular semanas do mês atual que atingiram a meta
+        function getWeeklyAchievements(pid, meta) {
+            const playerEvents = events.filter(e => e.jogadorId === pid);
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const weeks = {};
+            playerEvents.forEach(e => {
+                if (!e.data) return;
+                const val = Number(e.valor) || 0;
+                const d = new Date(e.data);
+                const dBrasilia = new Date(d.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+                if (dBrasilia.getFullYear() !== currentYear || dBrasilia.getMonth() !== currentMonth) return;
+                const weekRange = getWeekRange(dBrasilia);
+                const wkKey = getDiaBrasilia(weekRange.monday.toISOString());
+                let score = 0;
+                if (e.tipo === 'gol') {
+                    if (e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado') score = val;
+                    else if (e.subtipo === 'benção-dos-deuses') score = val;
+                    else score = val;
+                } else if (e.tipo === 'figurinha') score = val;
+                else if (e.tipo === 'punicao') score = -Math.abs(val);
+                if (score !== 0) weeks[wkKey] = (weeks[wkKey] || 0) + score;
+            });
+            return Object.entries(weeks).filter(([k, v]) => v >= meta).map(([k, v]) => ({ weekKey: k, total: v }));
+        }
+
+        async function checkAndSaveConquistas(pid) {
                 const conq = calcConquistas(pid);
                 const player = players.find(p => p.id === pid);
                 if (!player) return;
@@ -5299,14 +5326,44 @@ function calcConquistas(pid) {
                         isUnlocked = conq.currentDayTotal >= cfg.goals;
                         valorAtual = conq.currentDayTotal;
                     } else if (cfg.period === 'week') {
-                        isUnlocked = conq.currentWeekTotal >= cfg.goals;
-                        valorAtual = conq.currentWeekTotal;
+                        // Verificar todas as semanas do mês atual
+                        const achievements = getWeeklyAchievements(pid, cfg.goals);
+                        for (const ach of achievements) {
+                            const jaExiste = conquistasHistorico.some(ch =>
+                                ch.jogadorId === pid &&
+                                ch.conquistaId === cfg.id &&
+                                ch.periodo === 'week' &&
+                                ch.dataConquista === ach.weekKey
+                            );
+                            if (!jaExiste) {
+                                try {
+                                    await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
+                                        jogadorId: pid,
+                                        jogadorNome: alvoNome,
+                                        conquistaId: cfg.id,
+                                        conquistaNome: cfg.nome || cfg.name || '',
+                                        conquistaImg: cfg.img || '',
+                                        periodo: 'week',
+                                        meta: cfg.meta || cfg.goals || 0,
+                                        valorAtingido: ach.total,
+                                        dataConquista: ach.weekKey,
+                                        pago: false,
+                                        dataPagamento: null,
+                                        observacao: '',
+                                        premio: (CONQUISTAS_CONFIG[cfg.id] ? CONQUISTAS_CONFIG[cfg.id].premioPadrao : '') || cfg.premio || '',
+                                        createdAt: new Date().toISOString()
+                                    });
+                                } catch (e) {
+                                    // Silently fail
+                                }
+                            }
+                        }
                     } else if (cfg.period === 'month') {
                         isUnlocked = conq.monthTotal >= cfg.goals;
                         valorAtual = conq.monthTotal;
                     }
 
-                    if (isUnlocked) {
+                    if (isUnlocked && cfg.period !== 'week') {
                         // Check if already saved for this period
                         const jaExiste = conquistasHistorico.some(ch =>
                             ch.jogadorId === pid &&
@@ -5549,7 +5606,7 @@ function showAlbum(playerId) {
             const conqMural = calcConquistas(playerId);
 
             // Build CONQUISTAS from Firebase config so edits reflect immediately
-            const cfgListAlbum = conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT;
+            const cfgListAlbum = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT).filter(c => !c.tipoAlvo || c.tipoAlvo === 'guerreiro' || c.tipoAlvo === 'ambos');
             const CONQUISTAS = cfgListAlbum.map(cfg => {
                 const meta = cfg.meta || cfg.goals || 0;
                 const periodo = cfg.periodo || cfg.period || 'month';
@@ -5562,6 +5619,9 @@ function showAlbum(playerId) {
                     current = conqMural.currentWeekTotal >= meta ? 1 : 0;
                     progressCurrent = conqMural.currentWeekTotal;
                     repeatable = true;
+                } else if (periodo === 'month') {
+                    current = conqMural.monthTotal >= meta ? 1 : 0;
+                    progressCurrent = conqMural.monthTotal;
                 } else {
                     current = conqMural.totalAcumulado;
                     progressCurrent = conqMural.totalAcumulado;
@@ -6116,7 +6176,7 @@ function getTorcidasConsecutivas(comissaoId) {
 
             if (origemEl) origemEl.textContent = c.origem || '';
             if (recEl) recEl.textContent = stats.totalReal + ' gols';
-            if (recCountEl) recCountEl.textContent = stats.totalReal;
+            if (recCountEl) recCountEl.textContent = stats.totalMonth;
             if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
             const photo = document.getElementById('album-comissao-photo');
@@ -9053,11 +9113,17 @@ function editarConquistaConfig(conqId) {
             if (!confirm('Tem certeza que deseja excluir este feito?')) return;
             try {
                 const c = conquistasConfig.find(x => x.id === conqId);
-                const docId = c && c._docId ? c._docId : conqId;
+                const docId = c && c._docId ? c._docId : null;
+                if (!docId) {
+                    showToast('Este feito é padrão e não pode ser excluído. Edite-o ou recrie.', 'error');
+                    console.log('Feito sem _docId:', conqId, c);
+                    return;
+                }
                 await window.deleteDoc(window.doc(window.db, 'conquistasConfig', docId));
                 showToast('Feito excluído!', 'success');
             } catch (e) {
-                showToast('Erro ao excluir feito', 'error');
+                console.error('Erro ao excluir feito:', e);
+                showToast('Erro ao excluir feito: ' + (e.message || e.code || ''), 'error');
             }
         }
 
