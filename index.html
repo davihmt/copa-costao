@@ -1520,7 +1520,10 @@
                                 <select id="pun-tipo" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
                                     <option value="chegar-atrasado">🟡 Chegar Atrasado S/ Justificativa (-1)</option>
                                     <option value="quebra-processos">🟡 Quebra de Processos (-1)</option>
-                                    <option value="cancelamento">🔴 Cancelamento (-3)</option>
+                                    <option value="cancelamento-1">🔴 Cancelamento (-1)</option>
+                                    <option value="cancelamento-2">🔴 Cancelamento (-2)</option>
+                                    <option value="cancelamento-3">🔴 Cancelamento (-3)</option>
+                                    <option value="cancelamento-5">🔴 Cancelamento (-5)</option>
                                     <option value="falta-justificativa">🔴 Falta S/ Justificativa (-3)</option>
                                     <option value="benção-1">🜂 Benção dos Deuses (+1)</option>
                                     <option value="benção-3">🜂 Benção dos Deuses (+3)</option>
@@ -2295,14 +2298,12 @@ function isSameDay(d1, d2) {
         };
 
 function getWeekRange(date) {
+            // Recebe Date em horário local (BR)
             const d = date instanceof Date ? new Date(date.getTime()) : new Date(date);
-            const day = d.getDay();
+            const day = d.getDay(); // 0=dom, 1=seg, ..., 6=sab
             const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            const monday = new Date(d.setDate(diff));
-            monday.setHours(0, 0, 0, 0);
-            const sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-            sunday.setHours(23, 59, 59, 999);
+            const monday = new Date(d.getFullYear(), d.getMonth(), diff, 0, 0, 0, 0);
+            const sunday = new Date(d.getFullYear(), d.getMonth(), diff + 6, 23, 59, 59, 999);
             return { monday, sunday };
         };
 
@@ -4229,62 +4230,7 @@ async function excluirDuelo(dueloId) {
         
         
         
-        // ===== FUNÇÃO DE DEBUG =====
-        window.debugGlaucia = function(pid) {
-            if (!pid) {
-                const g = players.find(p => p.nome && p.nome.toLowerCase().includes('glaucia'));
-                pid = g ? g.id : null;
-            }
-            if (!pid) { console.log('Use: debugGlaucia("id")'); return; }
-
-            const evs = events.filter(e => e.jogadorId === pid);
-            console.log('=== EVENTOS GLAUCIA === Total:', evs.length);
-
-            // Semana 27/07-02/08
-            const ws = new Date(2026, 6, 27);
-            const we = new Date(2026, 7, 2, 23, 59, 59);
-            let total = 0;
-            const semana = [];
-
-            evs.forEach(e => {
-                if (!e.data) return;
-                const d = getBRDate(e.data);
-                const val = Number(e.valor) || 0;
-                let sc = 0;
-                if (e.tipo === 'gol') sc = val;
-                else if (e.tipo === 'figurinha') sc = val;
-                else if (e.tipo === 'punicao') sc = -Math.abs(val);
-
-                if (sc !== 0 && d >= ws && d <= we) {
-                    total += sc;
-                    semana.push({data: e.data, dia: d.toLocaleDateString('pt-BR'), tipo: e.tipo, subtipo: e.subtipo, valor: val, score: sc});
-                }
-            });
-
-            console.table(semana);
-            console.log('TOTAL SEMANA 27/07-02/08:', total);
-
-            // Todas as semanas
-            const weeks = {};
-            evs.forEach(e => {
-                if (!e.data) return;
-                const d = getBRDate(e.data);
-                const val = Number(e.valor) || 0;
-                let sc = 0;
-                if (e.tipo === 'gol') sc = val;
-                else if (e.tipo === 'figurinha') sc = val;
-                else if (e.tipo === 'punicao') sc = -Math.abs(val);
-                if (sc !== 0) {
-                    const wk = getWeekRange(d);
-                    const key = getDiaBrasilia(wk.monday.toISOString());
-                    weeks[key] = (weeks[key] || 0) + sc;
-                }
-            });
-            console.log('TODAS AS SEMANAS:', weeks);
-            return {total, semana, weeks};
-        };
-        // ===== FIM DEBUG =====
-
+        
         function initApp() {
             const today = getTodayStr();
             ['gols-data', 'fig-data', 'pun-data', 'mural-foto-data'].forEach(id => {
@@ -4682,6 +4628,11 @@ function getPlayerStats(playerId) {
         // ===== COMISSAO STATS (inclui cartões + honrarias históricos) =====
         function getComissaoStats(comissaoId) {
             const comissaoEvents = events.filter(e => e.jogadorId === comissaoId);
+            // Debug
+            const c = comissao.find(x => x.id === comissaoId);
+            if (c && (c.nome === 'Angel' || c.nome === 'Eduarda')) {
+                console.log('[DEBUG getComissaoStats] Sábio:', c.nome, 'Eventos:', comissaoEvents.length, 'Honrarias:', honrarias.length);
+            }
             const today = new Date();
             today.setHours(12, 0, 0, 0);
 
@@ -4694,8 +4645,16 @@ function getPlayerStats(playerId) {
                 const val = Number(ev.valor) || 0;
 
                 if (ev.tipo === 'gol') {
-                    if (ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado') {
-                        // Honrarias já contam em honrarias, não duplicar aqui
+                    if (ev.subtipo === 'elogio-recebido') {
+                        baseTotal += val;
+                        if (isSameDay(evDate, today)) baseDay += val;
+                        if (isSameWeek(evDate, today)) baseWeek += val;
+                        if (isSameMonth(evDate, today)) baseMonth += val;
+                    } else if (ev.subtipo === 'elogio-dado') {
+                        baseTotal += val;
+                        if (isSameDay(evDate, today)) baseDay += val;
+                        if (isSameWeek(evDate, today)) baseWeek += val;
+                        if (isSameMonth(evDate, today)) baseMonth += val;
                     } else if (ev.subtipo === 'benção-dos-deuses') {
                         verdesTotal += val;
                         if (isSameDay(evDate, today)) verdesDay += val;
@@ -4722,45 +4681,17 @@ function getPlayerStats(playerId) {
                 }
             });
 
-            // Buscar honrarias da comissão diretamente na coleção 'elogios'
-            // Contar tanto os RECEBIDOS quanto os ENVIADOS
-            var elogiosRecebidos = 0, elogiosRecebidosDay = 0, elogiosRecebidosWeek = 0, elogiosRecebidosMonth = 0;
-            var elogiosDados = 0, elogiosDadosDay = 0, elogiosDadosWeek = 0, elogiosDadosMonth = 0;
-
-            honrarias.forEach(el => {
-                if (!el.data) return;
-                const elDate = getBRDate(el.data);
-
-                // Comissão RECEBEU honraria
-                if (el.paraId === comissaoId && el.paraTipo === 'comissao') {
-                    elogiosRecebidos++;
-                    if (isSameDay(elDate, today)) elogiosRecebidosDay++;
-                    if (isSameWeek(elDate, today)) elogiosRecebidosWeek++;
-                    if (isSameMonth(elDate, today)) elogiosRecebidosMonth++;
-                }
-                // Comissão ENVIOU honraria
-                if (el.deId === comissaoId && el.deTipo === 'comissao') {
-                    elogiosDados++;
-                    if (isSameDay(elDate, today)) elogiosDadosDay++;
-                    if (isSameWeek(elDate, today)) elogiosDadosWeek++;
-                    if (isSameMonth(elDate, today)) elogiosDadosMonth++;
-                }
-            });
-
-            const totalElogios = elogiosRecebidos + elogiosDados;
-            const totalElogiosDay = elogiosRecebidosDay + elogiosDadosDay;
-            const totalElogiosWeek = elogiosRecebidosWeek + elogiosDadosWeek;
-            const totalElogiosMonth = elogiosRecebidosMonth + elogiosDadosMonth;
+            // Honrarias já são contadas como eventos 'elogio-recebido'/'elogio-dado' na coleção eventos
+            // Não precisamos contar duplicado da coleção 'elogios'
 
             return {
                 baseTotal, baseDay, baseWeek, baseMonth,
                 verdesTotal, verdesDay, verdesWeek, verdesMonth,
                 punishTotal, punishDay, punishWeek, punishMonth,
-                elogiosRecebidos, elogiosDados,
-                totalReal: baseTotal + verdesTotal + totalElogios - punishTotal,
-                totalDay: baseDay + verdesDay + totalElogiosDay - punishDay,
-                totalWeek: baseWeek + verdesWeek + totalElogiosWeek - punishWeek,
-                totalMonth: baseMonth + verdesMonth + totalElogiosMonth - punishMonth
+                totalReal: baseTotal + verdesTotal - punishTotal,
+                totalDay: baseDay + verdesDay - punishDay,
+                totalWeek: baseWeek + verdesWeek - punishWeek,
+                totalMonth: baseMonth + verdesMonth - punishMonth
             };
         };
 
@@ -5345,10 +5276,16 @@ function calcConquistas(pid) {
             playerEvents.forEach(e => {
                 if (!e.data) return;
                 const val = Number(e.valor) || 0;
-                // Usar getBRDate para evitar problemas de fuso horário
-                const d = getBRDate(e.data);
-                const weekRange = getWeekRange(d);
-                const wkKey = getDiaBrasilia(weekRange.monday.toISOString());
+                // Calcular semana diretamente da string YYYY-MM-DD sem fuso horário
+                const parts = e.data.split('-');
+                const year = parseInt(parts[0], 10);
+                const month = parseInt(parts[1], 10) - 1; // 0-indexed
+                const day = parseInt(parts[2], 10);
+                const d = new Date(year, month, day); // Horário local, sem UTC
+                const dayOfWeek = d.getDay(); // 0=dom, 1=seg, ..., 6=sab
+                const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                const monday = new Date(year, month, day + diffToMonday);
+                const wkKey = monday.getFullYear() + '-' + String(monday.getMonth() + 1).padStart(2, '0') + '-' + String(monday.getDate()).padStart(2, '0');
                 let score = 0;
                 if (e.tipo === 'gol') {
                     if (e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado') score = val;
@@ -5359,7 +5296,6 @@ function calcConquistas(pid) {
                 if (score !== 0) weeks[wkKey] = (weeks[wkKey] || 0) + score;
             });
             const result = Object.entries(weeks).filter(([k, v]) => v >= meta).map(([k, v]) => ({ weekKey: k, total: v }));
-            // Debug: mostrar todas as semanas calculadas
             if (pid === 'glaucia' || (players.find(p => p.id === pid) || {}).nome === 'Glaucia') {
                 console.log('[DEBUG getWeeklyAchievements] pid:', pid, 'meta:', meta, 'weeks:', weeks, 'result:', result);
             }
@@ -6993,7 +6929,10 @@ async function lancarPunicao() {
             const map = {
                 'chegar-atrasado': { label: '🟡 Chegar Atrasado S/ Justificativa', val: -1, cor: 'amarelo' },
                 'quebra-processos': { label: '🟡 Quebra de Processos', val: -1, cor: 'amarelo' },
-                'cancelamento': { label: '🔴 Cancelamento', val: -3, cor: 'vermelho' },
+                'cancelamento-1': { label: '🔴 Cancelamento', val: -1, cor: 'vermelho' },
+                'cancelamento-2': { label: '🔴 Cancelamento', val: -2, cor: 'vermelho' },
+                'cancelamento-3': { label: '🔴 Cancelamento', val: -3, cor: 'vermelho' },
+                'cancelamento-5': { label: '🔴 Cancelamento', val: -5, cor: 'vermelho' },
                 'falta-justificativa': { label: '🔴 Falta S/ Justificativa', val: -3, cor: 'vermelho' },
                 'custom': { label: 'Julgamento Personalizado', val: 0, cor: 'vermelho' }
             };
@@ -7359,13 +7298,15 @@ async function loadElogios() {
                     snapshot.forEach(doc => {
                         honrarias.push({ id: doc.id, ...doc.data() });
                     });
+                    // Re-render home (sábios dependem de honrarias para glória)
+                    renderPlayers();
                     // Re-render mural if visible
                     if (document.getElementById('section-mural') && !document.getElementById('section-mural').classList.contains('hidden')) {
-                        throttleRender(renderMural);
+                        renderMural();
                     }
                     // Re-render admin elogios if visible
                     if (inAdmin && currentAdminTab === 'elogios-admin') {
-                        throttleRender(renderElogiosAdmin);
+                        renderElogiosAdmin();
                     }
                 });
             } catch (e) {
@@ -9425,6 +9366,59 @@ function editarConquistaConfig(conqId) {
             </div>
         </div>
     </div>
+
+
+    <!-- DEBUG CONSOLE -->
+    <script>
+        window.debugSemanaGlaucia = function() {
+            // Encontrar ID da Glaucia
+            var glaucia = players.find(function(p) { 
+                return p.nome && p.nome.toLowerCase().indexOf('glaucia') !== -1; 
+            });
+            if (!glaucia) {
+                console.log('Glaucia não encontrada');
+                console.log('Jogadores:', players.map(function(p) { return p.nome; }));
+                return;
+            }
+            var pid = glaucia.id;
+            console.log('=== GLAUCIA: ' + glaucia.nome + ' (ID: ' + pid + ') ===');
+
+            // Semana 27/07 - 02/08
+            var ws = new Date(2026, 6, 27); // 27/07
+            var we = new Date(2026, 7, 2, 23, 59, 59); // 02/08
+
+            var evs = events.filter(function(e) { return e.jogadorId === pid; });
+            var total = 0;
+            var lista = [];
+
+            evs.forEach(function(e) {
+                if (!e.data) return;
+                var d = new Date(e.data + 'T12:00:00');
+                var val = Number(e.valor) || 0;
+                var score = 0;
+                if (e.tipo === 'gol') score = val;
+                else if (e.tipo === 'figurinha') score = val;
+                else if (e.tipo === 'punicao') score = -Math.abs(val);
+
+                if (d >= ws && d <= we) {
+                    total += score;
+                    lista.push({
+                        data: e.data,
+                        tipo: e.tipo,
+                        subtipo: e.subtipo || '-',
+                        valor: val,
+                        score: score,
+                        obs: (e.observacao || '').substring(0, 50)
+                    });
+                }
+            });
+
+            console.log('Eventos na semana 27/07-02/08:');
+            console.table(lista);
+            console.log('TOTAL: ' + total);
+            return { total: total, eventos: lista };
+        };
+    </script>
 
 </body>
 </html>
