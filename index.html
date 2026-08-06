@@ -967,8 +967,6 @@
                         <h3 class="text-xl font-bold mb-4"><i class="fas fa-gem mr-2 text-yellow-400"></i>Feitos do Conselho</h3>
                         <div id="album-comissao-conquistas-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
                     </div>
-                </div>
-                <div class="lg:col-span-2 space-y-4">
                     <div class="player-card">
                         <h3 class="text-xl font-bold mb-4"><i class="fas fa-scroll mr-2 text-[#C8A25A]"></i>Crônica de Feitos</h3>
                         <div id="album-comissao-events" class="space-y-2 max-h-64 overflow-y-auto"></div>
@@ -6346,7 +6344,41 @@ function getTorcidasConsecutivas(comissaoId) {
                         </div>
                     `;
                 }).join('');
-            }// Mostrar álbum comissão
+            }
+
+            // CRÔNICA DE FEITOS — eventos do sábio
+            const comissaoEvents = events.filter(e => e.jogadorId === comissaoId).sort((a, b) => {
+                const da = getBRDate(a.data);
+                const db = getBRDate(b.data);
+                return db - da;
+            });
+            const comissaoEventsDiv = document.getElementById('album-comissao-events');
+            if (comissaoEventsDiv) {
+                if (comissaoEvents.length === 0) {
+                    comissaoEventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum feito registrado</p>';
+                } else {
+                    comissaoEventsDiv.innerHTML = comissaoEvents.map(e => {
+                        let icon = '', color = '', sign = '';
+                        if (e.tipo === 'gol') { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = '+'; }
+                        else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; sign = '+'; }
+                        else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
+                        return `
+                            <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${icon}</span>
+                                    <div>
+                                        <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
+                                        <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
+                                    </div>
+                                </div>
+                                <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Mostrar álbum comissão
             const albumEl = document.getElementById('section-album-comissao');
             if (albumEl) albumEl.classList.remove('hidden');
             window.scrollTo(0, 0);
