@@ -2071,6 +2071,14 @@
                         <h3 class="text-2xl font-bold mb-6"><i class="fas fa-shield-halved mr-2 text-[#C8A25A]"></i>Gerenciar Arena</h3>
 
                         <div class="glass rounded-2xl p-6 max-w-3xl mb-6">
+                            <h4 class="text-xl font-bold mb-4"><i class="fas fa-wand-magic-sparkles mr-2 text-[#C8A25A]"></i>Recalcular Duelos</h4>
+                            <p class="text-gray-400 text-sm mb-4">Corrige duelos finalizados com resultado 0-0 que foram auto-finalizados antes dos eventos carregarem.</p>
+                            <button onclick="recalcularDuelosFinalizados()" class="w-full py-3 rounded-xl btn-primary text-[#ECE8E1] font-bold text-lg">
+                                <i class="fas fa-calculator mr-2"></i>Recalcular Duelos 0-0
+                            </button>
+                        </div>
+
+                        <div class="glass rounded-2xl p-6 max-w-3xl mb-6">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-khanda mr-2 text-yellow-400"></i>Duelos Pendentes</h4>
                             <div id="admin-arena-pendentes" class="space-y-2">
                                 <p class="text-gray-500 text-center py-4">Carregando...</p>
@@ -2416,6 +2424,8 @@ function getTodayStr() {
                     snapshot.forEach(doc => {
                         duelos.push({ id: doc.id, ...doc.data() });
                     });
+                    // Auto-finalizar duelos expirados
+                    verificarDuelosExpirados();
                     if (!document.getElementById('section-arena').classList.contains('hidden')) {
                         renderArenaIndividuais();
                     }
@@ -2423,6 +2433,95 @@ function getTodayStr() {
                 });
             } catch (e) {}
         }
+
+        // Auto-finalizar duelos que passaram do prazo (dataFim)
+        async function verificarDuelosExpirados() {
+            // Só finalizar se os eventos já foram carregados
+            if (!events || events.length === 0) return;
+
+            const agora = new Date();
+            const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agora);
+            for (const duelo of expirados) {
+                try {
+                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
+                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
+                    let vencedorId = null;
+                    let vencedorNome = '';
+                    if (gloriaA > gloriaB) { vencedorId = duelo.desafianteId; vencedorNome = duelo.desafianteNome; }
+                    else if (gloriaB > gloriaA) { vencedorId = duelo.desafiadoId; vencedorNome = duelo.desafiadoNome; }
+
+                    await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
+                        status: 'finalizado',
+                        gloriaDesafiante: gloriaA,
+                        gloriaDesafiado: gloriaB,
+                        vencedorId,
+                        vencedorNome,
+                        finalizadoAt: agora.toISOString(),
+                        autoFinalizado: true,
+                        torcidasResolvidas: true
+                    });
+
+                    // Update historico
+                    await atualizarDueloHistorico(duelo.desafianteId, vencedorId === duelo.desafianteId, vencedorId === null);
+                    await atualizarDueloHistorico(duelo.desafiadoId, vencedorId === duelo.desafiadoId, vencedorId === null);
+
+                    // Resolve apostas
+                    await resolverTorcidas(duelo.id, vencedorId);
+
+                    // +3 glórias para vencedor, -1 para perdedor
+                    if (vencedorId) {
+                        const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
+                        await window.addDoc(window.collection(window.db, 'eventos'), {
+                            jogadorId: vencedorId,
+                            tipo: 'gol',
+                            subtipo: 'duelo-vitoria',
+                            subtipoLabel: '⚔️ Vitória em Duelo',
+                            valor: 3,
+                            data: getTodayStr(),
+                            observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                            createdAt: agora.toISOString()
+                        });
+                        await window.addDoc(window.collection(window.db, 'eventos'), {
+                            jogadorId: perdedorId,
+                            tipo: 'punicao',
+                            subtipo: 'duelo-derrota',
+                            subtipoLabel: '⚔️ Derrota em Duelo',
+                            valor: -1,
+                            data: getTodayStr(),
+                            observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                            createdAt: agora.toISOString()
+                        });
+                    }
+                } catch (e) {}
+            }
+        }
+
+        // Recalcular duelos finalizados com resultado 0-0 (auto-finalizados incorretamente)
+        async function recalcularDuelosFinalizados() {
+            const duplosZero = duelos.filter(d => d.status === 'finalizado' && d.gloriaDesafiante === 0 && d.gloriaDesafiado === 0);
+            if (duplosZero.length === 0) return;
+
+            for (const duelo of duplosZero) {
+                try {
+                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
+                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
+                    let vencedorId = null;
+                    let vencedorNome = '';
+                    if (gloriaA > gloriaB) { vencedorId = duelo.desafianteId; vencedorNome = duelo.desafianteNome; }
+                    else if (gloriaB > gloriaA) { vencedorId = duelo.desafiadoId; vencedorNome = duelo.desafiadoNome; }
+
+                    await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
+                        gloriaDesafiante: gloriaA,
+                        gloriaDesafiado: gloriaB,
+                        vencedorId,
+                        vencedorNome,
+                        recalculadoAt: new Date().toISOString()
+                    });
+                } catch (e) {}
+            }
+            if (isAdmin) showToast(duplosZero.length + ' duelo(s) 0-0 recalculado(s)!', 'success');
+        }
+        window.recalcularDuelosFinalizados = recalcularDuelosFinalizados;
 
         async function loadDuelosHistorico() {
             try {
@@ -2448,11 +2547,94 @@ function getTodayStr() {
                     snapshot.forEach(doc => {
                         guerrasClas.push({ id: doc.id, ...doc.data() });
                     });
+                    // Auto-finalizar guerras expiradas
+                    verificarGuerrasExpiradas();
                     if (!document.getElementById('section-arena').classList.contains('hidden')) {
                         renderArenaClas();
                     }
                 });
             } catch (e) {}
+        }
+
+        // Auto-finalizar guerras de clã que passaram do prazo (dataFim)
+        async function verificarGuerrasExpiradas() {
+            // Só finalizar se os eventos já foram carregados
+            if (!events || events.length === 0) return;
+
+            const agora = new Date();
+            const expiradas = guerrasClas.filter(g => g.status === 'ativa' && g.dataFim && new Date(g.dataFim) < agora);
+            for (const guerra of expiradas) {
+                try {
+                    const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
+                    const jogadoresB = players.filter(p => p.equipeId === guerra.claDesafiadoId);
+                    const comissaoA = comissao.filter(c => c.equipeId === guerra.claDesafianteId);
+                    const comissaoB = comissao.filter(c => c.equipeId === guerra.claDesafiadoId);
+
+                    let gloriaA = 0, gloriaB = 0;
+                    if (guerra.dataInicio && guerra.dataFim) {
+                        jogadoresA.forEach(p => { gloriaA += getGlaciaGuerra(p.id, guerra); });
+                        jogadoresB.forEach(p => { gloriaB += getGlaciaGuerra(p.id, guerra); });
+                        comissaoA.forEach(c => { gloriaA += getGlaciaGuerra(c.id, guerra); });
+                        comissaoB.forEach(c => { gloriaB += getGlaciaGuerra(c.id, guerra); });
+                    }
+
+                    let vencedorId = null;
+                    let vencedorNome = 'Empate';
+                    const claA = equipes.find(e => e.id === guerra.claDesafianteId);
+                    const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
+                    if (gloriaA > gloriaB) { vencedorId = guerra.claDesafianteId; vencedorNome = claA ? claA.nome : 'Clã A'; }
+                    else if (gloriaB > gloriaA) { vencedorId = guerra.claDesafiadoId; vencedorNome = claB ? claB.nome : 'Clã B'; }
+
+                    await window.updateDoc(window.doc(window.db, 'guerrasClas', guerra.id), {
+                        status: 'finalizada',
+                        gloriaDesafiante: gloriaA,
+                        gloriaDesafiado: gloriaB,
+                        vencedorId,
+                        vencedorNome,
+                        finalizadoAt: agora.toISOString(),
+                        autoFinalizado: true
+                    });
+
+                    // Resolver apostas
+                    await resolverTorcidasGuerra(guerra.id, vencedorId);
+
+                    // +3 para vencedores, -1 para perdedores
+                    if (vencedorId) {
+                        const membrosVencedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
+                            const eqId = m.equipeId || (players.find(p => p.id === m.id) || {}).equipeId || (comissao.find(c => c.id === m.id) || {}).equipeId;
+                            return eqId === vencedorId;
+                        });
+                        const membrosPerdedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
+                            const eqId = m.equipeId || (players.find(p => p.id === m.id) || {}).equipeId || (comissao.find(c => c.id === m.id) || {}).equipeId;
+                            return eqId && eqId !== vencedorId;
+                        });
+                        for (const membro of membrosVencedores) {
+                            await window.addDoc(window.collection(window.db, 'eventos'), {
+                                jogadorId: membro.id,
+                                tipo: 'gol',
+                                subtipo: 'guerra-cla',
+                                subtipoLabel: '🛡️ Vitória na Guerra de Clã',
+                                valor: 3,
+                                data: getTodayStr(),
+                                observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+3 glórias)',
+                                createdAt: agora.toISOString()
+                            });
+                        }
+                        for (const membro of membrosPerdedores) {
+                            await window.addDoc(window.collection(window.db, 'eventos'), {
+                                jogadorId: membro.id,
+                                tipo: 'punicao',
+                                subtipo: 'guerra-cla-derrota',
+                                subtipoLabel: '🛡️ Derrota na Guerra de Clã',
+                                valor: -1,
+                                data: getTodayStr(),
+                                observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-1 glória)',
+                                createdAt: agora.toISOString()
+                            });
+                        }
+                    }
+                } catch (e) {}
+            }
         }
 
         function getSemanaAtual() {
@@ -2545,7 +2727,9 @@ function getTodayStr() {
             }
 
             const inicio = new Date(duelo.dataInicio);
-            const fim = new Date(duelo.dataFim || duelo.dataInicio);
+            // Duelo = 5 dias corridos exatos (120h), do mesmo horário ao mesmo horário
+            const fim = new Date(inicio);
+            fim.setDate(inicio.getDate() + 5);
             const agora = new Date();
             const inicioTs = inicio.getTime();
             const fimTs = fim.getTime();
@@ -2604,7 +2788,9 @@ function getTodayStr() {
 
             const inicioEfetivo = getInicioEfetivoGuerra(guerra.dataInicio);
             const inicio = new Date(inicioEfetivo || guerra.dataInicio);
-            const fim = new Date(guerra.dataFim || guerra.dataInicio);
+            // Guerra = 7 dias corridos exatos (168h), do mesmo horário ao mesmo horário
+            const fim = new Date(inicio);
+            fim.setDate(inicio.getDate() + 7);
             const agora = new Date();
             const inicioTs = inicio.getTime();
             const fimTs = fim.getTime();
@@ -2699,8 +2885,7 @@ function getTodayStr() {
             try {
                 const agora = new Date();
                 const dataFim = new Date(agora);
-                dataFim.setDate(agora.getDate() + 4);
-                dataFim.setHours(23, 59, 59, 999);
+                dataFim.setDate(agora.getDate() + 5); // 5 dias corridos exatos (120h)
                 await window.updateDoc(window.doc(window.db, 'duelos', dueloId), { 
                     status: 'ativo', 
                     aprovadoPor: 'admin', 
@@ -2747,7 +2932,8 @@ function getTodayStr() {
                     gloriaDesafiado: gloriaB,
                     vencedorId,
                     vencedorNome,
-                    finalizadoAt: new Date().toISOString()
+                    finalizadoAt: new Date().toISOString(),
+                    torcidasResolvidas: true
                 });
                 // Update historico
                 await atualizarDueloHistorico(duelo.desafianteId, vencedorId === duelo.desafianteId, vencedorId === null);
@@ -2965,7 +3151,7 @@ function getTodayStr() {
         }
 async function resolverTorcidas(dueloId, vencedorId) {
             const duelo = duelos.find(d => d.id === dueloId);
-            if (!duelo || !duelo.apostas) return;
+            if (!duelo || !duelo.apostas || duelo.torcidasResolvidas) return;
 
             for (const aposta of duelo.apostas) {
                 const acertou = aposta.apostadoId === vencedorId;
@@ -2981,6 +3167,11 @@ async function resolverTorcidas(dueloId, vencedorId) {
                     });
                 } catch (e) {}
             }
+
+            // Marcar torcidas como resolvidas no duelo
+            try {
+                await window.updateDoc(window.doc(window.db, 'duelos', dueloId), { torcidasResolvidas: true });
+            } catch (e) {}
         }
 
         
@@ -3137,7 +3328,7 @@ async function excluirDuelo(dueloId) {
 
         async function resolverTorcidasGuerra(guerraId, vencedorId) {
             const guerra = guerrasClas.find(g => g.id === guerraId);
-            if (!guerra || !guerra.apostas) return;
+            if (!guerra || !guerra.apostas || guerra.torcidasResolvidas) return;
             const claA = equipes.find(e => e.id === guerra.claDesafianteId);
             const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
 
@@ -3155,6 +3346,11 @@ async function excluirDuelo(dueloId) {
                     });
                 } catch (e) {}
             }
+
+            // Marcar torcidas como resolvidas na guerra
+            try {
+                await window.updateDoc(window.doc(window.db, 'guerrasClas', guerraId), { torcidasResolvidas: true });
+            } catch (e) {}
         }
 
         async function marcarDueloSemana(dueloId) {
@@ -4300,6 +4496,12 @@ async function excluirDuelo(dueloId) {
                 updateElogioSelects();
             }, 2000);
 
+            // Auto-finalizar duelos e recalcular 0-0 após todos os dados carregarem
+            setTimeout(() => {
+                verificarDuelosExpirados();
+                recalcularDuelosFinalizados();
+            }, 5000);
+
             // Render initial UI
             renderPlayers();
             renderRanking();
@@ -4514,6 +4716,8 @@ async function loadEvents() {
                     snapshot.forEach(doc => {
                         events.push({ id: doc.id, ...doc.data() });
                     });
+                    // Auto-finalizar duelos expirados agora que temos eventos
+                    verificarDuelosExpirados();
                     throttleRender(function() {
                         renderPlayers();
                         renderRanking();
