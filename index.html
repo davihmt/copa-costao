@@ -2285,7 +2285,10 @@
         // ===== PERIOD HELPERS =====
         function getBRDate(dateStr) {
             if (!dateStr) return new Date();
-            const [y, m, d] = dateStr.split('-').map(Number);
+            // Handle ISO timestamps like "2026-08-04T10:30:00.000Z" by extracting YYYY-MM-DD
+            const cleanStr = String(dateStr).split('T')[0];
+            const [y, m, d] = cleanStr.split('-').map(Number);
+            if (isNaN(y) || isNaN(m) || isNaN(d)) return new Date();
             return new Date(y, m - 1, d, 12, 0, 0);
         };
 
@@ -4340,7 +4343,7 @@ async function excluirDuelo(dueloId) {
 
             if (section === 'ranking') renderRanking();
             if (section === 'home') renderPlayers();
-            if (section === 'mural') renderMural();
+            if (section === 'mural') { updateElogioSelects(); renderMural(); }
             if (section === 'arena') { setArenaTab('individuais'); }
             if (section === 'album' && !currentAlbumPlayer) {
                 document.getElementById('album-empty').classList.remove('hidden');
@@ -4629,9 +4632,7 @@ function getPlayerStats(playerId) {
             const comissaoEvents = events.filter(e => e.jogadorId === comissaoId);
             // Debug
             const c = comissao.find(x => x.id === comissaoId);
-            if (c && (c.nome === 'Angel' || c.nome === 'Eduarda')) {
-                console.log('[DEBUG getComissaoStats] Sábio:', c.nome, 'Eventos:', comissaoEvents.length, 'Honrarias:', honrarias.length);
-            }
+            
             const today = new Date();
             today.setHours(12, 0, 0, 0);
 
@@ -4644,16 +4645,8 @@ function getPlayerStats(playerId) {
                 const val = Number(ev.valor) || 0;
 
                 if (ev.tipo === 'gol') {
-                    if (ev.subtipo === 'elogio-recebido') {
-                        baseTotal += val;
-                        if (isSameDay(evDate, today)) baseDay += val;
-                        if (isSameWeek(evDate, today)) baseWeek += val;
-                        if (isSameMonth(evDate, today)) baseMonth += val;
-                    } else if (ev.subtipo === 'elogio-dado') {
-                        baseTotal += val;
-                        if (isSameDay(evDate, today)) baseDay += val;
-                        if (isSameWeek(evDate, today)) baseWeek += val;
-                        if (isSameMonth(evDate, today)) baseMonth += val;
+                    if (ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado') {
+                        // Honrarias já contam na coleção 'elogios', não duplicar aqui
                     } else if (ev.subtipo === 'benção-dos-deuses') {
                         verdesTotal += val;
                         if (isSameDay(evDate, today)) verdesDay += val;
@@ -4680,17 +4673,45 @@ function getPlayerStats(playerId) {
                 }
             });
 
-            // Honrarias já são contadas como eventos 'elogio-recebido'/'elogio-dado' na coleção eventos
-            // Não precisamos contar duplicado da coleção 'elogios'
+            // Buscar honrarias da comissão diretamente na coleção 'elogios'
+            // Contar tanto os RECEBIDOS quanto os ENVIADOS
+            var elogiosRecebidos = 0, elogiosRecebidosDay = 0, elogiosRecebidosWeek = 0, elogiosRecebidosMonth = 0;
+            var elogiosDados = 0, elogiosDadosDay = 0, elogiosDadosWeek = 0, elogiosDadosMonth = 0;
+
+            honrarias.forEach(el => {
+                if (!el.data) return;
+                const elDate = getBRDate(el.data);
+
+                // Comissão RECEBEU honraria
+                if (el.paraId === comissaoId && el.paraTipo === 'comissao') {
+                    elogiosRecebidos++;
+                    if (isSameDay(elDate, today)) elogiosRecebidosDay++;
+                    if (isSameWeek(elDate, today)) elogiosRecebidosWeek++;
+                    if (isSameMonth(elDate, today)) elogiosRecebidosMonth++;
+                }
+                // Comissão ENVIOU honraria
+                if (el.deId === comissaoId && el.deTipo === 'comissao') {
+                    elogiosDados++;
+                    if (isSameDay(elDate, today)) elogiosDadosDay++;
+                    if (isSameWeek(elDate, today)) elogiosDadosWeek++;
+                    if (isSameMonth(elDate, today)) elogiosDadosMonth++;
+                }
+            });
+
+            const totalElogios = elogiosRecebidos + elogiosDados;
+            const totalElogiosDay = elogiosRecebidosDay + elogiosDadosDay;
+            const totalElogiosWeek = elogiosRecebidosWeek + elogiosDadosWeek;
+            const totalElogiosMonth = elogiosRecebidosMonth + elogiosDadosMonth;
 
             return {
                 baseTotal, baseDay, baseWeek, baseMonth,
                 verdesTotal, verdesDay, verdesWeek, verdesMonth,
                 punishTotal, punishDay, punishWeek, punishMonth,
-                totalReal: baseTotal + verdesTotal - punishTotal,
-                totalDay: baseDay + verdesDay - punishDay,
-                totalWeek: baseWeek + verdesWeek - punishWeek,
-                totalMonth: baseMonth + verdesMonth - punishMonth
+                elogiosRecebidos, elogiosDados,
+                totalReal: baseTotal + verdesTotal + totalElogios - punishTotal,
+                totalDay: baseDay + verdesDay + totalElogiosDay - punishDay,
+                totalWeek: baseWeek + verdesWeek + totalElogiosWeek - punishWeek,
+                totalMonth: baseMonth + verdesMonth + totalElogiosMonth - punishMonth
             };
         };
 
@@ -7333,10 +7354,10 @@ async function loadElogios() {
                     });
                     // Re-render home (sábios dependem de honrarias para glória)
                     renderPlayers();
-                    // Re-render mural if visible
-                    if (document.getElementById('section-mural') && !document.getElementById('section-mural').classList.contains('hidden')) {
-                        renderMural();
-                    }
+                    // Update honraria selects
+                    updateElogioSelects();
+                    // Always re-render mural when elogios update (even if hidden, to keep fresh)
+                    renderMural();
                     // Re-render admin elogios if visible
                     if (inAdmin && currentAdminTab === 'elogios-admin') {
                         renderElogiosAdmin();
