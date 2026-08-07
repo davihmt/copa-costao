@@ -2721,13 +2721,21 @@ function getTodayStr() {
         }
 
         function getGlaciaDuelo(jogadorId, duelo) {
-            if (!duelo || !duelo.dataInicio) {
+            if (!duelo) {
                 const stats = getPlayerStats(jogadorId);
                 return stats.totalWeek || 0;
             }
 
-            const inicio = new Date(duelo.dataInicio);
+            // Fallback para duelos antigos: dataInicio -> aprovadoAt -> createdAt
+            const inicioStr = duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt;
+            if (!inicioStr) {
+                const stats = getPlayerStats(jogadorId);
+                return stats.totalWeek || 0;
+            }
+
+            const inicio = new Date(inicioStr);
             // Duelo = 5 dias corridos exatos (120h), do mesmo horário ao mesmo horário
+            // IGNORAR dataFim salvo no Firebase - sempre recalcular
             const fim = new Date(inicio);
             fim.setDate(inicio.getDate() + 5);
             const agora = new Date();
@@ -2781,14 +2789,22 @@ function getTodayStr() {
         }
 
         function getGlaciaGuerra(jogadorId, guerra) {
-            if (!guerra || !guerra.dataInicio) {
+            if (!guerra) {
                 const stats = getPlayerStats(jogadorId);
                 return stats.totalWeek || 0;
             }
 
-            const inicioEfetivo = getInicioEfetivoGuerra(guerra.dataInicio);
-            const inicio = new Date(inicioEfetivo || guerra.dataInicio);
+            // Fallback para guerras antigas: dataInicio -> aprovadoAt -> createdAt
+            const inicioStr = guerra.dataInicio || guerra.aprovadoAt || guerra.createdAt;
+            if (!inicioStr) {
+                const stats = getPlayerStats(jogadorId);
+                return stats.totalWeek || 0;
+            }
+
+            const inicioEfetivo = getInicioEfetivoGuerra(inicioStr);
+            const inicio = new Date(inicioEfetivo || inicioStr);
             // Guerra = 7 dias corridos exatos (168h), do mesmo horário ao mesmo horário
+            // IGNORAR dataFim salvo no Firebase - sempre recalcular
             const fim = new Date(inicio);
             fim.setDate(inicio.getDate() + 7);
             const agora = new Date();
@@ -2821,6 +2837,16 @@ function getTodayStr() {
                     }
                 }
             });
+            return total;
+        }
+
+        function getGlaciaGuerraCla(equipeId, guerra) {
+            if (!guerra || !equipeId) return 0;
+            const jogadores = players.filter(p => p.equipeId === equipeId);
+            const comissaoMembros = comissao.filter(c => c.equipeId === equipeId);
+            let total = 0;
+            jogadores.forEach(p => { total += getGlaciaGuerra(p.id, guerra); });
+            comissaoMembros.forEach(c => { total += getGlaciaGuerra(c.id, guerra); });
             return total;
         }
 
@@ -3151,18 +3177,50 @@ function getTodayStr() {
         }
 async function resolverTorcidas(dueloId, vencedorId) {
             const duelo = duelos.find(d => d.id === dueloId);
-            if (!duelo || !duelo.apostas || duelo.torcidasResolvidas) return;
+            if (!duelo || !duelo.apostas) return;
+
+            // Chave única do duelo para identificar duplicatas (inclui ID para garantir unicidade absoluta)
+            const dueloKey = '[Duelo#' + dueloId + '] ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome;
 
             for (const aposta of duelo.apostas) {
+                const participanteId = aposta.participanteId || aposta.comissaoId;
+                if (!participanteId) continue;
+
+                // Verificar duplicata no Firebase: buscar eventos existentes para este participante neste duelo
+                let jaExiste = false;
+                try {
+                    const q = window.query(
+                        window.collection(window.db, 'eventos'),
+                        window.where('jogadorId', '==', participanteId),
+                        window.where('subtipo', '==', 'torcida-sabio')
+                    );
+                    const snap = await window.getDocs(q);
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.observacao && data.observacao.includes('[Duelo#' + dueloId + ']')) {
+                            jaExiste = true;
+                        }
+                    });
+                } catch (e) {
+                    // Fallback: verificar no array local
+                    jaExiste = events.some(e =>
+                        e.jogadorId === participanteId &&
+                        e.subtipo === 'torcida-sabio' &&
+                        e.observacao &&
+                        e.observacao.includes('[Duelo#' + dueloId + ']')
+                    );
+                }
+                if (jaExiste) continue;
+
                 const acertou = aposta.apostadoId === vencedorId;
                 const valor = acertou ? 1 : 0; // Acerto +1, erro 0 (não perde nada)
                 try {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
-                        jogadorId: aposta.participanteId || aposta.comissaoId,
+                        jogadorId: participanteId,
                         tipo: 'gol', subtipo: 'torcida-sabio',
                         subtipoLabel: acertou ? '✅ Torcida (Acertou!)' : '❌ Torcida (Errou!)',
                         valor, data: getTodayStr(),
-                        observacao: 'Torcida no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                        observacao: dueloKey,
                         createdAt: new Date().toISOString()
                     });
                 } catch (e) {}
@@ -3328,20 +3386,52 @@ async function excluirDuelo(dueloId) {
 
         async function resolverTorcidasGuerra(guerraId, vencedorId) {
             const guerra = guerrasClas.find(g => g.id === guerraId);
-            if (!guerra || !guerra.apostas || guerra.torcidasResolvidas) return;
+            if (!guerra || !guerra.apostas) return;
             const claA = equipes.find(e => e.id === guerra.claDesafianteId);
             const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
 
+            // Chave única da guerra para identificar duplicatas (inclui ID para garantir unicidade absoluta)
+            const guerraKey = '[Guerra#' + guerraId + '] ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B');
+
             for (const aposta of guerra.apostas) {
+                const participanteId = aposta.participanteId || aposta.comissaoId;
+                if (!participanteId) continue;
+
+                // Verificar duplicata no Firebase: buscar eventos existentes para este participante nesta guerra
+                let jaExiste = false;
+                try {
+                    const q = window.query(
+                        window.collection(window.db, 'eventos'),
+                        window.where('jogadorId', '==', participanteId),
+                        window.where('subtipo', '==', 'torcida-sabio-guerra')
+                    );
+                    const snap = await window.getDocs(q);
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        if (data.observacao && data.observacao.includes('[Guerra#' + guerraId + ']')) {
+                            jaExiste = true;
+                        }
+                    });
+                } catch (e) {
+                    // Fallback: verificar no array local
+                    jaExiste = events.some(e =>
+                        e.jogadorId === participanteId &&
+                        e.subtipo === 'torcida-sabio-guerra' &&
+                        e.observacao &&
+                        e.observacao.includes('[Guerra#' + guerraId + ']')
+                    );
+                }
+                if (jaExiste) continue;
+
                 const acertou = aposta.apostadoId === vencedorId;
                 const valor = acertou ? 1 : 0; // Acerto +1, erro 0 (não perde nada)
                 try {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
-                        jogadorId: aposta.participanteId || aposta.comissaoId,
+                        jogadorId: participanteId,
                         tipo: 'gol', subtipo: 'torcida-sabio-guerra',
                         subtipoLabel: acertou ? '✅ Torcida na Guerra (Acertou!)' : '❌ Torcida na Guerra (Errou!)',
                         valor, data: getTodayStr(),
-                        observacao: 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B'),
+                        observacao: guerraKey,
                         createdAt: new Date().toISOString()
                     });
                 } catch (e) {}
@@ -3584,7 +3674,7 @@ async function excluirDuelo(dueloId) {
                         <div class="glass rounded-xl p-4 flex items-center justify-between mb-2">
                             <div class="flex items-center gap-3">
                                 <span class="font-bold">${d.desafianteNome}</span>
-                                <span class="text-gray-500">${d.gloriaDesafiante || 0} vs ${d.gloriaDesafiado || 0}</span>
+                                <span class="text-gray-500">${getGlaciaDuelo(d.desafianteId, d)} vs ${getGlaciaDuelo(d.desafiadoId, d)}</span>
                                 <span class="font-bold">${d.desafiadoNome}</span>
                                 ${d.vencedorNome ? `<span class="text-green-400 text-sm">🏆 ${d.vencedorNome}</span>` : '<span class="text-yellow-400 text-sm">🤝 Empate</span>'}
                             </div>
@@ -3609,7 +3699,7 @@ async function excluirDuelo(dueloId) {
                                 <div class="flex items-center gap-3">
                                     ${claA && claA.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
                                     <span class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
-                                    <span class="text-gray-500">${g.gloriaDesafiante || 0} ⚔️ ${g.gloriaDesafiado || 0}</span>
+                                    <span class="text-gray-500">${getGlaciaGuerraCla(g.claDesafianteId, g)} ⚔️ ${getGlaciaGuerraCla(g.claDesafiadoId, g)}</span>
                                     ${claB && claB.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
                                     <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                                     ${g.vencedorNome ? `<span class="text-green-400 text-sm">🏆 ${g.vencedorNome}</span>` : '<span class="text-yellow-400 text-sm">🤝 Empate</span>'}
@@ -3877,7 +3967,7 @@ async function excluirDuelo(dueloId) {
                         <div class="glass rounded-xl p-4 flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <span class="font-bold">${d.desafianteNome}</span>
-                                <span class="text-gray-500">${d.gloriaDesafiante || 0} ⚔️ ${d.gloriaDesafiado || 0}</span>
+                                <span class="text-gray-500">${getGlaciaDuelo(d.desafianteId, d)} ⚔️ ${getGlaciaDuelo(d.desafiadoId, d)}</span>
                                 <span class="font-bold">${d.desafiadoNome}</span>
                             </div>
                             <span class="text-sm ${vencedorClass} font-bold">🏆 ${vencedor}</span>
@@ -4296,7 +4386,7 @@ async function excluirDuelo(dueloId) {
                             <div class="flex items-center gap-3">
                                 ${claA && claA.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
-                                <span class="text-gray-500">${g.gloriaDesafiante || 0} ⚔️ ${g.gloriaDesafiado || 0}</span>
+                                <span class="text-gray-500">${getGlaciaGuerraCla(g.claDesafianteId, g)} ⚔️ ${getGlaciaGuerraCla(g.claDesafiadoId, g)}</span>
                                 ${claB && claB.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                             </div>
@@ -4708,7 +4798,22 @@ function closeLightbox() {
             }
         };
 
-async function loadEvents() {
+function deduplicarTorcidas(eventos) {
+            const vistos = new Set();
+            return eventos.filter(ev => {
+                if (ev.subtipo !== 'torcida-sabio' && ev.subtipo !== 'torcida-sabio-guerra' && ev.subtipo !== 'torcida-participante-guerra') {
+                    return true;
+                }
+                const chave = (ev.jogadorId || '') + '|' + (ev.subtipo || '') + '|' + (ev.observacao || '');
+                if (vistos.has(chave)) {
+                    return false;
+                }
+                vistos.add(chave);
+                return true;
+            });
+        }
+
+        async function loadEvents() {
             try {
                 const q = window.query(window.collection(window.db, 'eventos'), window.orderBy('data', 'desc'));
                 window.onSnapshot(q, (snapshot) => {
@@ -4716,6 +4821,8 @@ async function loadEvents() {
                     snapshot.forEach(doc => {
                         events.push({ id: doc.id, ...doc.data() });
                     });
+                    // Deduplicar torcidas duplicadas no Firebase (mantém apenas a primeira)
+                    events = deduplicarTorcidas(events);
                     // Auto-finalizar duelos expirados agora que temos eventos
                     verificarDuelosExpirados();
                     throttleRender(function() {
