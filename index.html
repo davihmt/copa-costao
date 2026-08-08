@@ -6675,8 +6675,10 @@ function updateAdminSelects() {
                                     <div class="check-circle">
                                         <i class="fas fa-check"></i>
                                     </div>
-                                    <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#C8A25A]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#C8A25A] to-[#8C6239] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
+                                    <div style="width:72px;height:72px;flex-shrink:0;position:relative;border-radius:50%;overflow:hidden;border:2px solid ${isSelected ? '#C8A25A' : '#4B5563'};">
+                                        <img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center 10%;display:block;" onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-img').style.display='flex';">
+                                        <div class="fallback-img" style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#C8A25A,#8C6239);display:none;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;">${initials}</div>
+                                    </div>
                                     <div class="flex-1 min-w-0">
                                         <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
                                         <p class="text-xs text-gray-500">${p.time || 'Sem Casa'}</p>
@@ -6698,7 +6700,7 @@ function updateAdminSelects() {
                                 <div class="check-circle">
                                     <i class="fas fa-check"></i>
                                 </div>
-                                <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#C8A25A]/50" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#C8A25A]/50" style="object-position: center 10%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#C8A25A] to-[#8C6239] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
                                 <div class="flex-1 min-w-0">
                                     <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
