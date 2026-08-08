@@ -2653,23 +2653,42 @@ function getTodayStr() {
                     if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhum duelo carregado. Aguarde os dados carregarem.</p>';
                     return;
                 }
-                const finalizados = duelos.filter(d => d.status === 'finalizado' && d.vencedorId);
+                // Incluir TODOS os duelos finalizados (mesmo sem vencedorId salvo)
+                // Recalcular vencedor baseado no placar salvo no Firebase
+                const finalizados = duelos.filter(d => d.status === 'finalizado');
                 let criados = 0;
                 let pulados = 0;
 
                 for (const duelo of finalizados) {
-                    const perdedorId = duelo.vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
+                    // Recalcular vencedor baseado no placar salvo (ignora vencedorId que pode estar errado)
+                    const gA = duelo.gloriaDesafiante || 0;
+                    const gB = duelo.gloriaDesafiado || 0;
+                    let vencedorId = null;
+                    let vencedorNome = 'Empate';
+                    if (gA > gB) {
+                        vencedorId = duelo.desafianteId;
+                        vencedorNome = duelo.desafianteNome;
+                    } else if (gB > gA) {
+                        vencedorId = duelo.desafiadoId;
+                        vencedorNome = duelo.desafiadoNome;
+                    }
+
+                    // Se não há vencedor (empate), pular bônus +3/-1 (não há bônus em empate)
+                    if (!vencedorId) continue;
+
+                    const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
+
+                    // Data do evento = data do duelo (retroativa), NÃO hoje
                     const dataDuelo = duelo.dataFim || duelo.aprovadoAt || duelo.createdAt || getTodayStr();
-                    // Extrair só a data YYYY-MM-DD
                     let dataEvento = dataDuelo;
                     if (dataEvento.includes('T')) dataEvento = dataEvento.split('T')[0];
 
                     // 1. Vencedor +3
                     const obsVitoria = 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome;
-                    const existeVitoria = events.some(e => e.jogadorId === duelo.vencedorId && e.subtipo === 'duelo-vitoria' && e.observacao === obsVitoria);
+                    const existeVitoria = events.some(e => e.jogadorId === vencedorId && e.subtipo === 'duelo-vitoria' && e.observacao === obsVitoria);
                     if (!existeVitoria) {
                         await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: duelo.vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
+                            jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
                             subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: dataEvento,
                             observacao: obsVitoria, createdAt: new Date().toISOString()
                         });
@@ -2693,7 +2712,7 @@ function getTodayStr() {
                         for (const aposta of duelo.apostas) {
                             const participanteId = aposta.participanteId || aposta.comissaoId;
                             if (!participanteId) continue;
-                            const acertou = aposta.apostadoId === duelo.vencedorId;
+                            const acertou = aposta.apostadoId === vencedorId;
                             const valor = acertou ? 1 : 0;
                             const obsTorcida = 'Torcida no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome;
                             const existeTorcida = events.some(e => 
