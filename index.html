@@ -111,7 +111,7 @@
         .check-circle { width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
         .check-circle i { font-size: 10px; color: #ECE8E1; opacity: 0; transition: opacity 0.2s; }
         .multi-select-player.selected .check-circle i { opacity: 1; }
-        .multi-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 300px; overflow-y: auto; padding-right: 4px; }
+        .multi-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
         .comissao-card { border: 2px solid #C8A25A; }
         .comissao-card.preparador-campo { border-color: #C8A25A; }
         .comissao-card.analista-operacional { border-color: #3F6B42; }
@@ -952,6 +952,10 @@
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-yellow-900/20">
                                 <span class="text-yellow-400">⚔️ Glória</span>
                                 <span id="album-comissao-rec-count" class="font-bold text-yellow-400">0</span>
+                            </div>
+                            <div class="flex justify-between px-3 py-2 rounded-lg bg-green-900/20">
+                                <span class="text-green-400">🜂 Bênção dos Deuses</span>
+                                <span id="album-comissao-bencoes-count" class="font-bold text-green-400">0</span>
                             </div>
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-purple-900/20">
                                 <span class="text-purple-400">🏆 Feitos</span>
@@ -5497,6 +5501,10 @@ async function renderPlayers() {
                         ${comElogioBadge}
                             ${getGuerraVencedoraBadge(c.id)}
                             ${getPatenteBadgeComissao(c.id, 'home')}
+                            ${(() => {
+                                const bencoes = getBencoesDoMes(c.id);
+                                return bencoes > 0 ? `<div class="blessing-counter">${bencoes}</div>` : '';
+                            })()}
                             <div class="relative mx-auto" style="width:120px;">
                                 <div class="photo-area mx-auto" style="border-color: ${borderColor};margin-bottom:0;">
                                     <img src="${photoUrl}" alt="${c.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -6118,7 +6126,24 @@ function renderConquistasHistorico(pid) {
                     // Buscar premio do config se não estiver no documento
                     const cfgPremio = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT)
                         .find(c => c.id === ch.conquistaId);
-                    const premioValor = ch.premio || (cfgPremio ? (cfgPremio.premio || cfgPremio.prize || '') : '');
+                    // Mapeamento fixo por nome para garantir consistência (fallback quando ID está errado)
+                    const PREMIO_POR_NOME = {
+                        'BERSERKER!': 'ALMOÇO COSTAO',
+                        'BERSERKER': 'ALMOÇO COSTAO',
+                        'CAMPEÃO DO NORTE!': 'FOLGA + KIT VINHO',
+                        'CAMPEÃO DO NORTE': 'FOLGA + KIT VINHO',
+                        'SENHOR DA GUERRA!': 'R$ 200 SPA',
+                        'SENHOR DA GUERRA': 'R$ 200 SPA',
+                        'LENDA DE VALHALLA!!': 'TOUR BC EXPERIENCE',
+                        'LENDA DE VALHALLA!!!': 'TOUR BC EXPERIENCE PLUS',
+                        'FÚRIA DE ODIN!!!': 'FOLGA + ALMOÇO COSTAO',
+                        'FÚRIA DE ODIN': 'FOLGA + ALMOÇO COSTAO',
+                        'MASSACRE!!!': 'KIT PRAIA + GENUINO\'S',
+                        'MASSACRE': 'KIT PRAIA + GENUINO\'S'
+                    };
+                    const nomeUpper = (ch.conquistaNome || '').toUpperCase().trim();
+                    const premioFixo = PREMIO_POR_NOME[nomeUpper] || PREMIO_POR_NOME[Object.keys(PREMIO_POR_NOME).find(k => nomeUpper.includes(k.toUpperCase()))];
+                    const premioValor = ch.premio || premioFixo || (cfgPremio ? (cfgPremio.premio || cfgPremio.prize || '') : '');
                     const premioDisplay = premioValor ? `<p class="text-xs text-yellow-500/70 mt-0.5">🎁 ${premioValor}</p>` : '';
 
                 return `
@@ -6647,13 +6672,6 @@ function updateAdminSelects() {
                 return;
             }
 
-            // Get selected functions
-            const selectedFuncs = new Set();
-            selectedFigPlayers.forEach(id => {
-                const p = players.find(x => x.id === id);
-                if (p) selectedFuncs.add(p.time || 'Sem Casa');
-            });
-
             // Group players by function
             const functions = {};
             players.forEach(p => {
@@ -6664,56 +6682,33 @@ function updateAdminSelects() {
 
             let html = '';
             for (const [func, members] of Object.entries(functions)) {
-                const isFuncSelected = selectedFuncs.has(func);
-                // Hide this function section if already selected and not the current player's func
-                if (isFuncSelected) {
-                    // Show only the selected player from this function
-                    const selectedFromFunc = members.filter(p => selectedFigPlayers.has(p.id));
-                    if (selectedFromFunc.length > 0) {
-                        html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#C8A25A] uppercase tracking-wider">${func} <span class="text-green-400">✓ Selecionado</span></h4></div>`;
-                        html += selectedFromFunc.map(p => {
-                            const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
-                            const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
-                            return `
-                                <div class="multi-select-player selected" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
-                                    <div class="check-circle">
-                                        <i class="fas fa-check"></i>
-                                    </div>
-                                    <div style="width:72px;height:72px;flex-shrink:0;position:relative;border-radius:50%;overflow:hidden;border:2px solid ${isSelected ? '#C8A25A' : '#4B5563'};">
-                                        <img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center 10%;display:block;" onerror="this.style.display='none'; this.parentElement.querySelector('.fallback-img').style.display='flex';">
-                                        <div class="fallback-img" style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#C8A25A,#8C6239);display:none;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;">${initials}</div>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
-                                        <p class="text-xs text-gray-500">${p.time || 'Sem Casa'}</p>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('');
-                    }
-                } else {
-                    // Show all players from this function
-                    html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#C8A25A] uppercase tracking-wider">${func}</h4></div>`;
-                    html += members.map(p => {
-                        const isSelected = selectedFigPlayers.has(p.id);
-                        const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
-                        const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
+                const selectedFromFunc = members.filter(p => selectedFigPlayers.has(p.id));
+                const hasSelection = selectedFromFunc.length > 0;
 
-                        return `
-                            <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" data-player-id="${p.id}">
-                                <div class="check-circle">
-                                    <i class="fas fa-check"></i>
-                                </div>
-                                <img src="${photoUrl}" class="w-8 h-8 rounded-full object-cover border border-[#C8A25A]/50" style="object-position: center 10%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#C8A25A] to-[#8C6239] flex items-center justify-center text-xs font-bold hidden">${initials}</div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-semibold text-sm truncate">${p.nome} ${p.sobrenome || ''}</p>
-                                    <p class="text-xs text-gray-500">${p.time || 'Sem Casa'}</p>
-                                </div>
+                html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#C8A25A] uppercase tracking-wider">${func}${hasSelection ? ' <span class="text-green-400">✓ Selecionado</span>' : ''}</h4></div>`;
+
+                // Se houver seleção nesta função, mostrar APENAS os selecionados
+                // Se não houver seleção, mostrar TODOS
+                const visibleMembers = hasSelection ? selectedFromFunc : members;
+
+                html += visibleMembers.map(p => {
+                    const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                    const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
+                    const isSelected = selectedFigPlayers.has(p.id);
+                    return `
+                        <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" style="padding:10px 14px;cursor:pointer;">
+                            <div class="check-circle" style="flex-shrink:0;width:22px;height:22px;"><i class="fas fa-check" style="font-size:10px;"></i></div>
+                            <div style="width:48px;height:48px;flex-shrink:0;position:relative;border-radius:50%;overflow:hidden;border:2px solid ${isSelected ? '#C8A25A' : '#4B5563'};">
+                                <img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center 10%;display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div style="width:100%;height:100%;border-radius:50%;background:linear-gradient(135deg,#C8A25A,#8C6239);display:none;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;">${initials}</div>
                             </div>
-                        `;
-                    }).join('');
-                }
+                            <div class="text-left" style="flex:1;min-width:0;">
+                                <p class="font-semibold text-sm truncate" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.nome} ${p.sobrenome || ''}</p>
+                                <p class="text-xs text-gray-500">${p.time || 'Sem Casa'}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
 
             grid.innerHTML = html;
@@ -6894,6 +6889,8 @@ function getTorcidasConsecutivas(comissaoId) {
             if (origemEl) origemEl.textContent = c.origem || '';
             if (recEl) recEl.textContent = stats.totalReal + ' gols';
             if (recCountEl) recCountEl.textContent = stats.totalMonth;
+            const bencoesEl = document.getElementById('album-comissao-bencoes-count');
+            if (bencoesEl) bencoesEl.textContent = getBencoesDoMes(comissaoId);
             if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
             const photo = document.getElementById('album-comissao-photo');
