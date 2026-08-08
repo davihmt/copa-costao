@@ -6115,7 +6115,11 @@ function renderConquistasHistorico(pid) {
                     const obsHtml = ch.observacao ? `<p class="text-xs text-gray-500 italic">${ch.observacao}</p>` : '';
 
                     const nomeDisplay = ch.conquistaNome || 'Feito';
-                    const premioDisplay = ch.premio ? `<p class="text-xs text-yellow-500/70 mt-0.5">🎁 ${ch.premio}</p>` : '';
+                    // Buscar premio do config se não estiver no documento
+                    const cfgPremio = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT)
+                        .find(c => c.id === ch.conquistaId);
+                    const premioValor = ch.premio || (cfgPremio ? (cfgPremio.premio || cfgPremio.prize || '') : '');
+                    const premioDisplay = premioValor ? `<p class="text-xs text-yellow-500/70 mt-0.5">🎁 ${premioValor}</p>` : '';
 
                 return `
                         <div class="flex items-center gap-3 p-3 rounded-lg bg-gray-800/30 border border-yellow-500/20">
@@ -6358,7 +6362,7 @@ async function showAlbum(playerId) {
                 const pc = c.progressCurrent || 0;
                 const cv = c.current || 0;
                 const progressVal = Math.min(100, (pc / c.goals) * 100);
-                const progressText = c.repeatable ? `${pc}/${c.goals} gols` : `${cv}/${c.goals} glória`;
+                const progressText = c.repeatable ? `${pc}/${c.goals} gols` : `${pc}/${c.goals} glória`;
                 if (!isUnlocked) {
                     progressHtml = `<div class="w-full bg-gray-700 rounded-full h-2 mt-2"><div class="h-2 rounded-full transition-all" style="width: ${progressVal}%; background: linear-gradient(90deg, #C8A25A, #8C6239)"></div></div><p class="text-xs text-gray-500 mt-1 text-center">${progressText}</p>`;
                 } else if (c.repeatable) {
@@ -8451,23 +8455,20 @@ function getWeekEnd(dateStr) {
         };
 
 function getWeekRangeBrasilia(dateStr) {
-            var d;
-            if (dateStr instanceof Date) {
-                d = new Date(dateStr.getTime());
-            } else if (typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                d = new Date(dateStr + 'T00:00:00-03:00');
-            } else {
-                d = new Date(dateStr);
+            const d = getBRDate(dateStr);
+            if (isNaN(d.getTime())) {
+                var fallback = new Date();
+                var day = fallback.getDay();
+                var diff = fallback.getDate() - day + (day === 0 ? -6 : 1);
+                var monday = new Date(fallback.getFullYear(), fallback.getMonth(), diff, 0, 0, 0, 0);
+                var sunday = new Date(fallback.getFullYear(), fallback.getMonth(), diff + 6, 23, 59, 59, 999);
+                return { monday, sunday };
             }
-            if (isNaN(d.getTime())) d = new Date();
             var day = d.getDay();
             var diff = d.getDate() - day + (day === 0 ? -6 : 1);
-            var monday = new Date(d.setDate(diff));
-            monday.setHours(0, 0, 0, 0);
-            var sunday = new Date(monday);
-            sunday.setDate(monday.getDate() + 6);
-            sunday.setHours(23, 59, 59, 999);
-            return { monday: monday, sunday: sunday };
+            var monday = new Date(d.getFullYear(), d.getMonth(), diff, 0, 0, 0, 0);
+            var sunday = new Date(d.getFullYear(), d.getMonth(), diff + 6, 23, 59, 59, 999);
+            return { monday, sunday };
         };
 
 function atualizarContadorElogio() {
@@ -8498,32 +8499,9 @@ function atualizarContadorElogio() {
         // Helper: extrair o dia no fuso de Brasília (GMT-3) de qualquer data
         function getDiaBrasilia(dateStr) {
             if (!dateStr) return '';
-            // Timestamp do Firestore
-            if (dateStr && typeof dateStr.toDate === 'function') {
-                var d = dateStr.toDate();
-                return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-            }
-            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                return dateStr;
-            }
-            // Qualquer string ISO (terminando em Z) → extrair YYYY-MM-DD diretamente
-            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(dateStr)) {
-                return dateStr.substring(0, 10);
-            }
-            // DD/MM/YYYY
-            if (typeof dateStr === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-                var parts = dateStr.split('/');
-                return parts[2] + '-' + parts[1] + '-' + parts[0];
-            }
-            // Fallback: tentar new Date
-            var d = new Date(dateStr);
+            const d = getBRDate(dateStr);
             if (isNaN(d.getTime())) return '';
-            var offset = 3 * 60; // Brasilia is UTC-3
-            var local = new Date(d.getTime() - offset * 60 * 1000);
-            var year = local.getUTCFullYear();
-            var month = String(local.getUTCMonth() + 1).padStart(2, '0');
-            var day = String(local.getUTCDate()).padStart(2, '0');
-            return year + '-' + month + '-' + day;
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         };
 
 function getHojeBrasilia() {
@@ -8745,6 +8723,10 @@ function renderMuralFotosAlbum(jogadorId) {
 
                 if (!f.url) {
                     photoUrl = '';
+                } else if (f.url.startsWith('data:')) {
+                    // Base64 data URL (uploaded directly)
+                    photoUrl = f.url;
+                    isFullUrl = true;
                 } else if (f.url.startsWith('http://') || f.url.startsWith('https://')) {
                     // Cloudinary or other full URL
                     photoUrl = f.url;
@@ -9064,6 +9046,61 @@ function fecharPreviewModal() {
             document.getElementById('upload-preview-modal').classList.add('hidden');
             currentUploadFile = null;
             currentUploadCompressed = null;
+        }
+
+        function compressImage(file, maxWidth, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > maxWidth) {
+                            height = Math.round(height * (maxWidth / width));
+                            width = maxWidth;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = function() { reject(new Error('Erro ao carregar imagem')); };
+                    img.src = e.target.result;
+                };
+                reader.onerror = function() { reject(new Error('Erro ao ler arquivo')); };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function confirmarUploadFoto() {
+            if (!currentUploadFile) { showToast('Nenhuma imagem selecionada', 'error'); return; }
+            const legenda = document.getElementById('preview-legenda').value.trim();
+            const data = document.getElementById('preview-data').value;
+            if (!data) { showToast('Informe a data', 'error'); return; }
+
+            const btn = document.querySelector('#upload-preview-modal button[onclick="confirmarUploadFoto()"]');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...'; }
+
+            try {
+                // Comprimir e converter para base64
+                const compressed = await compressImage(currentUploadFile, 1200, 0.85);
+                await window.addDoc(window.collection(window.db, 'muralFotos'), {
+                    jogadorId: currentAlbumPlayer,
+                    url: compressed,
+                    legenda: legenda || '',
+                    data: data,
+                    createdAt: new Date().toISOString()
+                });
+                showToast('Foto registrada na Galeria de Batalhas!', 'success');
+                fecharPreviewModal();
+            } catch (e) {
+                showToast('Erro ao registrar foto: ' + e.message, 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-upload mr-2"></i>Enviar'; }
+            }
         };
 
 async function confirmarUpload() {
@@ -10124,5 +10161,27 @@ function editarConquistaConfig(conqId) {
         };
     </script>
 
+
+    <!-- Upload Preview Modal -->
+    <div id="upload-preview-modal" class="fixed inset-0 bg-black/80 z-[200] flex items-center justify-center hidden" style="backdrop-filter: blur(8px);">
+        <div class="glass rounded-2xl p-6 max-w-md w-full mx-4 border border-[#C8A25A]/30" style="background: rgba(27,26,23,0.95);">
+            <h3 class="text-xl font-bold text-center mb-4 text-[#C8A25A]"><i class="fas fa-image mr-2"></i>Pré-visualização</h3>
+            <div class="mb-4 rounded-xl overflow-hidden bg-gray-800 flex items-center justify-center" style="max-height:300px;">
+                <img id="preview-img" src="" alt="Preview" style="max-height:300px;width:100%;object-fit:contain;display:none;">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-400 mb-2">Legenda</label>
+                <input type="text" id="preview-legenda" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none" placeholder="Ex: Cliente Silva - Master Verão">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-400 mb-2">Data</label>
+                <input type="date" id="preview-data" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+            </div>
+            <div class="flex gap-3">
+                <button onclick="fecharPreviewModal()" class="flex-1 py-3 rounded-xl bg-gray-700 hover:bg-gray-600 transition-all text-[#ECE8E1] font-bold">Cancelar</button>
+                <button onclick="confirmarUploadFoto()" class="flex-1 py-3 rounded-xl btn-primary text-[#ECE8E1] font-bold"><i class="fas fa-upload mr-2"></i>Enviar</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
