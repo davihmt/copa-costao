@@ -2146,6 +2146,15 @@
                         </div>
                     </div>
 
+                    <!-- TORCIDAS DE GUERRA -->
+                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6">
+                        <h4 class="text-xl font-bold mb-4"><i class="fas fa-bolt mr-2 text-purple-400"></i>Torcidas de Guerra — Mapear / Excluir</h4>
+                        <p class="text-gray-400 text-sm mb-4">Eventos de glória dados por acerto/erro em torcidas de guerras. Use para corrigir guerras finalizadas prematuramente.</p>
+                        <div id="admin-arena-torcidas-guerra" class="space-y-2">
+                            <p class="text-gray-500 text-center py-4">Carregando torcidas...</p>
+                        </div>
+                    </div>
+
                                         <!-- RELATÓRIOS -->
                     <div id="admin-panel-relatorios" class="admin-panel hidden">
                         <h3 class="text-2xl font-bold mb-6"><i class="fas fa-file-invoice-dollar mr-2 text-[#C8A25A]"></i>Relatórios</h3>
@@ -3926,7 +3935,119 @@ async function reativarGuerra(guerraId) {
             }
         }
         window.corrigirDataInicioGuerra = corrigirDataInicioGuerra;
-function renderAdminArena() {
+function renderTorcidasGuerraAdmin() {
+            const container = document.getElementById('admin-arena-torcidas-guerra');
+            if (!container) return;
+
+            // Find all war cheer events
+            const torcidasGuerra = events.filter(e => 
+                e.subtipo === 'torcida-sabio-guerra' || 
+                e.subtipo === 'torcida-participante-guerra'
+            );
+
+            if (torcidasGuerra.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma torcida de guerra registrada.</p>';
+                return;
+            }
+
+            // Group by guerra (from observacao)
+            const porGuerra = {};
+            torcidasGuerra.forEach(ev => {
+                const obs = ev.observacao || 'Guerra desconhecida';
+                if (!porGuerra[obs]) porGuerra[obs] = [];
+                porGuerra[obs].push(ev);
+            });
+
+            let html = '';
+            let totalEventos = 0;
+            let totalGlória = 0;
+
+            Object.entries(porGuerra).forEach(([guerraNome, eventos]) => {
+                const acertos = eventos.filter(e => e.valor > 0).length;
+                const erros = eventos.filter(e => e.valor === 0).length;
+                const gloriaTotal = eventos.reduce((s, e) => s + (Number(e.valor) || 0), 0);
+                totalEventos += eventos.length;
+                totalGlória += gloriaTotal;
+
+                html += `
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h5 class="font-bold text-purple-400">${guerraNome}</h5>
+                            <span class="text-xs text-gray-400">${eventos.length} torcida(s) · ${acertos} acerto(s) · ${erros} erro(s) · ${gloriaTotal} glória total</span>
+                        </div>
+                        <div class="space-y-1">
+                            ${eventos.map(ev => {
+                                const player = players.find(p => p.id === ev.jogadorId);
+                                const com = comissao.find(c => c.id === ev.jogadorId);
+                                const nome = player ? player.nome + ' ' + (player.sobrenome || '') : (com ? com.nome : ev.jogadorId);
+                                const data = ev.data || ev.createdAt ? new Date(ev.data || ev.createdAt).toLocaleDateString('pt-BR') : '';
+                                const isAcerto = ev.valor > 0;
+                                return `
+                                    <div class="flex items-center justify-between p-2 rounded-lg bg-gray-800/30">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs ${isAcerto ? 'text-green-400' : 'text-red-400'}">${isAcerto ? '✅' : '❌'} ${nome}</span>
+                                            <span class="text-xs text-gray-500">${data}</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs font-bold ${isAcerto ? 'text-green-400' : 'text-gray-500'}">+${ev.valor || 0}</span>
+                                            <button onclick="excluirTorcidaGuerra('${ev.id}')" class="px-2 py-0.5 rounded bg-red-500/20 text-red-400 text-xs hover:bg-red-500/30"><i class="fas fa-trash-alt"></i></button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <button onclick="excluirTodasTorcidasGuerra('${guerraNome.replace(/'/g, "\'")}')" class="mt-2 w-full py-1.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-bold hover:bg-red-500/20 border border-red-500/20">
+                            <i class="fas fa-trash-alt mr-1"></i>Excluir TODAS as torcidas desta guerra
+                        </button>
+                    </div>
+                `;
+            });
+
+            html = `
+                <div class="mb-4 p-3 rounded-xl bg-purple-900/10 border border-purple-500/20">
+                    <p class="text-sm text-purple-400 font-bold">📊 Total: ${totalEventos} eventos · ${totalGlória} glória distribuída</p>
+                </div>
+                ${html}
+            `;
+
+            container.innerHTML = html;
+        }
+
+        async function excluirTorcidaGuerra(eventoId) {
+            if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
+            if (!confirm('Excluir este evento de torcida? A glória será removida do jogador.')) return;
+            try {
+                await window.deleteDoc(window.doc(window.db, 'eventos', eventoId));
+                showToast('Evento de torcida excluído!', 'success');
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+            } catch (e) {
+                showToast('Erro ao excluir: ' + e.message, 'error');
+            }
+        }
+        window.excluirTorcidaGuerra = excluirTorcidaGuerra;
+
+        async function excluirTodasTorcidasGuerra(guerraNome) {
+            if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
+            if (!confirm('Excluir TODAS as torcidas da guerra "' + guerraNome + '"?\n\nIsso removerá todas as glórias de torcida desta guerra.')) return;
+            try {
+                const torcidas = events.filter(e => 
+                    (e.subtipo === 'torcida-sabio-guerra' || e.subtipo === 'torcida-participante-guerra') &&
+                    e.observacao === guerraNome
+                );
+                let apagados = 0;
+                for (const ev of torcidas) {
+                    await window.deleteDoc(window.doc(window.db, 'eventos', ev.id));
+                    apagados++;
+                }
+                showToast(apagados + ' evento(s) de torcida excluído(s)!', 'success');
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+            } catch (e) {
+                showToast('Erro ao excluir: ' + e.message, 'error');
+            }
+        }
+        window.excluirTodasTorcidasGuerra = excluirTodasTorcidasGuerra;
+
+        function renderAdminArena() {
             const pendentes = duelos.filter(d => d.status === 'pendente');
             const ativos = duelos.filter(d => d.status === 'ativo');
             const guerrasPendentes = guerrasClas.filter(g => g.status === 'pendente');
@@ -4124,10 +4245,16 @@ function renderAdminArena() {
                     excluirGuerrasEl.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma guerra finalizada.</p>';
                 }
             }
+
+            // Render torcidas de guerra
+            renderTorcidasGuerraAdmin();
         }function showAdminArenaTab() {
             // This will be called when admin clicks Arena-related admin tab
             renderArenaIndividuais();
         }
+
+        // Render torcidas de guerra no admin para mapear/excluir
+        
 
 
 
