@@ -2806,8 +2806,9 @@ function getTodayStr() {
             // Só finalizar se os eventos já foram carregados
             if (!events || events.length === 0) return;
 
-            const agora = new Date();
-            const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agora);
+            const agoraBR = getBRDate(new Date());
+            agoraBR.setHours(23, 59, 59, 999);
+            const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agoraBR);
             for (const duelo of expirados) {
                 try {
                     const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
@@ -2823,7 +2824,7 @@ function getTodayStr() {
                         gloriaDesafiado: gloriaB,
                         vencedorId,
                         vencedorNome,
-                        finalizadoAt: agora.toISOString(),
+                        finalizadoAt: agoraBR.toISOString(),
                         autoFinalizado: true,
                         torcidasResolvidas: true
                     });
@@ -2842,13 +2843,15 @@ function getTodayStr() {
                             jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
                             subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: getTodayStr(),
                             observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                            createdAt: agora.toISOString()
+                            dueloId: duelo.id,
+                            createdAt: agoraBR.toISOString()
                         });
                         await window.addDoc(window.collection(window.db, 'eventos'), {
                             jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
                             subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: getTodayStr(),
                             observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                            createdAt: agora.toISOString()
+                            dueloId: duelo.id,
+                            createdAt: agoraBR.toISOString()
                         });
                         await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), { bonusAplicados: true });
                     }
@@ -2895,8 +2898,15 @@ function getTodayStr() {
             // Só finalizar se os eventos já foram carregados
             if (!events || events.length === 0) return;
 
-            const agora = new Date();
-            const expiradas = guerrasClas.filter(g => g.status === 'ativa' && g.dataFim && new Date(g.dataFim) < agora);
+            // Horário atual em Brasília (comparação precisa)
+            const agoraBR = getBRDate(new Date());
+            agoraBR.setHours(23, 59, 59, 999); // Final do dia para comparação
+
+            const expiradas = guerrasClas.filter(g => {
+                if (g.status !== 'ativa' || !g.dataFim) return false;
+                const fim = new Date(g.dataFim);
+                return fim < agoraBR;
+            });
             for (const guerra of expiradas) {
                 try {
                     const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
@@ -2925,7 +2935,7 @@ function getTodayStr() {
                         gloriaDesafiado: gloriaB,
                         vencedorId,
                         vencedorNome,
-                        finalizadoAt: agora.toISOString(),
+                        finalizadoAt: agoraBR.toISOString(),
                         autoFinalizado: true
                     });
 
@@ -2953,7 +2963,8 @@ function getTodayStr() {
                                     valor: 3,
                                     data: getTodayStr(),
                                     observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+3 glórias)',
-                                    createdAt: agora.toISOString()
+                                    guerraId: guerra.id,
+                                    createdAt: agoraBR.toISOString()
                                 });
                             }
                         }
@@ -2968,7 +2979,8 @@ function getTodayStr() {
                                     valor: -1,
                                     data: getTodayStr(),
                                     observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-1 glória)',
-                                    createdAt: agora.toISOString()
+                                    guerraId: guerra.id,
+                                    createdAt: agoraBR.toISOString()
                                 });
                             }
                         }
@@ -3074,10 +3086,15 @@ function getTodayStr() {
             }
 
             const inicio = new Date(inicioStr);
-            // Duelo = 5 dias corridos exatos (120h), do mesmo horário ao mesmo horário
-            // IGNORAR dataFim salvo no Firebase - sempre recalcular
-            const fim = new Date(inicio);
-            fim.setDate(inicio.getDate() + 5);
+            // Usar dataFim do Firebase se existir (ex: duelo reativado)
+            // Senão, calcular inicio + 5 dias como padrão
+            let fim;
+            if (duelo.dataFim) {
+                fim = new Date(duelo.dataFim);
+            } else {
+                fim = new Date(inicio);
+                fim.setDate(inicio.getDate() + 5);
+            }
             const agora = new Date();
             const inicioTs = inicio.getTime();
             const fimTs = fim.getTime();
@@ -3144,10 +3161,15 @@ function getTodayStr() {
 
             const inicioEfetivo = getInicioEfetivoGuerra(inicioStr);
             const inicio = new Date(inicioEfetivo || inicioStr);
-            // Guerra = 7 dias corridos exatos (168h), do mesmo horário ao mesmo horário
-            // IGNORAR dataFim salvo no Firebase - sempre recalcular
-            const fim = new Date(inicio);
-            fim.setDate(inicio.getDate() + 7);
+            // Usar dataFim do Firebase se existir (ex: guerra reativada para terminar hoje)
+            // Senão, calcular inicio + 7 dias como padrão
+            let fim;
+            if (guerra.dataFim) {
+                fim = new Date(guerra.dataFim);
+            } else {
+                fim = new Date(inicio);
+                fim.setDate(inicio.getDate() + 7);
+            }
             const agora = new Date();
             const inicioTs = inicio.getTime();
             const fimTs = fim.getTime();
@@ -3323,6 +3345,7 @@ function getTodayStr() {
                         valor: 3,
                         data: getTodayStr(),
                         observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                        dueloId: duelo.id,
                         createdAt: new Date().toISOString()
                     });
 
@@ -3335,6 +3358,7 @@ function getTodayStr() {
                         valor: -1,
                         data: getTodayStr(),
                         observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                        dueloId: duelo.id,
                         createdAt: new Date().toISOString()
                     });
 
@@ -3548,6 +3572,7 @@ async function resolverTorcidas(dueloId, vencedorId) {
                         subtipoLabel: acertou ? '✅ Torcida (Acertou!)' : '❌ Torcida (Errou!)',
                         valor, data: getTodayStr(),
                         observacao: 'Torcida no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                        dueloId: duelo.id,
                         createdAt: new Date().toISOString()
                     });
                 } catch (e) {}
@@ -3726,6 +3751,7 @@ async function excluirDuelo(dueloId) {
                         subtipoLabel: acertou ? '✅ Torcida na Guerra (Acertou!)' : '❌ Torcida na Guerra (Errou!)',
                         valor, data: getTodayStr(),
                         observacao: 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B'),
+                        guerraId: guerra.id,
                         createdAt: new Date().toISOString()
                     });
                 } catch (e) {}
@@ -3815,7 +3841,92 @@ async function excluirDuelo(dueloId) {
         }
 
 // ===== ADMIN ARENA RENDER =====
-        function renderAdminArena() {
+        
+        
+        async function reativarDuelo(dueloId) {
+            if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
+            const duelo = duelos.find(d => d.id === dueloId);
+            if (!duelo || duelo.status !== 'finalizado') { showToast('Duelo não encontrado ou não está finalizado', 'error'); return; }
+            if (!confirm('Reativar o duelo ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome + '?\n\nO duelo voltará a contar glórias a partir do horário original de início até o mesmo horário 5 dias depois.')) return;
+
+            try {
+                // Manter dataInicio original, recalcular dataFim a partir dele (+5 dias exatos)
+                const inicioOriginal = duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt;
+                const novaDataFim = new Date(inicioOriginal);
+                novaDataFim.setDate(novaDataFim.getDate() + 5);
+
+                await window.updateDoc(window.doc(window.db, 'duelos', dueloId), {
+                    status: 'ativo',
+                    vencedorId: null,
+                    vencedorNome: null,
+                    finalizadoAt: null,
+                    autoFinalizado: false,
+                    bonusAplicados: false,
+                    torcidasResolvidas: false,
+                    dataFim: novaDataFim.toISOString()
+                });
+                showToast('Duelo reativado! Glórias continuam contando do período original.', 'success');
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+            } catch (e) {
+                showToast('Erro ao reativar duelo: ' + e.message, 'error');
+            }
+        }
+        window.reativarDuelo = reativarDuelo;
+async function reativarGuerra(guerraId) {
+            if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
+            const guerra = guerrasClas.find(g => g.id === guerraId);
+            if (!guerra || guerra.status !== 'finalizada') { showToast('Guerra não encontrada ou não está finalizada', 'error'); return; }
+            const claA = equipes.find(e => e.id === guerra.claDesafianteId);
+            const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
+            if (!confirm('Reativar a guerra ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B') + '?\n\nA guerra voltará ao status "ativa" e finalizará hoje às 23:59h. Os eventos de bônus permanecem.')) return;
+
+            try {
+                // Definir dataFim para HOJE às 23:59:59 (horário de Brasília)
+                const agora = new Date();
+                const fimHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 23, 59, 59, 999);
+
+                await window.updateDoc(window.doc(window.db, 'guerrasClas', guerraId), {
+                    status: 'ativa',
+                    vencedorId: null,
+                    vencedorNome: null,
+                    finalizadoAt: null,
+                    autoFinalizado: false,
+                    torcidasResolvidas: false,
+                    dataFim: fimHoje.toISOString()
+                });
+                showToast('Guerra reativada! Finaliza hoje às 23:59h.', 'success');
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+            } catch (e) {
+                showToast('Erro ao reativar guerra: ' + e.message, 'error');
+            }
+        }
+        window.reativarGuerra = reativarGuerra;
+
+        // Corrigir data de início de uma guerra ativa (ex: Gelo x Fogo que ficou com data errada)
+        async function corrigirDataInicioGuerra(guerraId) {
+            if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
+            const guerra = guerrasClas.find(g => g.id === guerraId);
+            if (!guerra) { showToast('Guerra não encontrada', 'error'); return; }
+
+            const novaData = prompt('Informe a data de início correta (YYYY-MM-DD):\n\nExemplo: 2026-08-03 para 03/08/2026\n\nData atual salva: ' + (guerra.dataInicio ? guerra.dataInicio.split('T')[0] : 'N/A'));
+            if (!novaData || !/^\d{4}-\d{2}-\d{2}$/.test(novaData)) {
+                showToast('Data inválida. Use o formato YYYY-MM-DD.', 'error');
+                return;
+            }
+
+            try {
+                const inicioCorrigido = new Date(novaData + 'T00:01:00');
+                await window.updateDoc(window.doc(window.db, 'guerrasClas', guerraId), {
+                    dataInicio: inicioCorrigido.toISOString()
+                });
+                showToast('Data de início corrigida para ' + novaData + '! Recarregue a página.', 'success');
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+            } catch (e) {
+                showToast('Erro ao corrigir data: ' + e.message, 'error');
+            }
+        }
+        window.corrigirDataInicioGuerra = corrigirDataInicioGuerra;
+function renderAdminArena() {
             const pendentes = duelos.filter(d => d.status === 'pendente');
             const ativos = duelos.filter(d => d.status === 'ativo');
             const guerrasPendentes = guerrasClas.filter(g => g.status === 'pendente');
@@ -3950,14 +4061,17 @@ async function excluirDuelo(dueloId) {
                                 <span class="font-bold" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                                 <span class="text-xs text-[#C8A25A]">Dia ${info.diaAtual} de ${info.totalDias}</span>
                             </div>
-                            <button onclick="finalizarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C8A25A] to-[#8C6239] text-white text-sm font-bold"><i class="fas fa-flag-checkered mr-1"></i>Finalizar</button>
+                            <div class="flex gap-2">
+                                <button onclick="corrigirDataInicioGuerra('${g.id}')" class="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-400 text-sm font-bold hover:bg-blue-500/30" title="Corrigir data de início"><i class="fas fa-calendar-edit mr-1"></i>Corrigir Data</button>
+                                <button onclick="finalizarGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C8A25A] to-[#8C6239] text-white text-sm font-bold"><i class="fas fa-flag-checkered mr-1"></i>Finalizar</button>
+                            </div>
                         </div>
                     `;
                 }).join('');
                 finalizarEl.innerHTML += extraHtml3;
             }
 
-            // Excluir Duelos Finalizados
+            // Excluir / Reativar Duelos Finalizados
             const excluirDuelosEl = document.getElementById('admin-arena-excluir-duelos');
             const duelosFinalizados = duelos.filter(d => d.status === 'finalizado');
             if (excluirDuelosEl) {
@@ -3970,7 +4084,10 @@ async function excluirDuelo(dueloId) {
                                 <span class="font-bold">${d.desafiadoNome}</span>
                                 ${d.vencedorNome ? `<span class="text-green-400 text-sm">🏆 ${d.vencedorNome}</span>` : '<span class="text-yellow-400 text-sm">🤝 Empate</span>'}
                             </div>
-                            <button onclick="excluirDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-trash-alt mr-1"></i>Excluir</button>
+                            <div class="flex gap-2">
+                                <button onclick="reativarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm font-bold hover:bg-purple-500/30"><i class="fas fa-undo-alt mr-1"></i>Reativar</button>
+                                <button onclick="excluirDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-trash-alt mr-1"></i>Excluir</button>
+                            </div>
                         </div>
                     `).join('');
                 } else {
@@ -3978,7 +4095,7 @@ async function excluirDuelo(dueloId) {
                 }
             }
 
-            // Excluir Guerras Finalizadas
+            // Excluir / Reativar Guerras Finalizadas
             const excluirGuerrasEl = document.getElementById('admin-arena-excluir-guerras');
             const guerrasFinalizadas = guerrasClas.filter(g => g.status === 'finalizada');
             if (excluirGuerrasEl) {
@@ -3996,7 +4113,10 @@ async function excluirDuelo(dueloId) {
                                     <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                                     ${g.vencedorNome ? `<span class="text-green-400 text-sm">🏆 ${g.vencedorNome}</span>` : '<span class="text-yellow-400 text-sm">🤝 Empate</span>'}
                                 </div>
-                                <button onclick="excluirGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-trash-alt mr-1"></i>Excluir</button>
+                                <div class="flex gap-2">
+                                    <button onclick="reativarGuerra('${g.id}')" class="px-3 py-1 rounded-lg bg-orange-500/20 text-orange-400 text-sm font-bold hover:bg-orange-500/30"><i class="fas fa-undo-alt mr-1"></i>Reativar</button>
+                                    <button onclick="excluirGuerraCla('${g.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-trash-alt mr-1"></i>Excluir</button>
+                                </div>
                             </div>
                         `;
                     }).join('');
