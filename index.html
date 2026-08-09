@@ -2095,7 +2095,16 @@
 
                     <!-- Gerenciar Runas -->
                     <div <div id="admin-panel-arena-admin" class="admin-panel hidden">
-                        <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-blue-500/30">
+                        <!-- PAINEL DE BATALHAS — RESUMO -->
+                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-[#C8A25A]/30">
+                        <h4 class="text-xl font-bold mb-4 text-[#C8A25A]"><i class="fas fa-eye mr-2"></i>Painel de Batalhas</h4>
+                        <p class="text-gray-400 text-sm mb-4">Visão rápida de duelos e guerras em andamento com placar parcial.</p>
+                        <div id="admin-painel-batalhas" class="space-y-3">
+                            <p class="text-gray-500 text-center py-4">Carregando...</p>
+                        </div>
+                    </div>
+
+                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-blue-500/30">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-trophy mr-2 text-blue-400"></i>Reconstruir Bônus de Duelos</h4>
                             <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todos os duelos finalizados: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / +0 erro). Execute apenas 1 vez.</p>
                             <button onclick="reconstruirBonusDuelos()" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-[#ECE8E1] font-bold text-lg transition-colors">
@@ -3057,8 +3066,9 @@ function getTodayStr() {
             const fimDia = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate());
             const agoraDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
 
-            // Math.ceil para arredondar PARA CIMA (semana = 7 dias)
-            const totalDias = Math.max(1, Math.ceil((fimDia - inicioDia) / (1000 * 60 * 60 * 24)) + 1);
+            // GUERRAS DE CLÃ = SEMPRE 7 DIAS (segunda a domingo)
+            // Não usar a diferença real entre dataInicio e dataFim
+            const totalDias = 7;
 
             if (agoraDia < inicioDia) {
                 return { 
@@ -4047,7 +4057,70 @@ function renderTorcidasGuerraAdmin() {
         }
         window.excluirTodasTorcidasGuerra = excluirTodasTorcidasGuerra;
 
+        function renderPainelBatalhas() {
+            const container = document.getElementById('admin-painel-batalhas');
+            if (!container) return;
+
+            let html = '';
+
+            // === DUelos Ativos ===
+            const duelosAtivos = duelos.filter(d => d.status === 'ativo');
+            if (duelosAtivos.length > 0) {
+                html += '<div class="mb-4"><h5 class="text-sm font-bold text-[#C8A25A] mb-2"><i class="fas fa-khanda mr-1"></i>Duelos em Andamento</h5>';
+                html += duelosAtivos.map(d => {
+                    const gA = getGlaciaDuelo(d.desafianteId, d);
+                    const gB = getGlaciaDuelo(d.desafiadoId, d);
+                    return `
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-gray-800/40 border border-[#C8A25A]/10">
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold text-sm">${d.desafianteNome}</span>
+                                <span class="text-[#C8A25A] font-black">${gA}</span>
+                                <span class="text-gray-500 text-xs">vs</span>
+                                <span class="text-[#C8A25A] font-black">${gB}</span>
+                                <span class="font-bold text-sm">${d.desafiadoNome}</span>
+                            </div>
+                            <span class="text-xs text-green-400 font-bold">⚔️ Ativo</span>
+                        </div>
+                    `;
+                }).join('');
+                html += '</div>';
+            }
+
+            // === Guerras Ativas ===
+            const guerrasAtivas = guerrasClas.filter(g => g.status === 'ativa');
+            if (guerrasAtivas.length > 0) {
+                html += '<div class="mb-4"><h5 class="text-sm font-bold text-purple-400 mb-2"><i class="fas fa-shield-halved mr-1"></i>Guerras em Andamento</h5>';
+                html += guerrasAtivas.map(g => {
+                    const claA = equipes.find(e => e.id === g.claDesafianteId);
+                    const claB = equipes.find(e => e.id === g.claDesafiadoId);
+                    const gA = getGlaciaGuerraCla(g.claDesafianteId, g);
+                    const gB = getGlaciaGuerraCla(g.claDesafiadoId, g);
+                    const info = getDiaAtualGuerra(g.dataInicio, g.dataFim);
+                    return `
+                        <div class="flex items-center justify-between p-3 rounded-lg bg-gray-800/40 border border-purple-500/10">
+                            <div class="flex items-center gap-3">
+                                <span class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
+                                <span class="text-purple-400 font-black">${gA}</span>
+                                <span class="text-gray-500 text-xs">⚔️</span>
+                                <span class="text-purple-400 font-black">${gB}</span>
+                                <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
+                            </div>
+                            <span class="text-xs text-purple-400 font-bold">Dia ${info.diaAtual} de ${info.totalDias}</span>
+                        </div>
+                    `;
+                }).join('');
+                html += '</div>';
+            }
+
+            if (duelosAtivos.length === 0 && guerrasAtivas.length === 0) {
+                html = '<p class="text-gray-500 text-center py-4">Nenhum duelo ou guerra em andamento.</p>';
+            }
+
+            container.innerHTML = html;
+        }
+
         function renderAdminArena() {
+            renderPainelBatalhas();
             const pendentes = duelos.filter(d => d.status === 'pendente');
             const ativos = duelos.filter(d => d.status === 'ativo');
             const guerrasPendentes = guerrasClas.filter(g => g.status === 'pendente');
