@@ -3900,12 +3900,21 @@ async function excluirDuelo(dueloId) {
                 if (!participanteId) continue;
                 const acertou = aposta.apostadoId === vencedorId;
                 const valor = acertou ? 1 : 0;
+
+                // Verificar duplicata: jogador + guerra
+                const jaExiste = events.some(e =>
+                    e.jogadorId === participanteId &&
+                    e.subtipo === 'torcida-sabio-guerra' &&
+                    e.guerraId === guerra.id
+                );
+                if (jaExiste) continue;
+
                 try {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
                         jogadorId: participanteId, tipo: 'gol', subtipo: 'torcida-sabio-guerra',
                         subtipoLabel: acertou ? '✅ Torcida na Guerra (Acertou!)' : '❌ Torcida na Guerra (Errou!)',
                         valor, data: getTodayStr(),
-                        observacao: 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B'),
+                        observacao: 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B') + ' [Guerra#' + guerra.id + ']',
                         guerraId: guerra.id,
                         createdAt: new Date().toISOString()
                     });
@@ -4965,7 +4974,7 @@ function renderTorcidasGuerraAdmin() {
                                 subtipoLabel: acertou ? '✅ Torcida na Guerra (Acertou!)' : '❌ Torcida na Guerra (Errou!)',
                                 valor, 
                                 data: getTodayStr(),
-                                observacao: 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B'),
+                                observacao: 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B') + ' [Guerra#' + guerra.id + ']',
                                 createdAt: new Date().toISOString()
                             });
                         } catch (e) {}
