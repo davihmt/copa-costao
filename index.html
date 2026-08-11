@@ -2104,6 +2104,15 @@
                         </div>
                     </div>
 
+                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-purple-500/30">
+                            <h4 class="text-xl font-bold mb-4"><i class="fas fa-shield-halved mr-2 text-purple-400"></i>Reconstruir Bônus de Guerras</h4>
+                            <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todas as guerras finalizadas: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / +0 erro). Use se os bônus não foram distribuídos.</p>
+                            <button onclick="reconstruirBonusGuerras()" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-[#ECE8E1] font-bold text-lg transition-colors">
+                                <i class="fas fa-shield-halved mr-2"></i>Reconstruir Bônus de Guerras
+                            </button>
+                            <div id="reconstruir-guerras-msg" class="mt-3 hidden"></div>
+                        </div>
+
                     <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-blue-500/30">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-trophy mr-2 text-blue-400"></i>Reconstruir Bônus de Duelos</h4>
                             <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todos os duelos finalizados: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / +0 erro). Execute apenas 1 vez.</p>
@@ -2664,6 +2673,133 @@ function getTodayStr() {
         }
 
         // Reconstruir bônus de duelos (+3/-1) e torcidas a partir dos duelos finalizados
+        // Reconstruir bônus de guerras finalizadas (+3 vencedor, -1 perdedor, +1/-1 torcida)
+        async function reconstruirBonusGuerras() {
+            const container = document.getElementById('reconstruir-guerras-msg');
+            if (container) {
+                container.classList.remove('hidden');
+                container.innerHTML = '<p class="text-center text-gray-400">Reconstruindo bônus de guerras...</p>';
+            }
+            try {
+                const finalizadas = guerrasClas.filter(g => g.status === 'finalizada');
+                if (finalizadas.length === 0) {
+                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhuma guerra finalizada encontrada.</p>';
+                    return;
+                }
+
+                let criados = 0;
+                let pulados = 0;
+
+                for (const guerra of finalizadas) {
+                    const claA = equipes.find(e => e.id === guerra.claDesafianteId);
+                    const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
+                    const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
+                    const jogadoresB = players.filter(p => p.equipeId === guerra.claDesafiadoId);
+                    const comissaoA = comissao.filter(c => c.equipeId === guerra.claDesafianteId);
+                    const comissaoB = comissao.filter(c => c.equipeId === guerra.claDesafiadoId);
+
+                    // Recalcular vencedor baseado no placar salvo
+                    const gA = guerra.gloriaDesafiante || 0;
+                    const gB = guerra.gloriaDesafiado || 0;
+                    let vencedorId = null;
+                    let vencedorNome = 'Empate';
+                    if (gA > gB) { vencedorId = guerra.claDesafianteId; vencedorNome = claA ? claA.nome : 'Clã A'; }
+                    else if (gB > gA) { vencedorId = guerra.claDesafiadoId; vencedorNome = claB ? claB.nome : 'Clã B'; }
+
+                    if (!vencedorId) continue; // Empate não tem bônus
+
+                    const dataEvento = guerra.finalizadoAt ? guerra.finalizadoAt.split('T')[0] : getTodayStr();
+
+                    // 1. Vencedores +3
+                    const membrosVencedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
+                        const eqId = m.equipeId || (players.find(p => p.id === m.id) || {}).equipeId || (comissao.find(c => c.id === m.id) || {}).equipeId;
+                        return eqId === vencedorId;
+                    });
+
+                    for (const membro of membrosVencedores) {
+                        const existe = await eventoGuerraExiste(membro.id, 'guerra-cla', guerra.id);
+                        if (!existe) {
+                            await window.addDoc(window.collection(window.db, 'eventos'), {
+                                jogadorId: membro.id,
+                                tipo: 'gol',
+                                subtipo: 'guerra-cla',
+                                subtipoLabel: '🛡️ Vitória na Guerra de Clã',
+                                valor: 3,
+                                data: dataEvento,
+                                observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+3 glórias)',
+                                guerraId: guerra.id,
+                                createdAt: new Date().toISOString()
+                            });
+                            criados++;
+                        } else { pulados++; }
+                    }
+
+                    // 2. Perdedores -1
+                    const membrosPerdedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
+                        const eqId = m.equipeId || (players.find(p => p.id === m.id) || {}).equipeId || (comissao.find(c => c.id === m.id) || {}).equipeId;
+                        return eqId && eqId !== vencedorId;
+                    });
+
+                    for (const membro of membrosPerdedores) {
+                        const existe = await eventoGuerraExiste(membro.id, 'guerra-cla-derrota', guerra.id);
+                        if (!existe) {
+                            await window.addDoc(window.collection(window.db, 'eventos'), {
+                                jogadorId: membro.id,
+                                tipo: 'punicao',
+                                subtipo: 'guerra-cla-derrota',
+                                subtipoLabel: '🛡️ Derrota na Guerra de Clã',
+                                valor: -1,
+                                data: dataEvento,
+                                observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-1 glória)',
+                                guerraId: guerra.id,
+                                createdAt: new Date().toISOString()
+                            });
+                            criados++;
+                        } else { pulados++; }
+                    }
+
+                    // 3. Torcidas
+                    if (guerra.apostas && guerra.apostas.length > 0) {
+                        for (const aposta of guerra.apostas) {
+                            const participanteId = aposta.participanteId || aposta.comissaoId;
+                            if (!participanteId) continue;
+                            const acertou = aposta.apostadoId === vencedorId;
+                            const valor = acertou ? 1 : 0;
+                            const obsTorcida = 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B');
+
+                            const existe = events.some(e =>
+                                e.jogadorId === participanteId &&
+                                e.subtipo === 'torcida-sabio-guerra' &&
+                                e.guerraId === guerra.id
+                            );
+                            if (!existe) {
+                                await window.addDoc(window.collection(window.db, 'eventos'), {
+                                    jogadorId: participanteId,
+                                    tipo: 'gol',
+                                    subtipo: 'torcida-sabio-guerra',
+                                    subtipoLabel: acertou ? '✅ Torcida na Guerra (Acertou!)' : '❌ Torcida na Guerra (Errou!)',
+                                    valor: valor,
+                                    data: dataEvento,
+                                    observacao: obsTorcida,
+                                    guerraId: guerra.id,
+                                    createdAt: new Date().toISOString()
+                                });
+                                criados++;
+                            } else { pulados++; }
+                        }
+                    }
+                }
+
+                if (container) {
+                    container.innerHTML = '<p class="text-center text-green-400">✅ Reconstrução concluída! ' + criados + ' evento(s) criado(s), ' + pulados + ' já existiam.</p>';
+                }
+            } catch (e) {
+                if (container) {
+                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
+                }
+            }
+        }
+
         async function reconstruirBonusDuelos() {
             const container = document.getElementById('reconstruir-duelos-msg');
             if (container) {
@@ -4218,6 +4354,7 @@ function renderTorcidasGuerraAdmin() {
             if (finalizarEl && guerrasFila.length > 0) {
                 let extraHtml2 = '<h4 class="text-lg font-bold mb-3 text-orange-400 mt-6"><i class="fas fa-list mr-2"></i>Guerras na Fila</h4>';
                 extraHtml2 += `<p class="text-xs text-gray-400 mb-2">${guerrasFila.length}/3 na fila</p>`;
+                extraHtml2 += `<button onclick="promoverGuerrasFilaManual()" class="w-full py-2 mb-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold text-sm transition-colors"><i class="fas fa-play mr-2"></i>Promover Guerras da Fila para Ativas (Segunda-feira)</button>`;
                 extraHtml2 += guerrasFila.map(g => {
                     const claA = equipes.find(e => e.id === g.claDesafianteId);
                     const claB = equipes.find(e => e.id === g.claDesafiadoId);
@@ -4688,6 +4825,53 @@ function renderTorcidasGuerraAdmin() {
             }
         }
 
+        async function promoverGuerrasFilaManual() {
+            if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
+
+            const fila = guerrasClas.filter(g => g.status === 'fila');
+            if (fila.length === 0) { showToast('Nenhuma guerra na fila.', 'info'); return; }
+
+            // Calcular a segunda-feira mais recente (hoje ou passada)
+            const agora = new Date();
+            const dia = agora.getDay(); // 0=dom, 1=seg, ..., 6=sab
+            let diasAteSegunda;
+            if (dia === 1) {
+                diasAteSegunda = 0; // hoje é segunda
+            } else if (dia === 0) {
+                diasAteSegunda = -6; // domingo -> segunda passada (6 dias atrás)
+            } else {
+                diasAteSegunda = 1 - dia; // terça=-1, quarta=-2, etc.
+            }
+
+            const segunda = new Date(agora);
+            segunda.setDate(agora.getDate() + diasAteSegunda);
+            segunda.setHours(0, 1, 0, 0);
+
+            const domingo = new Date(segunda);
+            domingo.setDate(segunda.getDate() + 6);
+            domingo.setHours(23, 59, 59, 999);
+
+            const dataStr = segunda.toLocaleDateString('pt-BR');
+
+            if (!confirm(`Promover ${fila.length} guerra(s) da fila para ativas?\n\nInício: ${dataStr} às 00:01h\nTérmino: ${domingo.toLocaleDateString('pt-BR')} às 23:59h\n\nIsso vai iniciar as guerras imediatamente.`)) return;
+
+            try {
+                for (const g of fila) {
+                    await window.updateDoc(window.doc(window.db, 'guerrasClas', g.id), {
+                        status: 'ativa',
+                        dataInicio: segunda.toISOString(),
+                        dataFim: domingo.toISOString(),
+                        iniciadaAt: new Date().toISOString()
+                    });
+                }
+                showToast(`${fila.length} guerra(s) promovida(s) para ativas!`, 'success');
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+            } catch (e) {
+                showToast('Erro ao promover guerras: ' + e.message, 'error');
+            }
+        }
+        window.promoverGuerrasFilaManual = promoverGuerrasFilaManual;
+
         async function excluirGuerraFila(guerraId) {
             if (!isAdmin) { showToast('Acesso negado. Apenas admin.', 'error'); return; }
             if (!confirm('Tem certeza que deseja remover esta guerra da fila?')) return;
@@ -4711,6 +4895,16 @@ function renderTorcidasGuerraAdmin() {
             } catch (e) {
                 showToast('Erro ao recusar', 'error');
             }
+        }
+
+        // Verificar se evento de bônus de guerra já existe (evita duplicatas)
+        async function eventoGuerraExiste(jogadorId, subtipo, guerraId) {
+            const eventosJogador = events.filter(e => 
+                e.jogadorId === jogadorId && 
+                e.subtipo === subtipo && 
+                e.guerraId === guerraId
+            );
+            return eventosJogador.length > 0;
         }
 
         async function finalizarGuerraCla(guerraId) {
