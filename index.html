@@ -2708,7 +2708,8 @@ function getTodayStr() {
 
                     if (!vencedorId) continue; // Empate não tem bônus
 
-                    const dataEvento = guerra.finalizadoAt ? guerra.finalizadoAt.split('T')[0] : getTodayStr();
+                    // Data do evento = data de início da guerra (para contar na semana correta)
+                    const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getTodayStr();
 
                     // 1. Vencedores +3
                     const membrosVencedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
