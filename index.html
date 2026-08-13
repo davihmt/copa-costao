@@ -614,6 +614,7 @@
                 0 8px 30px rgba(0, 0, 0, 0.7),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
             animation: legendaryPulse 3s ease-in-out infinite;
+            overflow: visible !important;
         }
         @keyframes legendaryPulse {
             0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.15), 0 8px 30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05); }
@@ -621,20 +622,20 @@
         }
         .legendary-badge {
             position: absolute;
-            top: -6px;
+            top: -10px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(135deg, #FFD700, #FFA500);
             color: #1a1a2e;
-            padding: 2px 14px;
+            padding: 3px 16px;
             border-radius: 999px;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 900;
             font-family: 'Cinzel', serif;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
-            z-index: 35;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+            z-index: 50;
             border: 2px solid #FFD700;
             pointer-events: none;
             white-space: nowrap;
