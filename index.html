@@ -3724,6 +3724,9 @@ async function resolverTorcidas(dueloId, vencedorId) {
             const duelo = duelos.find(d => d.id === dueloId);
             if (!duelo || !duelo.apostas || duelo.torcidasResolvidas) return;
 
+            // Data do evento = data de início do duelo (para contar na semana correta)
+            const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getTodayStr();
+
             for (const aposta of duelo.apostas) {
                 const participanteId = aposta.participanteId || aposta.comissaoId;
                 if (!participanteId) continue;
@@ -3738,7 +3741,7 @@ async function resolverTorcidas(dueloId, vencedorId) {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
                         jogadorId: participanteId, tipo: 'gol', subtipo: 'torcida-sabio',
                         subtipoLabel: acertou ? '✅ Torcida (Acertou!)' : '❌ Torcida (Errou!)',
-                        valor, data: getTodayStr(),
+                        valor, data: dataEvento,
                         observacao: 'Torcida no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
                         dueloId: duelo.id,
                         createdAt: new Date().toISOString()
