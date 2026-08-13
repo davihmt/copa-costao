@@ -614,6 +614,7 @@
                 0 8px 30px rgba(0, 0, 0, 0.7),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
             animation: legendaryPulse 3s ease-in-out infinite;
+            padding-bottom: 28px !important;
         }
         @keyframes legendaryPulse {
             0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.15), 0 8px 30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05); }
@@ -621,7 +622,7 @@
         }
         .legendary-badge {
             position: absolute;
-            bottom: -10px;
+            bottom: 4px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(135deg, #FFD700, #FFA500);
@@ -636,6 +637,8 @@
             box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
             z-index: 35;
             border: 2px solid #FFD700;
+            pointer-events: none;
+            white-space: nowrap;
         }
 
             .admin-only { display: none !important; }
@@ -3224,7 +3227,11 @@ function getTodayStr() {
             return { status: 'ativa', diaAtual, totalDias, diasRestantes };
         }
 
-        function getDueloAtivo(jogadorId) {
+        function eventoDueloExiste(jogadorId, subtipo, dueloId) {
+            return events.some(e => e.jogadorId === jogadorId && e.subtipo === subtipo && e.dueloId === dueloId);
+        }
+
+function getDueloAtivo(jogadorId) {
             return duelos.find(d => d.status === 'ativo' && (d.desafianteId === jogadorId || d.desafiadoId === jogadorId));
         }
 
@@ -3720,6 +3727,11 @@ async function resolverTorcidas(dueloId, vencedorId) {
             for (const aposta of duelo.apostas) {
                 const participanteId = aposta.participanteId || aposta.comissaoId;
                 if (!participanteId) continue;
+
+                // Verificar duplicata: jogador + duelo
+                const jaExiste = events.some(e => e.jogadorId === participanteId && e.subtipo === 'torcida-sabio' && e.dueloId === duelo.id);
+                if (jaExiste) continue;
+
                 const acertou = aposta.apostadoId === vencedorId;
                 const valor = acertou ? 1 : 0;
                 try {
@@ -6760,7 +6772,7 @@ async function showAlbum(playerId) {
                     banner.style.cssText = 'background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.05)); border: 2px solid #FFD700; box-shadow: 0 0 30px rgba(255,215,0,0.2);';
                     banner.innerHTML = `
                         <p class="text-2xl font-black text-[#FFD700] mb-1" style="font-family: 'Cinzel', serif;">🔥 GUERREIRO LENDÁRIO 🔥</p>
-                        <p class="text-sm text-gray-400">${histDuelo.streakMax} vitórias consecutivas em duelos</p>
+                        <p class="text-sm text-gray-400">${streakMax} vitórias consecutivas em duelos</p>
                         <p class="text-xs text-gray-500 mt-1">Alcançou o status de Lendário na Arena</p>
                     `;
                     albumContent.insertBefore(banner, albumContent.firstChild);
