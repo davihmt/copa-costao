@@ -614,7 +614,6 @@
                 0 8px 30px rgba(0, 0, 0, 0.7),
                 inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
             animation: legendaryPulse 3s ease-in-out infinite;
-            padding-bottom: 28px !important;
         }
         @keyframes legendaryPulse {
             0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.15), 0 8px 30px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05); }
@@ -622,19 +621,19 @@
         }
         .legendary-badge {
             position: absolute;
-            bottom: 4px;
+            top: -6px;
             left: 50%;
             transform: translateX(-50%);
             background: linear-gradient(135deg, #FFD700, #FFA500);
             color: #1a1a2e;
-            padding: 3px 16px;
+            padding: 2px 14px;
             border-radius: 999px;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 900;
             font-family: 'Cinzel', serif;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
             z-index: 35;
             border: 2px solid #FFD700;
             pointer-events: none;
@@ -3281,14 +3280,20 @@ function getDueloAtivo(jogadorId) {
             playerEvents.forEach(ev => {
                 let evTs = null;
 
-                // Usar ev.data (data do evento) em vez de ev.createdAt (data de criação)
-                if (ev.data) {
-                    evTs = new Date(ev.data + 'T12:00:00').getTime();
-                } else if (ev.createdAt) {
+                // Usar createdAt (hora real de criação) como PRIMEIRA opção
+                // Isso garante que runas lançadas durante o duelo sejam contabilizadas
+                if (ev.createdAt) {
                     evTs = new Date(ev.createdAt).getTime();
+                } else if (ev.data) {
+                    evTs = new Date(ev.data + 'T12:00:00').getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
+                    // IGNORAR eventos de bônus de duelo (não fazem parte do placar)
+                    if (ev.subtipo === 'duelo-vitoria' || ev.subtipo === 'duelo-derrota' || 
+                        ev.subtipo === 'torcida-sabio') {
+                        return; // skip
+                    }
                     const val = Number(ev.valor) || 0;
                     if (ev.tipo === 'gol') {
                         total += val;
@@ -3356,11 +3361,11 @@ function getDueloAtivo(jogadorId) {
             playerEvents.forEach(ev => {
                 let evTs = null;
 
-                // Usar ev.data (data do evento) em vez de ev.createdAt (data de criação)
-                if (ev.data) {
-                    evTs = new Date(ev.data + 'T12:00:00').getTime();
-                } else if (ev.createdAt) {
+                // Usar createdAt (hora real de criação) como PRIMEIRA opção
+                if (ev.createdAt) {
                     evTs = new Date(ev.createdAt).getTime();
+                } else if (ev.data) {
+                    evTs = new Date(ev.data + 'T12:00:00').getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
