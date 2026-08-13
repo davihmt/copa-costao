@@ -3231,6 +3231,16 @@ function getTodayStr() {
             return events.some(e => e.jogadorId === jogadorId && e.subtipo === subtipo && e.dueloId === dueloId);
         }
 
+function getDiaAtualDuelo(duelo) {
+            const inicio = new Date(duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt);
+            const agora = new Date();
+            const totalDias = 5;
+            const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
+            const diasPassados = Math.floor(horasPassadas / 24);
+            const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
+            return { diaAtual, totalDias };
+        }
+
 function getDueloAtivo(jogadorId) {
             return duelos.find(d => d.status === 'ativo' && (d.desafianteId === jogadorId || d.desafiadoId === jogadorId));
         }
@@ -4240,7 +4250,7 @@ function renderTorcidasGuerraAdmin() {
                                 <span class="text-[#C8A25A] font-black">${gB}</span>
                                 <span class="font-bold text-sm">${d.desafiadoNome}</span>
                             </div>
-                            <span class="text-xs text-green-400 font-bold">⚔️ Ativo</span>
+                            ${(() => { const info = getDiaAtualDuelo(d); return `<span class="text-xs text-[#C8A25A] font-bold">Dia ${info.diaAtual} de ${info.totalDias}</span>`; })()}
                         </div>
                     `;
                 }).join('');
@@ -4436,9 +4446,15 @@ function renderTorcidasGuerraAdmin() {
                         <div class="glass rounded-xl p-4 flex items-center justify-between mb-2">
                             <div class="flex items-center gap-3">
                                 <span class="font-bold">${d.desafianteNome}</span>
-                                <span class="text-gray-500">${getGlaciaDuelo(d.desafianteId, d)} vs ${getGlaciaDuelo(d.desafiadoId, d)}</span>
+                                <span class="text-gray-500">${d.gloriaDesafiante !== undefined ? d.gloriaDesafiante : getGlaciaDuelo(d.desafianteId, d)} vs ${d.gloriaDesafiado !== undefined ? d.gloriaDesafiado : getGlaciaDuelo(d.desafiadoId, d)}</span>
                                 <span class="font-bold">${d.desafiadoNome}</span>
-                                ${d.vencedorNome ? `<span class="text-green-400 text-sm">🏆 ${d.vencedorNome}</span>` : '<span class="text-yellow-400 text-sm">🤝 Empate</span>'}
+                                ${(() => {
+                                    const gA = d.gloriaDesafiante !== undefined ? d.gloriaDesafiante : getGlaciaDuelo(d.desafianteId, d);
+                                    const gB = d.gloriaDesafiado !== undefined ? d.gloriaDesafiado : getGlaciaDuelo(d.desafiadoId, d);
+                                    if (gA > gB) return `<span class="text-green-400 text-sm">🏆 ${d.desafianteNome}</span>`;
+                                    if (gB > gA) return `<span class="text-green-400 text-sm">🏆 ${d.desafiadoNome}</span>`;
+                                    return `<span class="text-yellow-400 text-sm">🤝 Empate</span>`;
+                                })()}
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="reativarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm font-bold hover:bg-purple-500/30"><i class="fas fa-undo-alt mr-1"></i>Reativar</button>
@@ -4732,19 +4748,23 @@ function renderTorcidasGuerraAdmin() {
                 pendentesEl.classList.add('hidden');
             }
 
-            // Finalizados
+            // Finalizados - usar placar congelado no momento da finalização
             if (finalizados.length > 0) {
                 finalizadosList.innerHTML = finalizados.map(d => {
-                    const vencedor = d.vencedorNome || 'Empate';
-                    const vencedorClass = d.vencedorId ? 'text-green-400' : 'text-yellow-400';
+                    const gA = d.gloriaDesafiante !== undefined ? d.gloriaDesafiante : getGlaciaDuelo(d.desafianteId, d);
+                    const gB = d.gloriaDesafiado !== undefined ? d.gloriaDesafiado : getGlaciaDuelo(d.desafiadoId, d);
+                    let vencedorNome = 'Empate';
+                    let vencedorClass = 'text-yellow-400';
+                    if (gA > gB) { vencedorNome = d.desafianteNome; vencedorClass = 'text-green-400'; }
+                    else if (gB > gA) { vencedorNome = d.desafiadoNome; vencedorClass = 'text-green-400'; }
                     return `
                         <div class="glass rounded-xl p-4 flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <span class="font-bold">${d.desafianteNome}</span>
-                                <span class="text-gray-500">${getGlaciaDuelo(d.desafianteId, d)} ⚔️ ${getGlaciaDuelo(d.desafiadoId, d)}</span>
+                                <span class="text-gray-500">${gA} ⚔️ ${gB}</span>
                                 <span class="font-bold">${d.desafiadoNome}</span>
                             </div>
-                            <span class="text-sm ${vencedorClass} font-bold">🏆 ${vencedor}</span>
+                            <span class="text-sm ${vencedorClass} font-bold">🏆 ${vencedorNome}</span>
                         </div>
                     `;
                 }).join('');
@@ -5962,7 +5982,9 @@ async function renderPlayers() {
                         const func = p.time || 'Sem Casa';
                         const borderColor = eqCor || funcColors[func] || '#C8A25A';
 
-                        const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                        const photoUrl = p.tipo === 'comissao' 
+                    ? (p.foto ? getImageUrl(p.foto) : '') 
+                    : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
                         const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
                         const elogiosHoje = getElogiosRecebidosHoje(p.id, 'jogador');
                         const temElogio = elogiosHoje.length > 0;
@@ -5977,7 +5999,7 @@ async function renderPlayers() {
                         const streakBadge = getStreakBadge(p.id);
 
                         return `
-                            <div class="player-card card-hover relative ${isLegendary ? 'legendary' : ''}" style="border-color: ${isLegendary ? '#FFD700' : borderColor};" onclick="window.showAlbum('${p.id}')">
+                            <div class="player-card card-hover relative ${isLegendary ? 'legendary' : ''}" style="border-color: ${isLegendary ? '#FFD700' : borderColor};" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
                             ${isLegendary ? '<div class="legendary-badge">🔥 Lendário</div>' : ''}
                             ${elogioBadge}
                             ${dueloBadge}
@@ -6245,10 +6267,12 @@ async function renderPlayers() {
                 else if (rank === 3) medal = '🥉';
                 else medal = `<span class="text-gray-500 font-bold">${rank}</span>`;
 
-                const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                const photoUrl = p.tipo === 'comissao' 
+                    ? (p.foto ? getImageUrl(p.foto) : '') 
+                    : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
 
                 return `
-                    <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:border-[#C8A25A] transition-all" onclick="window.showAlbum('${p.id}')">
+                    <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:border-[#C8A25A] transition-all" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
                         <div class="text-2xl w-10 text-center">${medal}</div>
                         <img src="${photoUrl}" class="w-12 h-12 rounded-full object-cover border-2 border-[#C8A25A]" onerror="this.style.display='none'">
                         <div class="flex-1">
@@ -6301,14 +6325,16 @@ async function renderPlayers() {
                                 ${sortedMembers.map((p, idx) => {
                                     const stats = getPlayerStats(p.id);
                                     const total = getPeriodTotal(stats);
-                                    const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                                    const photoUrl = p.tipo === 'comissao' 
+                    ? (p.foto ? getImageUrl(p.foto) : '') 
+                    : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
                                     const rank = idx + 1;
                                     let rankBadge = '';
                                     if (rank === 1) rankBadge = '<span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-400 text-black text-xs font-bold flex items-center justify-center">1</span>';
                                     else if (rank === 2) rankBadge = '<span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gray-300 text-black text-xs font-bold flex items-center justify-center">2</span>';
                                     else if (rank === 3) rankBadge = '<span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-orange-400 text-black text-xs font-bold flex items-center justify-center">3</span>';
                                     return `
-                                        <div class="player-card cursor-pointer hover:border-[#C8A25A] transition-all relative" onclick="window.showAlbum('${p.id}')">
+                                        <div class="player-card cursor-pointer hover:border-[#C8A25A] transition-all relative" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
                                             ${rankBadge}
                                             <div class="flex items-center gap-3">
                                                 <img src="${photoUrl}" class="w-10 h-10 rounded-full object-cover border border-[#C8A25A]" onerror="this.style.display='none'">
@@ -7231,7 +7257,9 @@ function updateAdminSelects() {
                 const visibleMembers = hasSelection ? selectedFromFunc : members;
 
                 html += visibleMembers.map(p => {
-                    const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                    const photoUrl = p.tipo === 'comissao' 
+                    ? (p.foto ? getImageUrl(p.foto) : '') 
+                    : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
                     const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
                     const isSelected = selectedFigPlayers.has(p.id);
                     return `
@@ -7955,9 +7983,11 @@ function showEquipeAlbum(equipeId) {
                     ${jogadoresEquipe.map((p, idx) => {
                         const stats = getPlayerStats(p.id);
                         const total = getPeriodTotal(stats);
-                        const photoUrl = p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                        const photoUrl = p.tipo === 'comissao' 
+                    ? (p.foto ? getImageUrl(p.foto) : '') 
+                    : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
                         return `
-                            <div class="player-card cursor-pointer hover:border-[#C8A25A] transition-all relative" onclick="window.showAlbum('${p.id}')">
+                            <div class="player-card cursor-pointer hover:border-[#C8A25A] transition-all relative" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
                                 <div class="flex items-center gap-3">
                                     <img src="${photoUrl}" class="w-12 h-12 rounded-full object-cover border-2 border-[#C8A25A]" onerror="this.style.display='none'">
                                     <div class="flex-1 text-left">
