@@ -3281,12 +3281,12 @@ function getDueloAtivo(jogadorId) {
             playerEvents.forEach(ev => {
                 let evTs = null;
 
-                // Usar createdAt (hora real de criação) como PRIMEIRA opção
-                // Isso garante que runas lançadas durante o duelo sejam contabilizadas
-                if (ev.createdAt) {
-                    evTs = new Date(ev.createdAt).getTime();
-                } else if (ev.data) {
+                // Usar ev.data (data do evento) como PRIMEIRA opção
+                // Runas lançadas hoje têm data = hoje (YYYY-MM-DD)
+                if (ev.data) {
                     evTs = new Date(ev.data + 'T12:00:00').getTime();
+                } else if (ev.createdAt) {
+                    evTs = new Date(ev.createdAt).getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
@@ -3362,11 +3362,13 @@ function getDueloAtivo(jogadorId) {
             playerEvents.forEach(ev => {
                 let evTs = null;
 
-                // Usar createdAt (hora real de criação) como PRIMEIRA opção
-                if (ev.createdAt) {
-                    evTs = new Date(ev.createdAt).getTime();
-                } else if (ev.data) {
+                // Usar ev.data (data do evento) como PRIMEIRA opção
+                // Runas lançadas hoje têm data = hoje (YYYY-MM-DD)
+                // Bônus de duelo têm data = dataInicio do duelo (não contam na guerra atual)
+                if (ev.data) {
                     evTs = new Date(ev.data + 'T12:00:00').getTime();
+                } else if (ev.createdAt) {
+                    evTs = new Date(ev.createdAt).getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
@@ -7005,7 +7007,14 @@ async function showAlbum(playerId) {
                 }
             });
             rewardsGrid.innerHTML = rewardsHtml;const stickersDiv = document.getElementById('album-stickers');
-            const stickerEvents = playerEvents.filter(e => e.tipo === 'figurinha');
+            const stickerEvents = playerEvents.filter(e => {
+                if (e.tipo !== 'figurinha') return false;
+                // Mostrar apenas runas do mês atual
+                const evDate = getBRDate(e.data);
+                const today = new Date();
+                today.setHours(12, 0, 0, 0);
+                return isSameMonth(evDate, today);
+            });
             const stickerTypes = {};
             const STICKER_IMG_MAP = {
                 'master-verao': 'master-verao.png', 'master-inverno': 'master-inverno.png',
@@ -9187,10 +9196,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Add elogio document
+                // Usar data no formato YYYY-MM-DD do fuso de Brasília (não UTC)
+                const dataBrasilia = getHojeBrasilia();
                 await window.addDoc(window.collection(window.db, 'elogios'), {
                     deId, deTipo, deNome,
                     paraId, paraTipo, paraNome,
-                    testemunho, data: new Date().toISOString(),
+                    testemunho, data: dataBrasilia,
                     createdAt: new Date().toISOString()
                 });
 
