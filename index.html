@@ -3281,12 +3281,15 @@ function getDueloAtivo(jogadorId) {
             playerEvents.forEach(ev => {
                 let evTs = null;
 
-                // Usar ev.data (data do evento) como PRIMEIRA opção
-                // Runas lançadas hoje têm data = hoje (YYYY-MM-DD)
-                if (ev.data) {
-                    evTs = new Date(ev.data + 'T12:00:00').getTime();
-                } else if (ev.createdAt) {
+                // PRIORIDADE 1: createdAt (hora real de criação no Firebase)
+                // Usar para runas lançadas durante o duelo (hora exata)
+                if (ev.createdAt) {
                     evTs = new Date(ev.createdAt).getTime();
+                }
+                // PRIORIDADE 2: data (YYYY-MM-DD) - usar FIM do dia (23:59:59)
+                // Isso garante que eventos do mesmo dia do início do duelo sejam contados
+                else if (ev.data) {
+                    evTs = new Date(ev.data + 'T23:59:59').getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
@@ -3362,13 +3365,13 @@ function getDueloAtivo(jogadorId) {
             playerEvents.forEach(ev => {
                 let evTs = null;
 
-                // Usar ev.data (data do evento) como PRIMEIRA opção
-                // Runas lançadas hoje têm data = hoje (YYYY-MM-DD)
-                // Bônus de duelo têm data = dataInicio do duelo (não contam na guerra atual)
-                if (ev.data) {
-                    evTs = new Date(ev.data + 'T12:00:00').getTime();
-                } else if (ev.createdAt) {
+                // PRIORIDADE 1: createdAt (hora real de criação no Firebase)
+                if (ev.createdAt) {
                     evTs = new Date(ev.createdAt).getTime();
+                }
+                // PRIORIDADE 2: data (YYYY-MM-DD) - usar FIM do dia (23:59:59)
+                else if (ev.data) {
+                    evTs = new Date(ev.data + 'T23:59:59').getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
