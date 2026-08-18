@@ -3005,20 +3005,27 @@ function getTodayStr() {
                     // +3 glórias para vencedor, -1 para perdedor (apenas 1x por duelo)
                     if (vencedorId && !duelo.bonusAplicados) {
                         const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
-                            subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: getTodayStr(),
-                            observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                            dueloId: duelo.id,
-                            createdAt: agoraBR.toISOString()
-                        });
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
-                            subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: getTodayStr(),
-                            observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                            dueloId: duelo.id,
-                            createdAt: agoraBR.toISOString()
-                        });
+                        const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getTodayStr();
+                        const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
+                        if (!existeVitoria) {
+                            await window.addDoc(window.collection(window.db, 'eventos'), {
+                                jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
+                                subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: dataEvento,
+                                observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                                dueloId: duelo.id,
+                                createdAt: agoraBR.toISOString()
+                            });
+                        }
+                        const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', duelo.id);
+                        if (!existeDerrota) {
+                            await window.addDoc(window.collection(window.db, 'eventos'), {
+                                jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
+                                subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: dataEvento,
+                                observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                                dueloId: duelo.id,
+                                createdAt: agoraBR.toISOString()
+                            });
+                        }
                         await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), { bonusAplicados: true });
                     }
                 } catch (e) {}
@@ -3941,6 +3948,8 @@ async function excluirDuelo(dueloId) {
             const claA = equipes.find(e => e.id === guerra.claDesafianteId);
             const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
 
+            const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getTodayStr();
+
             for (const aposta of guerra.apostas) {
                 const participanteId = aposta.participanteId || aposta.comissaoId;
                 if (!participanteId) continue;
@@ -3959,7 +3968,7 @@ async function excluirDuelo(dueloId) {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
                         jogadorId: participanteId, tipo: 'gol', subtipo: 'torcida-sabio-guerra',
                         subtipoLabel: acertou ? '✅ Torcida na Guerra (Acertou!)' : '❌ Torcida na Guerra (Errou!)',
-                        valor, data: getTodayStr(),
+                        valor, data: dataEvento,
                         observacao: 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B') + ' [Guerra#' + guerra.id + ']',
                         guerraId: guerra.id,
                         createdAt: new Date().toISOString()
@@ -5048,6 +5057,8 @@ function renderTorcidasGuerraAdmin() {
                         return eqId && eqId !== vencedorId;
                     });
 
+                    const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getTodayStr();
+
                     // Vencedores +3 (verificar duplicata)
                     for (const membro of membrosVencedores) {
                         const existe = await eventoGuerraExiste(membro.id, 'guerra-cla', guerra.id);
@@ -5058,7 +5069,7 @@ function renderTorcidasGuerraAdmin() {
                                 subtipo: 'guerra-cla',
                                 subtipoLabel: '🛡️ Vitória na Guerra de Clã',
                                 valor: 3,
-                                data: getTodayStr(),
+                                data: dataEvento,
                                 observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+3 glórias)',
                                 createdAt: new Date().toISOString()
                             });
@@ -5075,7 +5086,7 @@ function renderTorcidasGuerraAdmin() {
                                 subtipo: 'guerra-cla-derrota',
                                 subtipoLabel: '🛡️ Derrota na Guerra de Clã',
                                 valor: -1,
-                                data: getTodayStr(),
+                                data: dataEvento,
                                 observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-1 glória)',
                                 createdAt: new Date().toISOString()
                             });
