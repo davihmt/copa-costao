@@ -10443,6 +10443,17 @@ function renderAdminConquistas() {
             let lista = [...conquistasHistorico].sort((a, b) => new Date(b.dataConquista) - new Date(a.dataConquista));
             if (filtroJogador) {
                 lista = lista.filter(ch => ch.jogadorId === filtroJogador);
+                // Filtrar por tipo de alvo do feito
+                const jogador = players.find(p => p.id === filtroJogador);
+                const isComissao = comissao.some(c => c.id === filtroJogador);
+                lista = lista.filter(ch => {
+                    const cfg = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT)
+                        .find(c => c.id === ch.conquistaId);
+                    const tipoAlvo = cfg ? (cfg.tipoAlvo || 'guerreiro') : 'guerreiro';
+                    if (jogador && tipoAlvo === 'comissao') return false;
+                    if (isComissao && tipoAlvo === 'guerreiro') return false;
+                    return true;
+                });
             }
 
             if (lista.length === 0) {
