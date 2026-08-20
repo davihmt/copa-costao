@@ -3360,15 +3360,15 @@ function getDueloAtivo(jogadorId) {
             for (const ev of playerEvents) {
                 let evTs = null;
 
-                // PRIORIDADE 1: data (YYYY-MM-DD) - usar FIM do dia (23:59:59)
-                // O campo 'data' é a data REAL do evento (ex: dia do gol, da runa, etc.)
-                // createdAt é apenas quando o registro foi criado no Firebase
-                if (ev.data) {
-                    evTs = new Date(ev.data + 'T23:59:59').getTime();
-                }
-                // PRIORIDADE 2: createdAt (fallback)
-                else if (ev.createdAt) {
+                // PRIORIDADE 1: createdAt (hora exata de criação no Firebase)
+                // Usar para eventos normais (gols, runas) durante o duelo
+                if (ev.createdAt) {
                     evTs = new Date(ev.createdAt).getTime();
+                }
+                // PRIORIDADE 2: data (YYYY-MM-DD) - usar FIM do dia (23:59:59)
+                // Fallback para eventos retroativos sem createdAt
+                else if (ev.data) {
+                    evTs = new Date(ev.data + 'T23:59:59').getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
