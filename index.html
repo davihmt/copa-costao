@@ -2189,6 +2189,22 @@
                         </button>
                         <div id="reconstruir-placares-msg" class="mt-3 hidden"></div>
                     </div>
+
+                    <!-- CORRIGIR RESULTADOS (VENCEDORES) -->
+                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-red-500/30">
+                        <h4 class="text-xl font-bold mb-4 text-red-400"><i class="fas fa-trophy mr-2"></i>Corrigir Resultados</h4>
+                        <p class="text-gray-400 text-sm mb-4">Recalcula os placares e <b>atualiza os vencedores</b> de todos os duelos/guerras finalizados. Use se os resultados (quem ganhou) estiverem incorretos após as correções.</p>
+                        <button onclick="corrigirResultadosDuelos()" class="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-lg transition-colors mb-3">
+                            <i class="fas fa-khanda mr-2"></i>Corrigir Resultados dos Duelos
+                        </button>
+                        <button onclick="corrigirResultadosGuerras()" class="w-full py-3 rounded-xl bg-red-800 hover:bg-red-700 text-white font-bold text-lg transition-colors mb-3">
+                            <i class="fas fa-shield-halved mr-2"></i>Corrigir Resultados das Guerras
+                        </button>
+                        <button onclick="corrigirDuelosZeroZero()" class="w-full py-3 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-lg transition-colors">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Corrigir Duelos 0-0
+                        </button>
+                        <div id="corrigir-resultados-msg" class="mt-3 hidden"></div>
+                    </div>
                     <!-- RECALCULAR PERÍODO ESPECÍFICO -->
                     <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-blue-500/30">
                         <h4 class="text-xl font-bold mb-4 text-blue-400"><i class="fas fa-calendar-alt mr-2"></i>Recalcular Duelos por Período</h4>
@@ -3341,18 +3357,18 @@ function getDueloAtivo(jogadorId) {
 
             const playerEvents = events.filter(e => e.jogadorId === jogadorId);
             let total = 0;
-            playerEvents.forEach(ev => {
+            for (const ev of playerEvents) {
                 let evTs = null;
 
-                // PRIORIDADE 1: createdAt (hora real de criação no Firebase)
-                // Usar para runas lançadas durante o duelo (hora exata)
-                if (ev.createdAt) {
-                    evTs = new Date(ev.createdAt).getTime();
-                }
-                // PRIORIDADE 2: data (YYYY-MM-DD) - usar FIM do dia (23:59:59)
-                // Isso garante que eventos do mesmo dia do início do duelo sejam contados
-                else if (ev.data) {
+                // PRIORIDADE 1: data (YYYY-MM-DD) - usar FIM do dia (23:59:59)
+                // O campo 'data' é a data REAL do evento (ex: dia do gol, da runa, etc.)
+                // createdAt é apenas quando o registro foi criado no Firebase
+                if (ev.data) {
                     evTs = new Date(ev.data + 'T23:59:59').getTime();
+                }
+                // PRIORIDADE 2: createdAt (fallback)
+                else if (ev.createdAt) {
+                    evTs = new Date(ev.createdAt).getTime();
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
@@ -3361,7 +3377,7 @@ function getDueloAtivo(jogadorId) {
                         ev.subtipo === 'torcida-sabio' ||
                         ev.subtipo === 'guerra-cla' || ev.subtipo === 'guerra-cla-derrota' ||
                         ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra') {
-                        return; // skip
+                        continue; // skip
                     }
                     const val = Number(ev.valor) || 0;
                     if (ev.tipo === 'gol') {
@@ -3372,7 +3388,7 @@ function getDueloAtivo(jogadorId) {
                         total -= Math.abs(val);
                     }
                 }
-            });
+            }
             return total;
         }
 
@@ -4469,6 +4485,282 @@ function renderTorcidasGuerraAdmin() {
         }
         window.reconstruirPlacaresGuerras = reconstruirPlacaresGuerras;
 
+        // ===== CORRIGIR RESULTADOS (VENCEDORES) =====
+        async function corrigirResultadosDuelos() {
+            const container = document.getElementById('corrigir-resultados-msg');
+            if (container) {
+                container.classList.remove('hidden');
+                container.innerHTML = '<p class="text-center text-gray-400">Corrigindo resultados dos duelos...</p>';
+            }
+
+            try {
+                const finalizados = duelos.filter(d => d.status === 'finalizado');
+                if (finalizados.length === 0) {
+                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhum duelo finalizado encontrado.</p>';
+                    return;
+                }
+
+                let corrigidos = 0;
+                let detalhes = [];
+
+                for (const duelo of finalizados) {
+                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
+                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
+
+                    // Determinar vencedor correto
+                    let vencedorIdCorreto = null;
+                    let vencedorNomeCorreto = '';
+                    if (gloriaA > gloriaB) {
+                        vencedorIdCorreto = duelo.desafianteId;
+                        vencedorNomeCorreto = duelo.desafianteNome;
+                    } else if (gloriaB > gloriaA) {
+                        vencedorIdCorreto = duelo.desafiadoId;
+                        vencedorNomeCorreto = duelo.desafiadoNome;
+                    }
+
+                    // Verificar se precisa corrigir
+                    const vencedorAntigo = duelo.vencedorId;
+                    const nomeAntigo = duelo.vencedorNome || 'Empate';
+
+                    if (vencedorAntigo !== vencedorIdCorreto || duelo.gloriaDesafiante !== gloriaA || duelo.gloriaDesafiado !== gloriaB) {
+                        // Atualizar duelo
+                        await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
+                            gloriaDesafiante: gloriaA,
+                            gloriaDesafiado: gloriaB,
+                            vencedorId: vencedorIdCorreto,
+                            vencedorNome: vencedorNomeCorreto
+                        });
+
+                        detalhes.push(`${duelo.desafianteNome} (${gloriaA}) vs ${duelo.desafiadoNome} (${gloriaB}) → 🏆 ${vencedorNomeCorreto || 'Empate'} (era: ${nomeAntigo})`);
+                        corrigidos++;
+
+                        // Atualizar histórico dos jogadores
+                        await atualizarDueloHistorico(duelo.desafianteId, vencedorIdCorreto === duelo.desafianteId, vencedorIdCorreto === null, duelo.id);
+                        await atualizarDueloHistorico(duelo.desafiadoId, vencedorIdCorreto === duelo.desafiadoId, vencedorIdCorreto === null, duelo.id);
+                    }
+                }
+
+                if (container) {
+                    if (corrigidos > 0) {
+                        container.innerHTML = `
+                            <p class="text-center text-green-400 mb-2">✅ ${corrigidos} duelo(s) corrigido(s)!</p>
+                            <div class="text-xs text-gray-400 space-y-1 max-h-48 overflow-y-auto">
+                                ${detalhes.map(d => `<p>• ${d}</p>`).join('')}
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = '<p class="text-center text-green-400">✅ Todos os duelos já estavam corretos!</p>';
+                    }
+                }
+
+                renderArenaIndividuais();
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+
+            } catch (e) {
+                if (container) {
+                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
+                }
+            }
+        }
+        window.corrigirResultadosDuelos = corrigirResultadosDuelos;
+
+        async function corrigirResultadosGuerras() {
+            const container = document.getElementById('corrigir-resultados-msg');
+            if (container) {
+                container.classList.remove('hidden');
+                container.innerHTML = '<p class="text-center text-gray-400">Corrigindo resultados das guerras...</p>';
+            }
+
+            try {
+                const finalizadas = guerrasClas.filter(g => g.status === 'finalizada');
+                if (finalizadas.length === 0) {
+                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhuma guerra finalizada encontrada.</p>';
+                    return;
+                }
+
+                let corrigidas = 0;
+                let detalhes = [];
+
+                for (const guerra of finalizadas) {
+                    const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
+                    const jogadoresB = players.filter(p => p.equipeId === guerra.claDesafiadoId);
+                    const comissaoA = comissao.filter(c => c.equipeId === guerra.claDesafianteId);
+                    const comissaoB = comissao.filter(c => c.equipeId === guerra.claDesafiadoId);
+
+                    let gloriaA = 0, gloriaB = 0;
+                    jogadoresA.forEach(p => { gloriaA += getGlaciaGuerra(p.id, guerra); });
+                    jogadoresB.forEach(p => { gloriaB += getGlaciaGuerra(p.id, guerra); });
+                    comissaoA.forEach(c => { gloriaA += getGlaciaGuerra(c.id, guerra); });
+                    comissaoB.forEach(c => { gloriaB += getGlaciaGuerra(c.id, guerra); });
+
+                    const claA = equipes.find(e => e.id === guerra.claDesafianteId);
+                    const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
+
+                    let vencedorIdCorreto = null;
+                    let vencedorNomeCorreto = 'Empate';
+                    if (gloriaA > gloriaB) {
+                        vencedorIdCorreto = guerra.claDesafianteId;
+                        vencedorNomeCorreto = claA ? claA.nome : 'Clã A';
+                    } else if (gloriaB > gloriaA) {
+                        vencedorIdCorreto = guerra.claDesafiadoId;
+                        vencedorNomeCorreto = claB ? claB.nome : 'Clã B';
+                    }
+
+                    const vencedorAntigo = guerra.vencedorId;
+                    const nomeAntigo = guerra.vencedorNome || 'Empate';
+
+                    if (vencedorAntigo !== vencedorIdCorreto || guerra.gloriaDesafiante !== gloriaA || guerra.gloriaDesafiado !== gloriaB) {
+                        await window.updateDoc(window.doc(window.db, 'guerrasClas', guerra.id), {
+                            gloriaDesafiante: gloriaA,
+                            gloriaDesafiado: gloriaB,
+                            vencedorId: vencedorIdCorreto,
+                            vencedorNome: vencedorNomeCorreto
+                        });
+
+                        detalhes.push(`${claA ? claA.nome : 'Clã A'} (${gloriaA}) vs ${claB ? claB.nome : 'Clã B'} (${gloriaB}) → 🏆 ${vencedorNomeCorreto} (era: ${nomeAntigo})`);
+                        corrigidas++;
+                    }
+                }
+
+                if (container) {
+                    if (corrigidas > 0) {
+                        container.innerHTML = `
+                            <p class="text-center text-green-400 mb-2">✅ ${corrigidas} guerra(s) corrigida(s)!</p>
+                            <div class="text-xs text-gray-400 space-y-1 max-h-48 overflow-y-auto">
+                                ${detalhes.map(d => `<p>• ${d}</p>`).join('')}
+                            </div>
+                        `;
+                    } else {
+                        container.innerHTML = '<p class="text-center text-green-400">✅ Todas as guerras já estavam corretas!</p>';
+                    }
+                }
+
+                renderArenaClas();
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+
+            } catch (e) {
+                if (container) {
+                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
+                }
+            }
+        }
+        window.corrigirResultadosGuerras = corrigirResultadosGuerras;
+
+        // ===== CORRIGIR DUELOS 0-0 =====
+        async function corrigirDuelosZeroZero() {
+            const container = document.getElementById('corrigir-resultados-msg');
+            if (container) {
+                container.classList.remove('hidden');
+                container.innerHTML = '<p class="text-center text-gray-400">Analisando duelos 0-0...</p>';
+            }
+
+            try {
+                // Encontrar duelos finalizados com placar 0-0
+                const duelosZero = duelos.filter(d => 
+                    d.status === 'finalizado' && 
+                    (d.gloriaDesafiante === 0 || d.gloriaDesafiante === undefined || d.gloriaDesafiante === null) &&
+                    (d.gloriaDesafiado === 0 || d.gloriaDesafiado === undefined || d.gloriaDesafiado === null)
+                );
+
+                if (duelosZero.length === 0) {
+                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhum duelo 0-0 encontrado.</p>';
+                    return;
+                }
+
+                let corrigidos = 0;
+                let detalhes = [];
+                let diagnosticos = [];
+
+                for (const duelo of duelosZero) {
+                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
+                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
+
+                    // DIAGNÓSTICO: verificar eventos dos jogadores no período
+                    const inicioStr = duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt;
+                    const inicio = new Date(inicioStr);
+                    let fim;
+                    if (duelo.dataFim) {
+                        fim = new Date(duelo.dataFim);
+                    } else {
+                        fim = new Date(inicio);
+                        fim.setDate(inicio.getDate() + 5);
+                    }
+                    const inicioTs = inicio.getTime();
+                    const fimTs = fim.getTime();
+
+                    const eventosA = events.filter(e => e.jogadorId === duelo.desafianteId);
+                    const eventosB = events.filter(e => e.jogadorId === duelo.desafiadoId);
+
+                    // Contar eventos válidos no período
+                    const validosA = eventosA.filter(ev => {
+                        let evTs = ev.data ? new Date(ev.data + 'T23:59:59').getTime() : (ev.createdAt ? new Date(ev.createdAt).getTime() : 0);
+                        return evTs >= inicioTs && evTs <= fimTs &&
+                            !['duelo-vitoria','duelo-derrota','torcida-sabio','guerra-cla','guerra-cla-derrota','torcida-sabio-guerra','torcida-participante-guerra'].includes(ev.subtipo);
+                    });
+                    const validosB = eventosB.filter(ev => {
+                        let evTs = ev.data ? new Date(ev.data + 'T23:59:59').getTime() : (ev.createdAt ? new Date(ev.createdAt).getTime() : 0);
+                        return evTs >= inicioTs && evTs <= fimTs &&
+                            !['duelo-vitoria','duelo-derrota','torcida-sabio','guerra-cla','guerra-cla-derrota','torcida-sabio-guerra','torcida-participante-guerra'].includes(ev.subtipo);
+                    });
+
+                    // Determinar vencedor
+                    let vencedorIdCorreto = null;
+                    let vencedorNomeCorreto = '';
+                    if (gloriaA > gloriaB) {
+                        vencedorIdCorreto = duelo.desafianteId;
+                        vencedorNomeCorreto = duelo.desafianteNome;
+                    } else if (gloriaB > gloriaA) {
+                        vencedorIdCorreto = duelo.desafiadoId;
+                        vencedorNomeCorreto = duelo.desafiadoNome;
+                    }
+
+                    // Atualizar duelo
+                    await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
+                        gloriaDesafiante: gloriaA,
+                        gloriaDesafiado: gloriaB,
+                        vencedorId: vencedorIdCorreto,
+                        vencedorNome: vencedorNomeCorreto
+                    });
+
+                    corrigidos++;
+                    detalhes.push(`${duelo.desafianteNome} (${gloriaA}) vs ${duelo.desafiadoNome} (${gloriaB}) → ${vencedorNomeCorreto || 'Empate'}`);
+
+                    if (gloriaA === 0 && gloriaB === 0) {
+                        diagnosticos.push(`
+                            <div class="mt-2 p-2 rounded bg-gray-800/50 text-xs">
+                                <p class="text-yellow-400 font-bold">⚠️ ${duelo.desafianteNome} vs ${duelo.desafiadoNome} — ainda 0-0</p>
+                                <p class="text-gray-400">Período: ${inicio.toLocaleDateString('pt-BR')} → ${fim.toLocaleDateString('pt-BR')}</p>
+                                <p class="text-gray-400">${duelo.desafianteNome}: ${validosA.length} evento(s) no período (total: ${eventosA.length})</p>
+                                <p class="text-gray-400">${duelo.desafiadoNome}: ${validosB.length} evento(s) no período (total: ${eventosB.length})</p>
+                            </div>
+                        `);
+                    }
+
+                    // Atualizar histórico
+                    await atualizarDueloHistorico(duelo.desafianteId, vencedorIdCorreto === duelo.desafianteId, vencedorIdCorreto === null, duelo.id);
+                    await atualizarDueloHistorico(duelo.desafiadoId, vencedorIdCorreto === duelo.desafiadoId, vencedorIdCorreto === null, duelo.id);
+                }
+
+                if (container) {
+                    container.innerHTML = `
+                        <p class="text-center text-green-400 mb-2">✅ ${corrigidos} duelo(s) 0-0 recalculado(s)!</p>
+                        <div class="text-xs text-gray-400 space-y-1 max-h-48 overflow-y-auto mb-3">
+                            ${detalhes.map(d => `<p>• ${d}</p>`).join('')}
+                        </div>
+                        ${diagnosticos.length > 0 ? '<p class="text-xs text-yellow-400 font-bold mb-1">Diagnóstico (ainda 0-0):</p>' + diagnosticos.join('') : ''}
+                    `;
+                }
+
+                renderArenaIndividuais();
+                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
+
+            } catch (e) {
+                if (container) {
+                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
+                }
+            }
+        }
+        window.corrigirDuelosZeroZero = corrigirDuelosZeroZero;
 
         // ===== RECALCULAR DUelos POR PERÍODO =====
         async function recalcularDuelosPorPeriodo() {
@@ -7342,7 +7634,17 @@ async function showAlbum(playerId) {
 
             // Build CONQUISTAS from Firebase config so edits reflect immediately
             const cfgListAlbum = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT);
-            const CONQUISTAS = cfgListAlbum.map(cfg => {
+            // Filtrar feitos por tipoAlvo: guerreiro vê guerreiro/ambos, comissão vê comissao/ambos
+            const playerIsComissao = !players.find(p => p.id === playerId);
+            const cfgListAlbumFiltered = cfgListAlbum.filter(cfg => {
+                const tipoAlvo = cfg.tipoAlvo || 'guerreiro';
+                if (playerIsComissao) {
+                    return tipoAlvo === 'comissao' || tipoAlvo === 'ambos';
+                } else {
+                    return tipoAlvo === 'guerreiro' || tipoAlvo === 'ambos';
+                }
+            });
+            const CONQUISTAS = cfgListAlbumFiltered.map(cfg => {
                 const meta = cfg.meta || cfg.goals || 0;
                 const periodo = cfg.periodo || cfg.period || 'month';
                 let current = 0, progressCurrent = 0, repeatable = false;
@@ -10422,7 +10724,26 @@ async function marcarConquistaPaga(conquistaId) {
             } catch (e) {
                 showToast('Erro ao marcar como pago', 'error');
             }
-        };
+        }
+
+        async function reverterPagamentoConquista(conquistaId) {
+            if (!confirm('Reverter o pagamento deste feito? O status voltará para PENDENTE.')) return;
+            try {
+                await window.updateDoc(window.doc(window.db, 'conquistasHistorico', conquistaId), {
+                    pago: false,
+                    dataPagamento: window.deleteField()
+                });
+                showToast('Pagamento revertido! Feito voltou para PENDENTE.', 'success');
+                renderAdminConquistas();
+                if (currentAlbumPlayer) {
+                    renderConquistasHistorico(currentAlbumPlayer);
+                }
+            } catch (e) {
+                showToast('Erro ao reverter pagamento: ' + e.message, 'error');
+            }
+        }
+        window.reverterPagamentoConquista = reverterPagamentoConquista;
+;
 
 async function excluirConquistaHistorico(conquistaId) {
             if (!confirm('Tem certeza que deseja excluir esta feito do histórico?')) return;
@@ -10467,7 +10788,12 @@ function renderAdminConquistas() {
                     ? '<span class="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 text-xs font-bold">PAGO</span>'
                     : '<span class="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-bold">PENDENTE</span>';
                 const pagamentoBtn = ch.pago
-                    ? `<span class="text-green-400 text-xs">Pago em ${ch.dataPagamento ? formatDate(ch.dataPagamento) : '-'}</span>`
+                    ? `<div class="flex items-center gap-2">
+                        <span class="text-green-400 text-xs">Pago em ${ch.dataPagamento ? formatDate(ch.dataPagamento) : '-'}</span>
+                        <button onclick="reverterPagamentoConquista('${ch.id}')" class="px-2 py-1 rounded-lg bg-yellow-500/20 text-yellow-400 text-xs font-bold hover:bg-yellow-500/30 transition-all" title="Reverter pagamento">
+                            <i class="fas fa-undo-alt mr-1"></i>Reverter
+                        </button>
+                       </div>`
                     : `<button onclick="marcarConquistaPaga('${ch.id}')" class="px-3 py-1 rounded-lg bg-green-500/20 text-green-400 text-xs font-bold hover:bg-green-500/30 transition-all">
                         <i class="fas fa-check mr-1"></i>Marcar Pago
                        </button>`;
