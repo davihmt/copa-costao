@@ -7644,20 +7644,34 @@ async function showAlbum(playerId) {
                     return tipoAlvo === 'guerreiro' || tipoAlvo === 'ambos';
                 }
             });
-            const CONQUISTAS = cfgListAlbumFiltered.map(cfg => {
+            // Remover duplicatas por ID e por nome normalizado
+            const seenIds = new Set();
+            const seenNames = new Set();
+            const cfgListAlbumDedup = cfgListAlbumFiltered.filter(cfg => {
+                const nomeRaw = (cfg.nome || cfg.id || '').toString();
+                const nome = nomeRaw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+                const id = (cfg.id || '').toString();
+                if (seenIds.has(id)) return false;
+                if (seenNames.has(nome)) return false;
+                seenIds.add(id);
+                seenNames.add(nome);
+                return true;
+            });
+            console.log('Mural de feitos:', cfgListAlbumDedup.length, 'cards únicos');
+            const CONQUISTAS = cfgListAlbumDedup.map(cfg => {
                 const meta = cfg.meta || cfg.goals || 0;
                 const periodo = cfg.periodo || cfg.period || 'month';
                 let current = 0, progressCurrent = 0, repeatable = false;
                 if (periodo === 'day') {
-                    current = conqMural.currentDayTotal >= meta ? 1 : 0;
+                    current = conqMural.currentDayTotal;  // valor real
                     progressCurrent = conqMural.currentDayTotal;
                     repeatable = true;
                 } else if (periodo === 'week') {
-                    current = conqMural.currentWeekTotal >= meta ? 1 : 0;
+                    current = conqMural.currentWeekTotal;  // valor real
                     progressCurrent = conqMural.currentWeekTotal;
                     repeatable = true;
                 } else if (periodo === 'month') {
-                    current = conqMural.monthTotal >= meta ? 1 : 0;
+                    current = conqMural.monthTotal;  // valor real, não 0/1
                     progressCurrent = conqMural.monthTotal;
                 } else {
                     current = conqMural.totalAcumulado;
@@ -7678,7 +7692,12 @@ async function showAlbum(playerId) {
                 const imgUrl = getImageUrl(c.img);
                 const borderColor = isUnlocked ? 'rgba(200, 162, 90, 0.5)' : 'rgba(255,255,255,0.1)';
                 const bgColor = isUnlocked ? 'rgba(200, 162, 90, 0.08)' : 'rgba(255,255,255,0.03)';
-                const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-key text-gray-500 text-xl"></i>';
+                const vezesConquistado = c.repeatable && c.current >= c.goals ? Math.floor(c.current / c.goals) : (isUnlocked ? 1 : 0);
+                const statusIcon = isUnlocked 
+                    ? (c.repeatable && vezesConquistado > 1 
+                        ? `<div class="flex flex-col items-center"><i class="fas fa-check-circle text-green-400 text-xl"></i><span class="text-xs text-green-400 font-bold mt-1">${vezesConquistado}x</span></div>` 
+                        : '<i class="fas fa-check-circle text-green-400 text-xl"></i>')
+                    : '<i class="fas fa-key text-gray-500 text-xl"></i>';
 
                 let progressHtml = '';
                 const pc = c.progressCurrent || 0;
@@ -7692,7 +7711,7 @@ async function showAlbum(playerId) {
                 }
 
                 if (isUnlocked) {
-                    const numCards = c.repeatable ? c.current : 1;
+                    const numCards = 1; // Sempre 1 card no mural, mesmo para repeatable
                     for (let i = 0; i < numCards; i++) {
                         rewardsHtml += `
                         <div class="rounded-xl p-3 transition-all flex flex-col items-center" style="background: ${bgColor}; border: 1px solid ${borderColor};">
@@ -8268,7 +8287,12 @@ function getTorcidasConsecutivas(comissaoId) {
                     const progress = Math.min(100, (progressCurrent / meta) * 100);
                     const borderColor = isUnlocked ? 'rgba(200, 162, 90, 0.5)' : 'rgba(255,255,255,0.1)';
                     const bgColor = isUnlocked ? 'rgba(200, 162, 90, 0.08)' : 'rgba(255,255,255,0.03)';
-                    const statusIcon = isUnlocked ? '<i class="fas fa-check-circle text-green-400 text-xl"></i>' : '<i class="fas fa-key text-gray-500 text-xl"></i>';
+                    const vezesConquistado = c.repeatable && c.current >= c.goals ? Math.floor(c.current / c.goals) : (isUnlocked ? 1 : 0);
+                const statusIcon = isUnlocked 
+                    ? (c.repeatable && vezesConquistado > 1 
+                        ? `<div class="flex flex-col items-center"><i class="fas fa-check-circle text-green-400 text-xl"></i><span class="text-xs text-green-400 font-bold mt-1">${vezesConquistado}x</span></div>` 
+                        : '<i class="fas fa-check-circle text-green-400 text-xl"></i>')
+                    : '<i class="fas fa-key text-gray-500 text-xl"></i>';
                     const imgUrl = conq.img ? getImageUrl(conq.img) : '';
 
                     return `
@@ -10998,12 +11022,28 @@ async function loadConquistasConfig() {
                     const firebaseConqs = [];
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        firebaseConqs.push({ _docId: doc.id, id: data.id || doc.id, ...data });
+                        // Garantir que o id seja consistente
+                        const itemId = data.id || doc.id;
+                        firebaseConqs.push({ _docId: doc.id, id: itemId, ...data });
                     });
                     const merged = {};
                     CONQUISTAS_DEFAULT.forEach(c => merged[c.id] = { ...c, _source: 'default' });
-                    firebaseConqs.forEach(c => merged[c.id] = { ...c, _source: 'firebase' });
-                    conquistasConfig = Object.values(merged).sort((a, b) => a.meta - b.meta);
+                    firebaseConqs.forEach(c => {
+                        if (c.id) {
+                            merged[c.id] = { ...c, _source: 'firebase' };
+                        }
+                    });
+                    // Dedup por nome normalizado (fallback para evitar duplicatas com IDs diferentes)
+                    const byName = {};
+                    Object.values(merged).forEach(c => {
+                        const nomeRaw = c.nome || c.id || '';
+                        const nome = nomeRaw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+                        if (!byName[nome] || (c._source === 'firebase')) {
+                            byName[nome] = c;
+                        }
+                    });
+                    conquistasConfig = Object.values(byName).sort((a, b) => a.meta - b.meta);
+                    console.log('ConquistasConfig carregado:', conquistasConfig.length, 'itens');
                     renderConquistasConfigList();
                     updateConquistaAdminSelect();
                 });
