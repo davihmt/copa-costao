@@ -865,6 +865,10 @@
                                     <span class="text-green-400">💬 Honra</span>
                                     <span id="album-honra-gols" class="font-bold text-green-400">0</span>
                                 </div>
+                                <div class="flex justify-between px-3 py-2 rounded-lg bg-orange-900/20">
+                                    <span class="text-orange-400">⚔️ Batalhas</span>
+                                    <span id="album-batalhas-gols" class="font-bold text-orange-400">0</span>
+                                </div>
                                 <div class="flex justify-between px-3 py-2 rounded-lg bg-gradient-to-r from-[#C8A25A]/20 to-[#8C6239]/20 border border-[#C8A25A]/30">
                                     <span class="font-bold">GLÓRIA VÁLIDA</span>
                                     <span id="album-total-real" class="font-black text-lg">0</span>
@@ -6416,6 +6420,7 @@ function getPlayerStats(playerId) {
             var elogiosRecebidosDay = 0, elogiosDadosDay = 0;
             var elogiosRecebidosWeek = 0, elogiosDadosWeek = 0;
             var elogiosRecebidosMonth = 0, elogiosDadosMonth = 0;
+            var batalhasTotal = 0, batalhasDay = 0, batalhasWeek = 0, batalhasMonth = 0;
 
             playerEvents.forEach(ev => {
                 // DEBUG: Show first event for each player
@@ -6483,10 +6488,11 @@ function getPlayerStats(playerId) {
                 elogiosRecebidosDay, elogiosDadosDay,
                 elogiosRecebidosWeek, elogiosDadosWeek,
                 elogiosRecebidosMonth, elogiosDadosMonth,
-                totalReal: baseTotal + stickersTotal + verdesTotal + elogiosRecebidos + elogiosDados - punishTotal,
-                totalDay: baseDay + stickersDay + verdesDay + elogiosRecebidosDay + elogiosDadosDay - punishDay,
-                totalWeek: baseWeek + stickersWeek + verdesWeek + elogiosRecebidosWeek + elogiosDadosWeek - punishWeek,
-                totalMonth: baseMonth + stickersMonth + verdesMonth + elogiosRecebidosMonth + elogiosDadosMonth - punishMonth
+                batalhasTotal, batalhasDay, batalhasWeek, batalhasMonth,
+                totalReal: baseTotal + stickersTotal + verdesTotal + elogiosRecebidos + elogiosDados + batalhasTotal - punishTotal,
+                totalDay: baseDay + stickersDay + verdesDay + elogiosRecebidosDay + elogiosDadosDay + batalhasDay - punishDay,
+                totalWeek: baseWeek + stickersWeek + verdesWeek + elogiosRecebidosWeek + elogiosDadosWeek + batalhasWeek - punishWeek,
+                totalMonth: baseMonth + stickersMonth + verdesMonth + elogiosRecebidosMonth + elogiosDadosMonth + batalhasMonth - punishMonth
             };
         }
 
@@ -7338,8 +7344,9 @@ function calcConquistas(pid) {
                             } catch (e) {
                                 console.error('Erro ao salvar feito:', e);
                             }
-                        } else if (valorAtual > (existente.valorAtingido || 0)) {
-                            // Atualizar valor se melhorou
+                        }
+                        // SEMPRE atualizar valorAtingido se mudou
+                        if (existente && valorAtual !== (existente.valorAtingido || 0)) {
                             try {
                                 await window.updateDoc(window.doc(window.db, 'conquistasHistorico', existente.id), {
                                     valorAtingido: valorAtual,
@@ -7358,18 +7365,34 @@ function renderConquistasHistorico(pid) {
                 const container = document.getElementById('album-conquistas-historico-list');
                 if (!container) return;
 
+                const hoje = new Date();
+                const mesAtual = hoje.toISOString().substring(0, 7);
+                const diaAtual = hoje.toISOString().split('T')[0];
+
                 // Determinar se é guerreiro ou sábio
                 const isJogador = players.some(p => p.id === pid);
                 const isComissao = comissao.some(c => c.id === pid);
 
                 let historico = conquistasHistorico.filter(ch => {
                     if (ch.jogadorId !== pid) return false;
+
+                    // FILTRAR POR PERÍODO ATUAL
+                    if (!ch.dataConquista) return true;
+
+                    if (ch.periodo === 'day') {
+                        return ch.dataConquista === diaAtual;
+                    } else if (ch.periodo === 'week') {
+                        const d = new Date(ch.dataConquista);
+                        return isSameWeek(d, hoje);
+                    } else {
+                        // month ou sem periodo
+                        return ch.dataConquista.startsWith(mesAtual);
+                    }
+                }).filter(ch => {
                     // Filtrar por tipo de alvo do feito
                     const cfg = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT)
                         .find(c => c.id === ch.conquistaId);
                     const tipoAlvo = cfg ? (cfg.tipoAlvo || 'guerreiro') : 'guerreiro';
-                    // Se for guerreiro, mostrar apenas feitos de guerreiro/ambos
-                    // Se for sábio, mostrar apenas feitos de sábio/ambos
                     if (isJogador && tipoAlvo === 'comissao') return false;
                     if (isComissao && tipoAlvo === 'guerreiro') return false;
                     return true;
@@ -7569,6 +7592,21 @@ async function showAlbum(playerId) {
             const julgamentoSaldo = punishVal - verdesVal;
             document.getElementById('album-punishment-goals').textContent = julgamentoSaldo > 0 ? `-${julgamentoSaldo}` : (julgamentoSaldo < 0 ? `+${Math.abs(julgamentoSaldo)}` : '0');
             document.getElementById('album-honra-gols').textContent = (stats.elogiosRecebidos || 0) + (stats.elogiosDados || 0);
+
+            // Calcular glórias de Batalhas (duelos + guerras)
+            const batalhasEventos = events.filter(e => 
+                e.jogadorId === playerId &&
+                (e.subtipo === 'duelo-vitoria' || e.subtipo === 'duelo-derrota' || 
+                 e.subtipo === 'guerra-cla' || e.subtipo === 'guerra-cla-derrota' ||
+                 e.subtipo === 'torcida-sabio' || e.subtipo === 'torcida-sabio-guerra')
+            );
+            const batalhasTotal = batalhasEventos.reduce((s, e) => {
+                const val = Number(e.valor) || 0;
+                return s + (e.tipo === 'punicao' ? -Math.abs(val) : val);
+            }, 0);
+            const batalhasEl = document.getElementById('album-batalhas-gols');
+            if (batalhasEl) batalhasEl.textContent = (batalhasTotal > 0 ? '+' : '') + batalhasTotal;
+
             document.getElementById('album-total-real').textContent = stats.totalMonth;
 
             // Calcular feitos
@@ -7687,7 +7725,7 @@ async function showAlbum(playerId) {
 
             let rewardsHtml = '';
             CONQUISTAS.forEach(c => {
-                const isUnlocked = c.repeatable ? c.current > 0 : c.current >= c.goals;
+                const isUnlocked = c.current >= c.goals; // Só desbloqueia ao atingir a meta
                 const progress = c.repeatable ? 0 : Math.min(100, (c.current / c.goals) * 100);
                 const imgUrl = getImageUrl(c.img);
                 const borderColor = isUnlocked ? 'rgba(200, 162, 90, 0.5)' : 'rgba(255,255,255,0.1)';
