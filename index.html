@@ -6448,6 +6448,11 @@ function getPlayerStats(playerId) {
                         if (isSameDay(evDate, today)) elogiosDadosDay += val;
                         if (isSameWeek(evDate, today)) elogiosDadosWeek += val;
                         if (isSameMonth(evDate, today)) elogiosDadosMonth += val;
+                    } else if (['duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(ev.subtipo)) {
+                        batalhasTotal += val;
+                        if (isSameDay(evDate, today)) batalhasDay += val;
+                        if (isSameWeek(evDate, today)) batalhasWeek += val;
+                        if (isSameMonth(evDate, today)) batalhasMonth += val;
                     } else if (ev.subtipo === 'cartao-verde' || ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses') {
                         verdesTotal += val;
                         if (isSameDay(evDate, today)) verdesDay += val;
@@ -7375,19 +7380,7 @@ function renderConquistasHistorico(pid) {
 
                 let historico = conquistasHistorico.filter(ch => {
                     if (ch.jogadorId !== pid) return false;
-
-                    // FILTRAR POR PERÍODO ATUAL
-                    if (!ch.dataConquista) return true;
-
-                    if (ch.periodo === 'day') {
-                        return ch.dataConquista === diaAtual;
-                    } else if (ch.periodo === 'week') {
-                        const d = new Date(ch.dataConquista);
-                        return isSameWeek(d, hoje);
-                    } else {
-                        // month ou sem periodo
-                        return ch.dataConquista.startsWith(mesAtual);
-                    }
+                    return true;
                 }).filter(ch => {
                     // Filtrar por tipo de alvo do feito
                     const cfg = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT)
@@ -7591,19 +7584,10 @@ async function showAlbum(playerId) {
             const verdesVal = Number(stats.verdesMonth) || 0;
             const julgamentoSaldo = punishVal - verdesVal;
             document.getElementById('album-punishment-goals').textContent = julgamentoSaldo > 0 ? `-${julgamentoSaldo}` : (julgamentoSaldo < 0 ? `+${Math.abs(julgamentoSaldo)}` : '0');
-            document.getElementById('album-honra-gols').textContent = (stats.elogiosRecebidos || 0) + (stats.elogiosDados || 0);
+            document.getElementById('album-honra-gols').textContent = (stats.elogiosRecebidosMonth || 0) + (stats.elogiosDadosMonth || 0);
 
-            // Calcular glórias de Batalhas (duelos + guerras)
-            const batalhasEventos = events.filter(e => 
-                e.jogadorId === playerId &&
-                (e.subtipo === 'duelo-vitoria' || e.subtipo === 'duelo-derrota' || 
-                 e.subtipo === 'guerra-cla' || e.subtipo === 'guerra-cla-derrota' ||
-                 e.subtipo === 'torcida-sabio' || e.subtipo === 'torcida-sabio-guerra')
-            );
-            const batalhasTotal = batalhasEventos.reduce((s, e) => {
-                const val = Number(e.valor) || 0;
-                return s + (e.tipo === 'punicao' ? -Math.abs(val) : val);
-            }, 0);
+            // Calcular glórias de Batalhas (duelos + guerras) — MÊS ATUAL
+            const batalhasTotal = stats.batalhasMonth || 0;
             const batalhasEl = document.getElementById('album-batalhas-gols');
             if (batalhasEl) batalhasEl.textContent = (batalhasTotal > 0 ? '+' : '') + batalhasTotal;
 
@@ -7617,13 +7601,16 @@ async function showAlbum(playerId) {
             // Deduplicate by (meta + periodo + month) to avoid counting duplicates
             const seenFeitos = new Set();
             let conquistasCount = 0;
+            const isJogadorCounter = players.some(p => p.id === playerId);
+            const isComissaoCounter = comissao.some(c => c.id === playerId);
             conquistasHistorico.forEach(ch => {
                 if (ch.jogadorId !== playerId) return;
                 // Filtrar por tipo de alvo do feito
                 const cfg = (conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT)
                     .find(c => c.id === ch.conquistaId);
                 const tipoAlvo = cfg ? (cfg.tipoAlvo || 'guerreiro') : 'guerreiro';
-                // Todos os feitos são contados para todos os jogadores
+                if (isJogadorCounter && tipoAlvo === 'comissao') return;
+                if (isComissaoCounter && tipoAlvo === 'guerreiro') return;
 
                 let key;
                 if (ch.periodo === 'week') {
