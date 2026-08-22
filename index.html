@@ -2624,7 +2624,7 @@ function getTodayStr() {
                     let dataElogio;
                     try {
                         if (!el.data) {
-                            dataElogio = getTodayStr();
+                            dataElogio = getHojeBrasilia();
                         } else if (typeof el.data === 'string') {
                             dataElogio = el.data;
                         } else if (el.data && typeof el.data.toDate === 'function') {
@@ -2638,7 +2638,7 @@ function getTodayStr() {
                             dataElogio = String(el.data);
                         }
                     } catch (err) {
-                        dataElogio = getTodayStr();
+                        dataElogio = getHojeBrasilia();
                     }
 
                     // Limpar: extrair só YYYY-MM-DD de qualquer formato
@@ -2651,7 +2651,7 @@ function getTodayStr() {
                     }
                     // Garantir formato YYYY-MM-DD
                     if (!/^\d{4}-\d{2}-\d{2}$/.test(dataElogio)) {
-                        dataElogio = getTodayStr();
+                        dataElogio = getHojeBrasilia();
                     }
 
                     const deId = el.deId;
@@ -2787,7 +2787,7 @@ function getTodayStr() {
                     if (!vencedorId) continue; // Empate não tem bônus
 
                     // Data do evento = data de início da guerra (para contar na semana correta)
-                    const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getTodayStr();
+                    const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getHojeBrasilia();
 
                     // 1. Vencedores +3
                     const membrosVencedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
@@ -2916,7 +2916,7 @@ function getTodayStr() {
                     const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
 
                     // Data do evento = data do duelo (retroativa), NÃO hoje
-                    const dataDuelo = duelo.dataFim || duelo.aprovadoAt || duelo.createdAt || getTodayStr();
+                    const dataDuelo = duelo.dataFim || duelo.aprovadoAt || duelo.createdAt || getHojeBrasilia();
                     let dataEvento = dataDuelo;
                     if (dataEvento.includes('T')) dataEvento = dataEvento.split('T')[0];
 
@@ -3072,7 +3072,7 @@ function getTodayStr() {
                     // +3 glórias para vencedor, -1 para perdedor (apenas 1x por duelo)
                     if (vencedorId && !duelo.bonusAplicados) {
                         const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
-                        const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getTodayStr();
+                        const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
                         const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
                         if (!existeVitoria) {
                             await window.addDoc(window.collection(window.db, 'eventos'), {
@@ -3192,7 +3192,7 @@ function getTodayStr() {
                             const eqId = m.equipeId || (players.find(p => p.id === m.id) || {}).equipeId || (comissao.find(c => c.id === m.id) || {}).equipeId;
                             return eqId && eqId !== vencedorId;
                         });
-                        const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getTodayStr();
+                        const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getHojeBrasilia();
                         for (const membro of membrosVencedores) {
                             const existe = await eventoGuerraExiste(membro.id, 'guerra-cla', guerra.id);
                             if (!existe) {
@@ -3610,7 +3610,7 @@ function getDueloAtivo(jogadorId) {
                 // +3 glórias para o vencedor, -1 para o perdedor
                 if (vencedorId && !duelo.bonusAplicados) {
                     const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
-                    const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getTodayStr();
+                    const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
 
                     // Vencedor +3
                     const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
@@ -3844,7 +3844,7 @@ async function resolverTorcidas(dueloId, vencedorId) {
             if (!duelo || !duelo.apostas || duelo.torcidasResolvidas) return;
 
             // Data do evento = data de início do duelo (para contar na semana correta)
-            const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getTodayStr();
+            const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
 
             for (const aposta of duelo.apostas) {
                 const participanteId = aposta.participanteId || aposta.comissaoId;
@@ -4030,7 +4030,7 @@ async function excluirDuelo(dueloId) {
             const claA = equipes.find(e => e.id === guerra.claDesafianteId);
             const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
 
-            const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getTodayStr();
+            const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getHojeBrasilia();
 
             for (const aposta of guerra.apostas) {
                 const participanteId = aposta.participanteId || aposta.comissaoId;
@@ -5714,7 +5714,7 @@ function renderAdminArena() {
                         return eqId && eqId !== vencedorId;
                     });
 
-                    const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getTodayStr();
+                    const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getHojeBrasilia();
 
                     // Vencedores +3 (verificar duplicata)
                     for (const membro of membrosVencedores) {
@@ -6085,7 +6085,7 @@ function renderAdminArena() {
         
         
         function initApp() {
-            const today = getTodayStr();
+            const today = getHojeBrasilia();
             ['gols-data', 'fig-data', 'pun-data', 'mural-foto-data'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = today;
@@ -7954,7 +7954,7 @@ function showAdminTab(tab) {
             if (tab === 'elogios-admin') renderElogiosAdmin();
             if (tab === 'mural-fotos') {
                 updateMuralFotosSelects();
-                document.getElementById('mural-foto-data').value = getTodayStr();
+                document.getElementById('mural-foto-data').value = getHojeBrasilia();
             }
             if (tab === 'arena-admin') renderAdminArena();
             if (tab === 'conquistas') {
@@ -7968,7 +7968,7 @@ function showAdminTab(tab) {
                     filterSel.innerHTML = '<option value="">Todos os guerreiros</option>' +
                         players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''}</option>`).join('');
                 }
-                document.getElementById('conq-data').value = getTodayStr();
+                document.getElementById('conq-data').value = getHojeBrasilia();
                 renderAdminConquistas();
             }
             if (tab === 'corrigir') {
@@ -9898,7 +9898,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast('Anciões do Reino não participa do sistema de elogios', 'error'); return;
                 }
 
-                const today = getTodayStr();
+                const today = getHojeBrasilia();
                 const hojeBrasilia = getHojeBrasilia();
 
                 // Check limits using ONLY Firebase data (honrarias array synced via onSnapshot)
@@ -10361,7 +10361,7 @@ async function handleFotoUpload(input) {
                 reader.readAsDataURL(file);
             }
 
-            document.getElementById('preview-data').value = getTodayStr();
+            document.getElementById('preview-data').value = getHojeBrasilia();
             document.getElementById('preview-legenda').value = '';
             previewModal.classList.remove('hidden');
 
