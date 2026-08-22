@@ -3044,57 +3044,7 @@ function getTodayStr() {
             const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agoraBR);
             for (const duelo of expirados) {
                 try {
-                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
-                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
-                    let vencedorId = null;
-                    let vencedorNome = '';
-                    if (gloriaA > gloriaB) { vencedorId = duelo.desafianteId; vencedorNome = duelo.desafianteNome; }
-                    else if (gloriaB > gloriaA) { vencedorId = duelo.desafiadoId; vencedorNome = duelo.desafiadoNome; }
-
-                    await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
-                        status: 'finalizado',
-                        gloriaDesafiante: gloriaA,
-                        gloriaDesafiado: gloriaB,
-                        vencedorId,
-                        vencedorNome,
-                        finalizadoAt: agoraBR.toISOString(),
-                        autoFinalizado: true,
-                        torcidasResolvidas: true
-                    });
-
-                    // Update historico
-                    await atualizarDueloHistorico(duelo.desafianteId, vencedorId === duelo.desafianteId, vencedorId === null, duelo.id);
-                    await atualizarDueloHistorico(duelo.desafiadoId, vencedorId === duelo.desafiadoId, vencedorId === null, duelo.id);
-
-                    // Resolve apostas
-                    await resolverTorcidas(duelo.id, vencedorId);
-
-                    // +3 glórias para vencedor, -1 para perdedor (apenas 1x por duelo)
-                    if (vencedorId && !duelo.bonusAplicados) {
-                        const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
-                        const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
-                        const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
-                        if (!existeVitoria) {
-                            await window.addDoc(window.collection(window.db, 'eventos'), {
-                                jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
-                                subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: dataEvento,
-                                observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                                dueloId: duelo.id,
-                                createdAt: agoraBR.toISOString()
-                            });
-                        }
-                        const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', duelo.id);
-                        if (!existeDerrota) {
-                            await window.addDoc(window.collection(window.db, 'eventos'), {
-                                jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
-                                subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: dataEvento,
-                                observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                                dueloId: duelo.id,
-                                createdAt: agoraBR.toISOString()
-                            });
-                        }
-                        await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), { bonusAplicados: true });
-                    }
+                    await executarFinalizacaoDuelo(duelo, true);
                 } catch (e) {}
             }
         }
@@ -3578,11 +3528,7 @@ function getDueloAtivo(jogadorId) {
             }
         }
 
-        async function finalizarDuelo(dueloId) {
-            if (!isAdmin) { showToast('Acesso negado. Apenas admin.', 'error'); return; }
-
-            const duelo = duelos.find(d => d.id === dueloId);
-            if (!duelo) return;
+        async function executarFinalizacaoDuelo(duelo, autoFinalizado = false) {
             const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
             const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
             let vencedorId = null;
@@ -3590,65 +3536,77 @@ function getDueloAtivo(jogadorId) {
             if (gloriaA > gloriaB) { vencedorId = duelo.desafianteId; vencedorNome = duelo.desafianteNome; }
             else if (gloriaB > gloriaA) { vencedorId = duelo.desafiadoId; vencedorNome = duelo.desafiadoNome; }
 
-            try {
-                await window.updateDoc(window.doc(window.db, 'duelos', dueloId), {
-                    status: 'finalizado',
-                    gloriaDesafiante: gloriaA,
-                    gloriaDesafiado: gloriaB,
-                    vencedorId,
-                    vencedorNome,
-                    finalizadoAt: new Date().toISOString(),
-                    torcidasResolvidas: true
-                });
-                // Update historico
-                await atualizarDueloHistorico(duelo.desafianteId, vencedorId === duelo.desafianteId, vencedorId === null, duelo.id);
-                await atualizarDueloHistorico(duelo.desafiadoId, vencedorId === duelo.desafiadoId, vencedorId === null, duelo.id);
+            await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
+                status: 'finalizado',
+                gloriaDesafiante: gloriaA,
+                gloriaDesafiado: gloriaB,
+                vencedorId,
+                vencedorNome,
+                finalizadoAt: new Date().toISOString(),
+                autoFinalizado: autoFinalizado,
+                torcidasResolvidas: true
+            });
 
-                // Resolver apostas dos sábios
-                await resolverTorcidas(dueloId, vencedorId);
+            // Update historico
+            await atualizarDueloHistorico(duelo.desafianteId, vencedorId === duelo.desafianteId, vencedorId === null, duelo.id);
+            await atualizarDueloHistorico(duelo.desafiadoId, vencedorId === duelo.desafiadoId, vencedorId === null, duelo.id);
 
-                // +3 glórias para o vencedor, -1 para o perdedor
-                if (vencedorId && !duelo.bonusAplicados) {
-                    const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
-                    const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
+            // Resolver apostas dos sábios
+            await resolverTorcidas(duelo.id, vencedorId);
 
-                    // Vencedor +3
-                    const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
-                    if (!existeVitoria) {
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: vencedorId,
-                            tipo: 'gol',
-                            subtipo: 'duelo-vitoria',
-                            subtipoLabel: '⚔️ Vitória em Duelo',
-                            valor: 3,
-                            data: dataEvento,
-                            observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                            dueloId: duelo.id,
-                            createdAt: new Date().toISOString()
-                        });
-                    }
+            // +3 glórias para o vencedor, -1 para o perdedor
+            if (vencedorId && !duelo.bonusAplicados) {
+                const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafiadoId;
+                const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
 
-                    // Perdedor -1
-                    const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', duelo.id);
-                    if (!existeDerrota) {
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: perdedorId,
-                            tipo: 'punicao',
-                            subtipo: 'duelo-derrota',
-                            subtipoLabel: '⚔️ Derrota em Duelo',
-                            valor: -1,
-                            data: dataEvento,
-                            observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                            dueloId: duelo.id,
-                            createdAt: new Date().toISOString()
-                        });
-                    }
-
-                    // Marcar bônus como aplicados no duelo (evita duplicatas em race conditions)
-                    await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), { bonusAplicados: true });
+                // Vencedor +3
+                const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
+                if (!existeVitoria) {
+                    await window.addDoc(window.collection(window.db, 'eventos'), {
+                        jogadorId: vencedorId,
+                        tipo: 'gol',
+                        subtipo: 'duelo-vitoria',
+                        subtipoLabel: '⚔️ Vitória em Duelo',
+                        valor: 3,
+                        data: dataEvento,
+                        observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                        dueloId: duelo.id,
+                        createdAt: new Date().toISOString()
+                    });
                 }
 
-                showToast('Duelo finalizado! Vencedor: ' + (vencedorNome || 'Empate!') + (vencedorId ? ' (+3 glórias)' : ''), 'success');
+                // Perdedor -1
+                const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', duelo.id);
+                if (!existeDerrota) {
+                    await window.addDoc(window.collection(window.db, 'eventos'), {
+                        jogadorId: perdedorId,
+                        tipo: 'punicao',
+                        subtipo: 'duelo-derrota',
+                        subtipoLabel: '⚔️ Derrota em Duelo',
+                        valor: -1,
+                        data: dataEvento,
+                        observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                        dueloId: duelo.id,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                // Marcar bônus como aplicados no duelo
+                await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), { bonusAplicados: true });
+            }
+
+            return { vencedorId, vencedorNome, gloriaA, gloriaB };
+        }
+
+        async function finalizarDuelo(dueloId) {
+            if (!isAdmin) { showToast('Acesso negado. Apenas admin.', 'error'); return; }
+
+            const duelo = duelos.find(d => d.id === dueloId);
+            if (!duelo) return;
+
+            try {
+                const resultado = await executarFinalizacaoDuelo(duelo, false);
+                showToast('Duelo finalizado! Vencedor: ' + (resultado.vencedorNome || 'Empate!') + (resultado.vencedorId ? ' (+3 glórias)' : ''), 'success');
                 if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
             } catch (e) {
                 showToast('Erro ao finalizar duelo', 'error');
