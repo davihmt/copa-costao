@@ -5975,21 +5975,24 @@ function renderAdminArena() {
             duelosFinalizados.forEach(d => {
                 // Desafiante
                 if (!statsMap[d.desafianteId]) {
-                    statsMap[d.desafianteId] = { jogadorId: d.desafianteId, vitorias: 0, derrotas: 0, empates: 0, streakAtual: 0, streakMax: 0 };
+                    statsMap[d.desafianteId] = { jogadorId: d.desafianteId, vitorias: 0, derrotas: 0, empates: 0, pontos: 0, streakAtual: 0, streakMax: 0 };
                 }
                 // Desafiado
                 if (!statsMap[d.desafiadoId]) {
-                    statsMap[d.desafiadoId] = { jogadorId: d.desafiadoId, vitorias: 0, derrotas: 0, empates: 0, streakAtual: 0, streakMax: 0 };
+                    statsMap[d.desafiadoId] = { jogadorId: d.desafiadoId, vitorias: 0, derrotas: 0, empates: 0, pontos: 0, streakAtual: 0, streakMax: 0 };
                 }
 
                 if (!d.vencedorId) {
                     // Empate
                     statsMap[d.desafianteId].empates++;
+                    statsMap[d.desafianteId].pontos += 1;
                     statsMap[d.desafiadoId].empates++;
+                    statsMap[d.desafiadoId].pontos += 1;
                     statsMap[d.desafianteId].streakAtual = 0;
                     statsMap[d.desafiadoId].streakAtual = 0;
                 } else if (d.vencedorId === d.desafianteId) {
                     statsMap[d.desafianteId].vitorias++;
+                    statsMap[d.desafianteId].pontos += 3;
                     statsMap[d.desafiadoId].derrotas++;
                     statsMap[d.desafianteId].streakAtual++;
                     statsMap[d.desafiadoId].streakAtual = 0;
@@ -5998,6 +6001,7 @@ function renderAdminArena() {
                     }
                 } else {
                     statsMap[d.desafiadoId].vitorias++;
+                    statsMap[d.desafiadoId].pontos += 3;
                     statsMap[d.desafianteId].derrotas++;
                     statsMap[d.desafiadoId].streakAtual++;
                     statsMap[d.desafianteId].streakAtual = 0;
@@ -6020,8 +6024,8 @@ function renderAdminArena() {
             }
 
             const sorted = [...historicoValido].sort((a, b) => {
-                const scoreA = (a.vitorias || 0) * 3 + (a.empates || 0) - (a.derrotas || 0);
-                const scoreB = (b.vitorias || 0) * 3 + (b.empates || 0) - (b.derrotas || 0);
+                const scoreA = (a.pontos || 0);
+                const scoreB = (b.pontos || 0);
                 return scoreB - scoreA;
             });
 
@@ -6043,9 +6047,10 @@ function renderAdminArena() {
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-2xl font-black text-[#C8A25A]">${d.streakAtual || 0}</p>
-                            <p class="text-xs text-gray-400">série atual</p>
-                            ${(d.streakMax || 0) >= 2 ? `<p class="text-xs text-yellow-400 font-bold">🔥 Máx: ${d.streakMax}</p>` : ''}
+                            <p class="text-2xl font-black text-[#C8A25A]">${d.pontos || 0}</p>
+                            <p class="text-xs text-gray-400">pontos</p>
+                            ${(d.streakAtual || 0) > 0 ? `<p class="text-xs text-green-400 font-bold">🔥 Série: ${d.streakAtual}</p>` : ''}
+                            ${(d.streakMax || 0) >= 2 ? `<p class="text-xs text-yellow-400 font-bold">🏆 Máx: ${d.streakMax}</p>` : ''}
                         </div>
                     </div>
                 `;
