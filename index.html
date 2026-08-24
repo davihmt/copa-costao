@@ -902,6 +902,16 @@
                         </div>
                         <div class="player-card">
                             <h3 class="text-xl font-bold mb-4"><i class="fas fa-scroll mr-2 text-[#C8A25A]"></i>Crônica de Feitos</h3>
+                            <div class="flex flex-wrap gap-2 mb-3 items-center">
+                                <button onclick="filtrarEventosAlbum('todos')" class="filtro-evento px-3 py-1 rounded-full text-xs font-bold bg-\[\#C8A25A\] text-[#0B0A0A] transition-all" data-filtro="todos">Todos</button>
+                                <button onclick="filtrarEventosAlbum('gol')" class="filtro-evento px-3 py-1 rounded-full text-xs font-bold bg-[#ECE8E1]/10 text-[#ECE8E1] hover:bg-[#ECE8E1]/20 transition-all" data-filtro="gol">⚔️ Glória</button>
+                                <button onclick="filtrarEventosAlbum('punicao')" class="filtro-evento px-3 py-1 rounded-full text-xs font-bold bg-[#ECE8E1]/10 text-[#ECE8E1] hover:bg-[#ECE8E1]/20 transition-all" data-filtro="punicao">👎 Julgamento</button>
+                                <button onclick="filtrarEventosAlbum('elogio')" class="filtro-evento px-3 py-1 rounded-full text-xs font-bold bg-[#ECE8E1]/10 text-[#ECE8E1] hover:bg-[#ECE8E1]/20 transition-all" data-filtro="elogio">💬 Elogios</button>
+                                <button onclick="filtrarEventosAlbum('batalha')" class="filtro-evento px-3 py-1 rounded-full text-xs font-bold bg-[#ECE8E1]/10 text-[#ECE8E1] hover:bg-[#ECE8E1]/20 transition-all" data-filtro="batalha">⚔️ Batalhas</button>
+                                <select id="album-filtro-mes" onchange="filtrarEventosAlbum(filtroAtualAlbum)" class="ml-auto bg-[#ECE8E1]/10 text-[#ECE8E1] text-xs rounded-lg px-2 py-1 border border-[#ECE8E1]/20">
+                                    <option value="todos">Todos os meses</option>
+                                </select>
+                            </div>
                             <div id="album-events" class="space-y-2 max-h-64 overflow-y-auto"></div>
                         </div>
                         <div id="album-elogios" class="player-card hidden">
@@ -1882,9 +1892,7 @@
                                     <input type="date" id="reconstruir-data-ate" class="w-full bg-[#1A1814] border border-[#C8A25A]/30 rounded-lg px-3 py-2 text-[#ECE8E1] text-sm">
                                 </div>
                             </div>
-                            <button onclick="reconstruirEventosElogios()" class="w-full py-3 rounded-xl bg-green-600 hover:bg-green-500 text-[#ECE8E1] font-bold text-lg transition-colors mb-3">
-                                <i class="fas fa-undo-alt mr-2"></i>Reconstruir Elogios
-                            </button>
+                            
                             <button onclick="limparElogiosReconstruidos()" class="w-full py-2 rounded-xl bg-red-900/50 hover:bg-red-800/50 text-red-300 font-bold text-sm transition-colors border border-red-500/30">
                                 <i class="fas fa-trash-alt mr-2"></i>Limpar Elogios Reconstruídos
                             </button>
@@ -2122,18 +2130,14 @@
                     <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-purple-500/30">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-shield-halved mr-2 text-purple-400"></i>Reconstruir Bônus de Guerras</h4>
                             <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todas as guerras finalizadas: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / +0 erro). Use se os bônus não foram distribuídos.</p>
-                            <button onclick="reconstruirBonusGuerras()" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-[#ECE8E1] font-bold text-lg transition-colors">
-                                <i class="fas fa-shield-halved mr-2"></i>Reconstruir Bônus de Guerras
-                            </button>
+                            
                             <div id="reconstruir-guerras-msg" class="mt-3 hidden"></div>
                         </div>
 
                     <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-blue-500/30">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-trophy mr-2 text-blue-400"></i>Reconstruir Bônus de Duelos</h4>
                             <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todos os duelos finalizados: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / +0 erro). Execute apenas 1 vez.</p>
-                            <button onclick="reconstruirBonusDuelos()" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-[#ECE8E1] font-bold text-lg transition-colors">
-                                <i class="fas fa-trophy mr-2"></i>Reconstruir Bônus de Duelos
-                            </button>
+                            
                             <div id="reconstruir-duelos-msg" class="mt-3 hidden"></div>
                         </div>
                         <h3 class="text-2xl font-bold mb-6"><i class="fas fa-shield-halved mr-2 text-[#C8A25A]"></i>Gerenciar Arena</h3>
@@ -2185,68 +2189,9 @@
                     <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-orange-500/30">
                         <h4 class="text-xl font-bold mb-4 text-orange-400"><i class="fas fa-calculator mr-2"></i>Reconstruir Placares</h4>
                         <p class="text-gray-400 text-sm mb-4">Recalcula os placares de todos os duelos e guerras finalizados usando as regras atuais (excluindo bônus cruzados). Use se os placares estiverem incorretos.</p>
-                        <button onclick="reconstruirPlacaresDuelos()" class="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-lg transition-colors mb-3">
-                            <i class="fas fa-khanda mr-2"></i>Reconstruir Placares de Duelos
-                        </button>
-                        <button onclick="reconstruirPlacaresGuerras()" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-lg transition-colors">
-                            <i class="fas fa-shield-halved mr-2"></i>Reconstruir Placares de Guerras
-                        </button>
-                        <div id="reconstruir-placares-msg" class="mt-3 hidden"></div>
-                    </div>
-
-                    <!-- CORRIGIR RESULTADOS (VENCEDORES) -->
-                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-red-500/30">
-                        <h4 class="text-xl font-bold mb-4 text-red-400"><i class="fas fa-trophy mr-2"></i>Corrigir Resultados</h4>
-                        <p class="text-gray-400 text-sm mb-4">Recalcula os placares e <b>atualiza os vencedores</b> de todos os duelos/guerras finalizados. Use se os resultados (quem ganhou) estiverem incorretos após as correções.</p>
-                        <button onclick="corrigirResultadosDuelos()" class="w-full py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-lg transition-colors mb-3">
-                            <i class="fas fa-khanda mr-2"></i>Corrigir Resultados dos Duelos
-                        </button>
-                        <button onclick="corrigirResultadosGuerras()" class="w-full py-3 rounded-xl bg-red-800 hover:bg-red-700 text-white font-bold text-lg transition-colors mb-3">
-                            <i class="fas fa-shield-halved mr-2"></i>Corrigir Resultados das Guerras
-                        </button>
-                        <button onclick="corrigirDuelosZeroZero()" class="w-full py-3 rounded-xl bg-yellow-600 hover:bg-yellow-500 text-white font-bold text-lg transition-colors">
-                            <i class="fas fa-exclamation-triangle mr-2"></i>Corrigir Duelos 0-0
-                        </button>
-                        <div id="corrigir-resultados-msg" class="mt-3 hidden"></div>
-                    </div>
-                    <!-- RECALCULAR PERÍODO ESPECÍFICO -->
-                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-blue-500/30">
-                        <h4 class="text-xl font-bold mb-4 text-blue-400"><i class="fas fa-calendar-alt mr-2"></i>Recalcular Duelos por Período</h4>
-                        <p class="text-gray-400 text-sm mb-4">Informe o período do duelo (data de início) para recalcular os placares. Útil quando os resultados foram comprometidos por duplicatas.</p>
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="text-xs text-gray-400 block mb-1">Data Início do Duelo</label>
-                                <input type="date" id="recalc-duelo-de" class="w-full bg-[#1A1814] border border-[#C8A25A]/30 rounded-lg px-3 py-2 text-[#ECE8E1] text-sm">
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-400 block mb-1">Data Fim do Duelo (opcional)</label>
-                                <input type="date" id="recalc-duelo-ate" class="w-full bg-[#1A1814] border border-[#C8A25A]/30 rounded-lg px-3 py-2 text-[#ECE8E1] text-sm">
-                            </div>
-                    <!-- RECALCULAR GUERRAS POR PERÍODO -->
-                    <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-purple-500/30">
-                        <h4 class="text-xl font-bold mb-4 text-purple-400"><i class="fas fa-shield-halved mr-2"></i>Recalcular Guerras por Período</h4>
-                        <p class="text-gray-400 text-sm mb-4">Informe o período da guerra (data de início) para recalcular os placares.</p>
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="text-xs text-gray-400 block mb-1">Data Início da Guerra</label>
-                                <input type="date" id="recalc-guerra-de" class="w-full bg-[#1A1814] border border-[#C8A25A]/30 rounded-lg px-3 py-2 text-[#ECE8E1] text-sm">
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-400 block mb-1">Data Fim da Guerra (opcional)</label>
-                                <input type="date" id="recalc-guerra-ate" class="w-full bg-[#1A1814] border border-[#C8A25A]/30 rounded-lg px-3 py-2 text-[#ECE8E1] text-sm">
-                            </div>
-                        </div>
-                        <button onclick="recalcularGuerrasPorPeriodo()" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-lg transition-colors">
-                            <i class="fas fa-calculator mr-2"></i>Recalcular Guerras do Período
-                        </button>
-                        <div id="recalc-guerra-msg" class="mt-3 hidden"></div>
-                    </div>
-
-                        </div>
-                        <button onclick="recalcularDuelosPorPeriodo()" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-lg transition-colors">
-                            <i class="fas fa-calculator mr-2"></i>Recalcular Duelos do Período
-                        </button>
-                        <div id="recalc-duelo-msg" class="mt-3 hidden"></div>
+                        
+                        
+                        
                     </div>
 
 
@@ -2593,114 +2538,6 @@ function getTodayStr() {
         }
 
         // Reconstruir eventos de elogios a partir da coleção 'elogios' (histórico intacto)
-        async function reconstruirEventosElogios() {
-            const container = document.getElementById('reconstruir-msg');
-            const dataDe = document.getElementById('reconstruir-data-de')?.value;
-            const dataAte = document.getElementById('reconstruir-data-ate')?.value;
-
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Reconstruindo...</p>';
-            }
-            try {
-                let q = window.query(window.collection(window.db, 'elogios'), window.orderBy('data', 'asc'));
-                const snap = await window.getDocs(q);
-                const elogios = [];
-                snap.forEach(doc => { elogios.push({ id: doc.id, ...doc.data() }); });
-
-                // Filtrar por período se informado
-                let filtrados = elogios;
-                if (dataDe) {
-                    filtrados = filtrados.filter(el => el.data >= dataDe);
-                }
-                if (dataAte) {
-                    filtrados = filtrados.filter(el => el.data <= dataAte);
-                }
-
-                let criados = 0;
-                let pulados = 0;
-                for (const el of filtrados) {
-                    // Converter o campo 'data' para string YYYY-MM-DD
-                    let dataElogio;
-                    try {
-                        if (!el.data) {
-                            dataElogio = getHojeBrasilia();
-                        } else if (typeof el.data === 'string') {
-                            dataElogio = el.data;
-                        } else if (el.data && typeof el.data.toDate === 'function') {
-                            // Timestamp do Firestore
-                            const d = el.data.toDate();
-                            dataElogio = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                        } else if (el.data instanceof Date) {
-                            const d = el.data;
-                            dataElogio = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                        } else {
-                            dataElogio = String(el.data);
-                        }
-                    } catch (err) {
-                        dataElogio = getHojeBrasilia();
-                    }
-
-                    // Limpar: extrair só YYYY-MM-DD de qualquer formato
-                    if (dataElogio.includes('T')) {
-                        dataElogio = dataElogio.split('T')[0];
-                    }
-                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataElogio)) {
-                        const [dia, mes, ano] = dataElogio.split('/');
-                        dataElogio = ano + '-' + mes + '-' + dia;
-                    }
-                    // Garantir formato YYYY-MM-DD
-                    if (!/^\d{4}-\d{2}-\d{2}$/.test(dataElogio)) {
-                        dataElogio = getHojeBrasilia();
-                    }
-
-                    const deId = el.deId;
-                    const paraId = el.paraId;
-                    const dePlayer = players.find(p => p.id === deId);
-                    const deComissao = comissao.find(c => c.id === deId);
-                    const deNome = dePlayer ? dePlayer.nome : (deComissao ? deComissao.nome : deId);
-                    const paraPlayer = players.find(p => p.id === paraId);
-                    const paraComissao = comissao.find(c => c.id === paraId);
-                    const paraNome = paraPlayer ? paraPlayer.nome : (paraComissao ? paraComissao.nome : paraId);
-
-                    // Formatar data para exibição (DD/MM/YYYY)
-                    const [anoE, mesE, diaE] = dataElogio.split('-');
-                    const dataExibicao = diaE + '/' + mesE + '/' + anoE;
-
-                    // 1. Evento para quem ENVIOU (elogio-dado +1)
-                    const obsDado = 'Elogio dado para ' + paraNome + ' em ' + dataExibicao;
-                    const existeDado = events.some(e => e.jogadorId === deId && e.subtipo === 'elogio-dado' && e.observacao === obsDado);
-                    if (!existeDado) {
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: deId, tipo: 'gol', subtipo: 'elogio-dado',
-                            subtipoLabel: '💬 Elogio Enviado', valor: 1, data: dataElogio,
-                            observacao: obsDado, createdAt: new Date().toISOString()
-                        });
-                        criados++;
-                    } else { pulados++; }
-
-                    // 2. Evento para quem RECEBEU (elogio-recebido +1)
-                    const obsRecebido = 'Elogio recebido de ' + deNome + ' em ' + dataExibicao;
-                    const existeRecebido = events.some(e => e.jogadorId === paraId && e.subtipo === 'elogio-recebido' && e.observacao === obsRecebido);
-                    if (!existeRecebido) {
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: paraId, tipo: 'gol', subtipo: 'elogio-recebido',
-                            subtipoLabel: '💬 Elogio Recebido', valor: 1, data: dataElogio,
-                            observacao: obsRecebido, createdAt: new Date().toISOString()
-                        });
-                        criados++;
-                    } else { pulados++; }
-                }
-
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-green-400">✅ Reconstrução concluída! ' + criados + ' evento(s) criado(s), ' + pulados + ' já existiam.</p>';
-                }
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
 
         // Limpar todos os eventos de elogio reconstruídos (para refazer do zero)
         async function limparElogiosReconstruidos() {
@@ -2752,233 +2589,6 @@ function getTodayStr() {
 
         // Reconstruir bônus de duelos (+3/-1) e torcidas a partir dos duelos finalizados
         // Reconstruir bônus de guerras finalizadas (+3 vencedor, -1 perdedor, +1/-1 torcida)
-        async function reconstruirBonusGuerras() {
-            const container = document.getElementById('reconstruir-guerras-msg');
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Reconstruindo bônus de guerras...</p>';
-            }
-            try {
-                const finalizadas = guerrasClas.filter(g => g.status === 'finalizada');
-                if (finalizadas.length === 0) {
-                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhuma guerra finalizada encontrada.</p>';
-                    return;
-                }
-
-                let criados = 0;
-                let pulados = 0;
-
-                for (const guerra of finalizadas) {
-                    const claA = equipes.find(e => e.id === guerra.claDesafianteId);
-                    const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
-                    const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
-                    const jogadoresB = players.filter(p => p.equipeId === guerra.claDesafiadoId);
-                    const comissaoA = comissao.filter(c => c.equipeId === guerra.claDesafianteId);
-                    const comissaoB = comissao.filter(c => c.equipeId === guerra.claDesafiadoId);
-
-                    // Recalcular vencedor baseado no placar salvo
-                    const gA = guerra.gloriaDesafiante || 0;
-                    const gB = guerra.gloriaDesafiado || 0;
-                    let vencedorId = null;
-                    let vencedorNome = 'Empate';
-                    if (gA > gB) { vencedorId = guerra.claDesafianteId; vencedorNome = claA ? claA.nome : 'Clã A'; }
-                    else if (gB > gA) { vencedorId = guerra.claDesafiadoId; vencedorNome = claB ? claB.nome : 'Clã B'; }
-
-                    if (!vencedorId) continue; // Empate não tem bônus
-
-                    // Data do evento = data de início da guerra (para contar na semana correta)
-                    const dataEvento = guerra.dataInicio ? guerra.dataInicio.split('T')[0] : getHojeBrasilia();
-
-                    // 1. Vencedores +3
-                    const membrosVencedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
-                        const eqId = m.equipeId || (players.find(p => p.id === m.id) || {}).equipeId || (comissao.find(c => c.id === m.id) || {}).equipeId;
-                        return eqId === vencedorId;
-                    });
-
-                    for (const membro of membrosVencedores) {
-                        const existe = await eventoGuerraExiste(membro.id, 'guerra-cla', guerra.id);
-                        if (!existe) {
-                            await window.addDoc(window.collection(window.db, 'eventos'), {
-                                jogadorId: membro.id,
-                                tipo: 'gol',
-                                subtipo: 'guerra-cla',
-                                subtipoLabel: '🛡️ Vitória na Guerra de Clã',
-                                valor: 3,
-                                data: dataEvento,
-                                observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+3 glórias)',
-                                guerraId: guerra.id,
-                                createdAt: new Date().toISOString()
-                            });
-                            criados++;
-                        } else { pulados++; }
-                    }
-
-                    // 2. Perdedores -1
-                    const membrosPerdedores = [...jogadoresA, ...jogadoresB, ...comissaoA, ...comissaoB].filter(m => {
-                        const eqId = m.equipeId || (players.find(p => p.id === m.id) || {}).equipeId || (comissao.find(c => c.id === m.id) || {}).equipeId;
-                        return eqId && eqId !== vencedorId;
-                    });
-
-                    for (const membro of membrosPerdedores) {
-                        const existe = await eventoGuerraExiste(membro.id, 'guerra-cla-derrota', guerra.id);
-                        if (!existe) {
-                            await window.addDoc(window.collection(window.db, 'eventos'), {
-                                jogadorId: membro.id,
-                                tipo: 'punicao',
-                                subtipo: 'guerra-cla-derrota',
-                                subtipoLabel: '🛡️ Derrota na Guerra de Clã',
-                                valor: -1,
-                                data: dataEvento,
-                                observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-1 glória)',
-                                guerraId: guerra.id,
-                                createdAt: new Date().toISOString()
-                            });
-                            criados++;
-                        } else { pulados++; }
-                    }
-
-                    // 3. Torcidas
-                    if (guerra.apostas && guerra.apostas.length > 0) {
-                        for (const aposta of guerra.apostas) {
-                            const participanteId = aposta.participanteId || aposta.comissaoId;
-                            if (!participanteId) continue;
-                            const acertou = aposta.apostadoId === vencedorId;
-                            const valor = acertou ? 1 : 0;
-                            const obsTorcida = 'Torcida na guerra: ' + (claA ? claA.nome : 'Clã A') + ' vs ' + (claB ? claB.nome : 'Clã B');
-
-                            const existe = events.some(e =>
-                                e.jogadorId === participanteId &&
-                                e.subtipo === 'torcida-sabio-guerra' &&
-                                e.guerraId === guerra.id
-                            );
-                            if (!existe) {
-                                await window.addDoc(window.collection(window.db, 'eventos'), {
-                                    jogadorId: participanteId,
-                                    tipo: 'gol',
-                                    subtipo: 'torcida-sabio-guerra',
-                                    subtipoLabel: acertou ? '✅ Torcida na Guerra (Acertou!)' : '❌ Torcida na Guerra (Errou!)',
-                                    valor: valor,
-                                    data: dataEvento,
-                                    observacao: obsTorcida,
-                                    guerraId: guerra.id,
-                                    createdAt: new Date().toISOString()
-                                });
-                                criados++;
-                            } else { pulados++; }
-                        }
-                    }
-                }
-
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-green-400">✅ Reconstrução concluída! ' + criados + ' evento(s) criado(s), ' + pulados + ' já existiam.</p>';
-                }
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
-
-        async function reconstruirBonusDuelos() {
-            const container = document.getElementById('reconstruir-duelos-msg');
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Reconstruindo bônus de duelos...</p>';
-            }
-            try {
-                if (!duelos || duelos.length === 0) {
-                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhum duelo carregado. Aguarde os dados carregarem.</p>';
-                    return;
-                }
-                // Incluir TODOS os duelos finalizados (mesmo sem vencedorId salvo)
-                // Recalcular vencedor baseado no placar salvo no Firebase
-                const finalizados = duelos.filter(d => d.status === 'finalizado');
-                let criados = 0;
-                let pulados = 0;
-
-                for (const duelo of finalizados) {
-                    // Recalcular vencedor baseado no placar salvo (ignora vencedorId que pode estar errado)
-                    const gA = duelo.gloriaDesafiante || 0;
-                    const gB = duelo.gloriaDesafiado || 0;
-                    let vencedorId = null;
-                    let vencedorNome = 'Empate';
-                    if (gA > gB) {
-                        vencedorId = duelo.desafianteId;
-                        vencedorNome = duelo.desafianteNome;
-                    } else if (gB > gA) {
-                        vencedorId = duelo.desafiadoId;
-                        vencedorNome = duelo.desafiadoNome;
-                    }
-
-                    // Se não há vencedor (empate), pular bônus +3/-1 (não há bônus em empate)
-                    if (!vencedorId) continue;
-
-                    const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafianteId;
-
-                    // Data do evento = data do duelo (retroativa), NÃO hoje
-                    const dataDuelo = duelo.dataFim || duelo.aprovadoAt || duelo.createdAt || getHojeBrasilia();
-                    let dataEvento = dataDuelo;
-                    if (dataEvento.includes('T')) dataEvento = dataEvento.split('T')[0];
-
-                    // 1. Vencedor +3
-                    const obsVitoria = 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome;
-                    const existeVitoria = events.some(e => e.jogadorId === vencedorId && e.subtipo === 'duelo-vitoria' && e.observacao === obsVitoria);
-                    if (!existeVitoria) {
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
-                            subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: dataEvento,
-                            observacao: obsVitoria, createdAt: new Date().toISOString()
-                        });
-                        criados++;
-                    } else { pulados++; }
-
-                    // 2. Perdedor -1
-                    const obsDerrota = 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome;
-                    const existeDerrota = events.some(e => e.jogadorId === perdedorId && e.subtipo === 'duelo-derrota' && e.observacao === obsDerrota);
-                    if (!existeDerrota) {
-                        await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
-                            subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: dataEvento,
-                            observacao: obsDerrota, createdAt: new Date().toISOString()
-                        });
-                        criados++;
-                    } else { pulados++; }
-
-                    // 3. Torcidas
-                    if (duelo.apostas && duelo.apostas.length > 0) {
-                        for (const aposta of duelo.apostas) {
-                            const participanteId = aposta.participanteId || aposta.comissaoId;
-                            if (!participanteId) continue;
-                            const acertou = aposta.apostadoId === vencedorId;
-                            const valor = acertou ? 1 : 0;
-                            const obsTorcida = 'Torcida no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome;
-                            const existeTorcida = events.some(e => 
-                                e.jogadorId === participanteId && 
-                                e.subtipo === 'torcida-sabio' && 
-                                e.observacao === obsTorcida
-                            );
-                            if (!existeTorcida) {
-                                await window.addDoc(window.collection(window.db, 'eventos'), {
-                                    jogadorId: participanteId, tipo: 'gol', subtipo: 'torcida-sabio',
-                                    subtipoLabel: acertou ? '✅ Torcida (Acertou!)' : '❌ Torcida (Errou!)',
-                                    valor: valor, data: dataEvento,
-                                    observacao: obsTorcida, createdAt: new Date().toISOString()
-                                });
-                                criados++;
-                            } else { pulados++; }
-                        }
-                    }
-                }
-
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-green-400">✅ Reconstrução concluída! ' + criados + ' evento(s) criado(s), ' + pulados + ' já existiam.</p>';
-                }
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
 
         // Diagnosticar e corrigir datas dos eventos (converte Timestamp para YYYY-MM-DD)
         async function corrigirDatasEventos() {
@@ -3036,16 +2646,12 @@ function getTodayStr() {
 
         // Auto-finalizar duelos que passaram do prazo (dataFim)
         async function verificarDuelosExpirados() {
-            // Só finalizar se os eventos já foram carregados
             if (!events || events.length === 0) return;
-
             const agoraBR = getBRDate(new Date());
             agoraBR.setHours(23, 59, 59, 999);
             const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agoraBR);
             for (const duelo of expirados) {
-                try {
-                    await executarFinalizacaoDuelo(duelo, true);
-                } catch (e) {}
+                try { await executarFinalizacaoDuelo(duelo, true); } catch (e) {}
             }
         }
 
@@ -3315,7 +2921,6 @@ function getDueloAtivo(jogadorId) {
                 let evTs = null;
 
                 // PRIORIDADE 1: data (YYYY-MM-DD) - data REAL do evento
-                // Usar para eventos retroativos e normais
                 if (ev.data) {
                     evTs = new Date(ev.data + 'T23:59:59').getTime();
                 }
@@ -3547,63 +3152,42 @@ function getDueloAtivo(jogadorId) {
                 torcidasResolvidas: true
             });
 
-            // Update historico
             await atualizarDueloHistorico(duelo.desafianteId, vencedorId === duelo.desafianteId, vencedorId === null, duelo.id);
             await atualizarDueloHistorico(duelo.desafiadoId, vencedorId === duelo.desafiadoId, vencedorId === null, duelo.id);
-
-            // Resolver apostas dos sábios
             await resolverTorcidas(duelo.id, vencedorId);
 
-            // +3 glórias para o vencedor, -1 para o perdedor
             if (vencedorId && !duelo.bonusAplicados) {
                 const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafiadoId;
                 const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
 
-                // Vencedor +3
                 const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
                 if (!existeVitoria) {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
-                        jogadorId: vencedorId,
-                        tipo: 'gol',
-                        subtipo: 'duelo-vitoria',
-                        subtipoLabel: '⚔️ Vitória em Duelo',
-                        valor: 3,
-                        data: dataEvento,
+                        jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
+                        subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: dataEvento,
                         observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                        dueloId: duelo.id,
-                        createdAt: new Date().toISOString()
+                        dueloId: duelo.id, createdAt: new Date().toISOString()
                     });
                 }
 
-                // Perdedor -1
                 const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', duelo.id);
                 if (!existeDerrota) {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
-                        jogadorId: perdedorId,
-                        tipo: 'punicao',
-                        subtipo: 'duelo-derrota',
-                        subtipoLabel: '⚔️ Derrota em Duelo',
-                        valor: -1,
-                        data: dataEvento,
+                        jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
+                        subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: dataEvento,
                         observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                        dueloId: duelo.id,
-                        createdAt: new Date().toISOString()
+                        dueloId: duelo.id, createdAt: new Date().toISOString()
                     });
                 }
-
-                // Marcar bônus como aplicados no duelo
                 await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), { bonusAplicados: true });
             }
-
             return { vencedorId, vencedorNome, gloriaA, gloriaB };
         }
 
         async function finalizarDuelo(dueloId) {
             if (!isAdmin) { showToast('Acesso negado. Apenas admin.', 'error'); return; }
-
             const duelo = duelos.find(d => d.id === dueloId);
             if (!duelo) return;
-
             try {
                 const resultado = await executarFinalizacaoDuelo(duelo, false);
                 showToast('Duelo finalizado! Vencedor: ' + (resultado.vencedorNome || 'Empate!') + (resultado.vencedorId ? ' (+3 glórias)' : ''), 'success');
@@ -4065,6 +3649,21 @@ async function excluirDuelo(dueloId) {
             </div>`;
         }
 
+        
+        // ===== CONTADOR REGRESSIVO =====
+        function formatarTempoRestante(dataFim) {
+            const agora = new Date();
+            const fim = new Date(dataFim);
+            const diff = fim - agora;
+            if (diff <= 0) return '⏰ Encerrado';
+            const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            if (dias > 0) return `⏳ ${dias}d ${horas}h ${minutos}m`;
+            if (horas > 0) return `⏳ ${horas}h ${minutos}m`;
+            return `⏳ ${minutos}m`;
+        }
+
         function renderDueloProgress(duelo) {
             const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
             const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
@@ -4087,7 +3686,7 @@ async function excluirDuelo(dueloId) {
                 diasInfo = `<div class="flex justify-between text-xs text-gray-400 mt-2">
                     <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')}</span>
                     <span class="font-bold text-[#C8A25A]">Dia ${diaAtual} de ${totalDias}</span>
-                    <span>${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}</span>
+                    <span>${formatarTempoRestante(d.dataFim)}</span>
                 </div>`;
             }
 
@@ -4100,38 +3699,7 @@ async function excluirDuelo(dueloId) {
         }
 
 // ===== ADMIN ARENA RENDER =====
-        
-        
-        async function reativarDuelo(dueloId) {
-            if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
-            const duelo = duelos.find(d => d.id === dueloId);
-            if (!duelo || duelo.status !== 'finalizado') { showToast('Duelo não encontrado ou não está finalizado', 'error'); return; }
-            if (!confirm('Reativar o duelo ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome + '?\n\nO duelo voltará a contar glórias a partir do horário original de início até o mesmo horário 5 dias depois.')) return;
-
-            try {
-                // Manter dataInicio original, recalcular dataFim a partir dele (+5 dias exatos)
-                const inicioOriginal = duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt;
-                const novaDataFim = new Date(inicioOriginal);
-                novaDataFim.setDate(novaDataFim.getDate() + 5);
-
-                await window.updateDoc(window.doc(window.db, 'duelos', dueloId), {
-                    status: 'ativo',
-                    vencedorId: null,
-                    vencedorNome: null,
-                    finalizadoAt: null,
-                    autoFinalizado: false,
-                    bonusAplicados: false,
-                    torcidasResolvidas: false,
-                    dataFim: novaDataFim.toISOString()
-                });
-                showToast('Duelo reativado! Glórias continuam contando do período original.', 'success');
-                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
-            } catch (e) {
-                showToast('Erro ao reativar duelo: ' + e.message, 'error');
-            }
-        }
-        window.reativarDuelo = reativarDuelo;
-async function reativarGuerra(guerraId) {
+        async function reativarGuerra(guerraId) {
             if (!isAdmin) { showToast('Acesso negado', 'error'); return; }
             const guerra = guerrasClas.find(g => g.id === guerraId);
             if (!guerra || guerra.status !== 'finalizada') { showToast('Guerra não encontrada ou não está finalizada', 'error'); return; }
@@ -4361,253 +3929,8 @@ function renderTorcidasGuerraAdmin() {
 
         
         // ===== RECONSTRUIR PLACARES DE DUelos =====
-        async function reconstruirPlacaresDuelos() {
-            const container = document.getElementById('reconstruir-placares-msg');
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Recalculando placares de duelos...</p>';
-            }
-
-            try {
-                const finalizados = duelos.filter(d => d.status === 'finalizado');
-                let atualizados = 0;
-
-                for (const duelo of finalizados) {
-                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
-                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
-
-                    // Only update if different from saved values
-                    const savedA = duelo.gloriaDesafiante !== undefined ? duelo.gloriaDesafiante : null;
-                    const savedB = duelo.gloriaDesafiado !== undefined ? duelo.gloriaDesafiado : null;
-
-                    if (savedA !== gloriaA || savedB !== gloriaB) {
-                        await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
-                            gloriaDesafiante: gloriaA,
-                            gloriaDesafiado: gloriaB
-                        });
-                        atualizados++;
-                    }
-                }
-
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-green-400">✅ ' + atualizados + ' duelo(s) atualizado(s)! Recarregue a página.</p>';
-                }
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
-        window.reconstruirPlacaresDuelos = reconstruirPlacaresDuelos;
-
         // ===== RECONSTRUIR PLACARES DE GUERRAS =====
-        async function reconstruirPlacaresGuerras() {
-            const container = document.getElementById('reconstruir-placares-msg');
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Recalculando placares de guerras...</p>';
-            }
-
-            try {
-                const finalizadas = guerrasClas.filter(g => g.status === 'finalizada');
-                let atualizados = 0;
-
-                for (const guerra of finalizadas) {
-                    const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
-                    const jogadoresB = players.filter(p => p.equipeId === guerra.claDesafiadoId);
-                    const comissaoA = comissao.filter(c => c.equipeId === guerra.claDesafianteId);
-                    const comissaoB = comissao.filter(c => c.equipeId === guerra.claDesafiadoId);
-
-                    let gloriaA = 0, gloriaB = 0;
-                    jogadoresA.forEach(p => { gloriaA += getGlaciaGuerra(p.id, guerra); });
-                    jogadoresB.forEach(p => { gloriaB += getGlaciaGuerra(p.id, guerra); });
-                    comissaoA.forEach(c => { gloriaA += getGlaciaGuerra(c.id, guerra); });
-                    comissaoB.forEach(c => { gloriaB += getGlaciaGuerra(c.id, guerra); });
-
-                    const savedA = guerra.gloriaDesafiante !== undefined ? guerra.gloriaDesafiante : null;
-                    const savedB = guerra.gloriaDesafiado !== undefined ? guerra.gloriaDesafiado : null;
-
-                    if (savedA !== gloriaA || savedB !== gloriaB) {
-                        await window.updateDoc(window.doc(window.db, 'guerrasClas', guerra.id), {
-                            gloriaDesafiante: gloriaA,
-                            gloriaDesafiado: gloriaB
-                        });
-                        atualizados++;
-                    }
-                }
-
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-green-400">✅ ' + atualizados + ' guerra(s) atualizada(s)! Recarregue a página.</p>';
-                }
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
-        window.reconstruirPlacaresGuerras = reconstruirPlacaresGuerras;
-
         // ===== CORRIGIR RESULTADOS (VENCEDORES) =====
-        async function corrigirResultadosDuelos() {
-            const container = document.getElementById('corrigir-resultados-msg');
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Corrigindo resultados dos duelos...</p>';
-            }
-
-            try {
-                const finalizados = duelos.filter(d => d.status === 'finalizado');
-                if (finalizados.length === 0) {
-                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhum duelo finalizado encontrado.</p>';
-                    return;
-                }
-
-                let corrigidos = 0;
-                let detalhes = [];
-
-                for (const duelo of finalizados) {
-                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
-                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
-
-                    // Determinar vencedor correto
-                    let vencedorIdCorreto = null;
-                    let vencedorNomeCorreto = '';
-                    if (gloriaA > gloriaB) {
-                        vencedorIdCorreto = duelo.desafianteId;
-                        vencedorNomeCorreto = duelo.desafianteNome;
-                    } else if (gloriaB > gloriaA) {
-                        vencedorIdCorreto = duelo.desafiadoId;
-                        vencedorNomeCorreto = duelo.desafiadoNome;
-                    }
-
-                    // Verificar se precisa corrigir
-                    const vencedorAntigo = duelo.vencedorId;
-                    const nomeAntigo = duelo.vencedorNome || 'Empate';
-
-                    if (vencedorAntigo !== vencedorIdCorreto || duelo.gloriaDesafiante !== gloriaA || duelo.gloriaDesafiado !== gloriaB) {
-                        // Atualizar duelo
-                        await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
-                            gloriaDesafiante: gloriaA,
-                            gloriaDesafiado: gloriaB,
-                            vencedorId: vencedorIdCorreto,
-                            vencedorNome: vencedorNomeCorreto
-                        });
-
-                        detalhes.push(`${duelo.desafianteNome} (${gloriaA}) vs ${duelo.desafiadoNome} (${gloriaB}) → 🏆 ${vencedorNomeCorreto || 'Empate'} (era: ${nomeAntigo})`);
-                        corrigidos++;
-
-                        // Atualizar histórico dos jogadores
-                        await atualizarDueloHistorico(duelo.desafianteId, vencedorIdCorreto === duelo.desafianteId, vencedorIdCorreto === null, duelo.id);
-                        await atualizarDueloHistorico(duelo.desafiadoId, vencedorIdCorreto === duelo.desafiadoId, vencedorIdCorreto === null, duelo.id);
-                    }
-                }
-
-                if (container) {
-                    if (corrigidos > 0) {
-                        container.innerHTML = `
-                            <p class="text-center text-green-400 mb-2">✅ ${corrigidos} duelo(s) corrigido(s)!</p>
-                            <div class="text-xs text-gray-400 space-y-1 max-h-48 overflow-y-auto">
-                                ${detalhes.map(d => `<p>• ${d}</p>`).join('')}
-                            </div>
-                        `;
-                    } else {
-                        container.innerHTML = '<p class="text-center text-green-400">✅ Todos os duelos já estavam corretos!</p>';
-                    }
-                }
-
-                renderArenaIndividuais();
-                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
-
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
-        window.corrigirResultadosDuelos = corrigirResultadosDuelos;
-
-        async function corrigirResultadosGuerras() {
-            const container = document.getElementById('corrigir-resultados-msg');
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Corrigindo resultados das guerras...</p>';
-            }
-
-            try {
-                const finalizadas = guerrasClas.filter(g => g.status === 'finalizada');
-                if (finalizadas.length === 0) {
-                    if (container) container.innerHTML = '<p class="text-center text-yellow-400">Nenhuma guerra finalizada encontrada.</p>';
-                    return;
-                }
-
-                let corrigidas = 0;
-                let detalhes = [];
-
-                for (const guerra of finalizadas) {
-                    const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
-                    const jogadoresB = players.filter(p => p.equipeId === guerra.claDesafiadoId);
-                    const comissaoA = comissao.filter(c => c.equipeId === guerra.claDesafianteId);
-                    const comissaoB = comissao.filter(c => c.equipeId === guerra.claDesafiadoId);
-
-                    let gloriaA = 0, gloriaB = 0;
-                    jogadoresA.forEach(p => { gloriaA += getGlaciaGuerra(p.id, guerra); });
-                    jogadoresB.forEach(p => { gloriaB += getGlaciaGuerra(p.id, guerra); });
-                    comissaoA.forEach(c => { gloriaA += getGlaciaGuerra(c.id, guerra); });
-                    comissaoB.forEach(c => { gloriaB += getGlaciaGuerra(c.id, guerra); });
-
-                    const claA = equipes.find(e => e.id === guerra.claDesafianteId);
-                    const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
-
-                    let vencedorIdCorreto = null;
-                    let vencedorNomeCorreto = 'Empate';
-                    if (gloriaA > gloriaB) {
-                        vencedorIdCorreto = guerra.claDesafianteId;
-                        vencedorNomeCorreto = claA ? claA.nome : 'Clã A';
-                    } else if (gloriaB > gloriaA) {
-                        vencedorIdCorreto = guerra.claDesafiadoId;
-                        vencedorNomeCorreto = claB ? claB.nome : 'Clã B';
-                    }
-
-                    const vencedorAntigo = guerra.vencedorId;
-                    const nomeAntigo = guerra.vencedorNome || 'Empate';
-
-                    if (vencedorAntigo !== vencedorIdCorreto || guerra.gloriaDesafiante !== gloriaA || guerra.gloriaDesafiado !== gloriaB) {
-                        await window.updateDoc(window.doc(window.db, 'guerrasClas', guerra.id), {
-                            gloriaDesafiante: gloriaA,
-                            gloriaDesafiado: gloriaB,
-                            vencedorId: vencedorIdCorreto,
-                            vencedorNome: vencedorNomeCorreto
-                        });
-
-                        detalhes.push(`${claA ? claA.nome : 'Clã A'} (${gloriaA}) vs ${claB ? claB.nome : 'Clã B'} (${gloriaB}) → 🏆 ${vencedorNomeCorreto} (era: ${nomeAntigo})`);
-                        corrigidas++;
-                    }
-                }
-
-                if (container) {
-                    if (corrigidas > 0) {
-                        container.innerHTML = `
-                            <p class="text-center text-green-400 mb-2">✅ ${corrigidas} guerra(s) corrigida(s)!</p>
-                            <div class="text-xs text-gray-400 space-y-1 max-h-48 overflow-y-auto">
-                                ${detalhes.map(d => `<p>• ${d}</p>`).join('')}
-                            </div>
-                        `;
-                    } else {
-                        container.innerHTML = '<p class="text-center text-green-400">✅ Todas as guerras já estavam corretas!</p>';
-                    }
-                }
-
-                renderArenaClas();
-                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
-
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
-        window.corrigirResultadosGuerras = corrigirResultadosGuerras;
-
         // ===== CORRIGIR DUELOS 0-0 =====
         async function corrigirDuelosZeroZero() {
             const container = document.getElementById('corrigir-resultados-msg');
@@ -4725,216 +4048,8 @@ function renderTorcidasGuerraAdmin() {
         window.corrigirDuelosZeroZero = corrigirDuelosZeroZero;
 
         // ===== RECALCULAR DUelos POR PERÍODO =====
-        async function recalcularDuelosPorPeriodo() {
-            const dataDe = document.getElementById('recalc-duelo-de').value;
-            const dataAte = document.getElementById('recalc-duelo-ate').value;
-            const container = document.getElementById('recalc-duelo-msg');
-
-            if (!dataDe) {
-                if (container) {
-                    container.classList.remove('hidden');
-                    container.innerHTML = '<p class="text-center text-red-400">Informe a data de início do duelo.</p>';
-                }
-                return;
-            }
-
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Recalculando duelos...</p>';
-            }
-
-            try {
-                // Filter duels by period
-                let duelosFiltrados = duelos.filter(d => d.status === 'finalizado');
-
-                if (dataDe) {
-                    const deDate = new Date(dataDe);
-                    duelosFiltrados = duelosFiltrados.filter(d => {
-                        const inicio = d.dataInicio ? new Date(d.dataInicio) : null;
-                        return inicio && inicio >= deDate;
-                    });
-                }
-
-                if (dataAte) {
-                    const ateDate = new Date(dataAte);
-                    ateDate.setHours(23, 59, 59, 999);
-                    duelosFiltrados = duelosFiltrados.filter(d => {
-                        const inicio = d.dataInicio ? new Date(d.dataInicio) : null;
-                        return inicio && inicio <= ateDate;
-                    });
-                }
-
-                if (duelosFiltrados.length === 0) {
-                    if (container) {
-                        container.innerHTML = '<p class="text-center text-yellow-400">Nenhum duelo finalizado encontrado no período.</p>';
-                    }
-                    return;
-                }
-
-                let atualizados = 0;
-                let detalhes = [];
-
-                for (const duelo of duelosFiltrados) {
-                    const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
-                    const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
-
-                    const savedA = duelo.gloriaDesafiante !== undefined ? duelo.gloriaDesafiante : null;
-                    const savedB = duelo.gloriaDesafiado !== undefined ? duelo.gloriaDesafiado : null;
-
-                    // Determine winner based on recalculated scores
-                    let vencedorId = null;
-                    let vencedorNome = '';
-                    if (gloriaA > gloriaB) {
-                        vencedorId = duelo.desafianteId;
-                        vencedorNome = duelo.desafianteNome;
-                    } else if (gloriaB > gloriaA) {
-                        vencedorId = duelo.desafiadoId;
-                        vencedorNome = duelo.desafiadoNome;
-                    }
-
-                    // Update duel with recalculated scores
-                    await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
-                        gloriaDesafiante: gloriaA,
-                        gloriaDesafiado: gloriaB,
-                        vencedorId: vencedorId,
-                        vencedorNome: vencedorNome
-                    });
-
-                    atualizados++;
-                    detalhes.push(`${duelo.desafianteNome} (${gloriaA}) vs ${duelo.desafiadoNome} (${gloriaB}) → 🏆 ${vencedorNome || 'Empate'}`);
-                }
-
-                if (container) {
-                    container.innerHTML = `
-                        <p class="text-center text-green-400 mb-2">✅ ${atualizados} duelo(s) recalculado(s)!</p>
-                        <div class="text-xs text-gray-400 space-y-1 max-h-48 overflow-y-auto">
-                            ${detalhes.map(d => `<p>${d}</p>`).join('')}
-                        </div>
-                    `;
-                }
-
-                // Refresh display
-                renderArenaIndividuais();
-                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
-
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
-        window.recalcularDuelosPorPeriodo = recalcularDuelosPorPeriodo;
-
         // ===== RECALCULAR GUERRAS POR PERÍODO =====
-        async function recalcularGuerrasPorPeriodo() {
-            const dataDe = document.getElementById('recalc-guerra-de').value;
-            const dataAte = document.getElementById('recalc-guerra-ate').value;
-            const container = document.getElementById('recalc-guerra-msg');
-
-            if (!dataDe) {
-                if (container) {
-                    container.classList.remove('hidden');
-                    container.innerHTML = '<p class="text-center text-red-400">Informe a data de início da guerra.</p>';
-                }
-                return;
-            }
-
-            if (container) {
-                container.classList.remove('hidden');
-                container.innerHTML = '<p class="text-center text-gray-400">Recalculando guerras...</p>';
-            }
-
-            try {
-                // Filter wars by period
-                let guerrasFiltradas = guerrasClas.filter(g => g.status === 'finalizada');
-
-                if (dataDe) {
-                    const deDate = new Date(dataDe);
-                    guerrasFiltradas = guerrasFiltradas.filter(g => {
-                        const inicio = g.dataInicio ? new Date(g.dataInicio) : null;
-                        return inicio && inicio >= deDate;
-                    });
-                }
-
-                if (dataAte) {
-                    const ateDate = new Date(dataAte);
-                    ateDate.setHours(23, 59, 59, 999);
-                    guerrasFiltradas = guerrasFiltradas.filter(g => {
-                        const inicio = g.dataInicio ? new Date(g.dataInicio) : null;
-                        return inicio && inicio <= ateDate;
-                    });
-                }
-
-                if (guerrasFiltradas.length === 0) {
-                    if (container) {
-                        container.innerHTML = '<p class="text-center text-yellow-400">Nenhuma guerra finalizada encontrada no período.</p>';
-                    }
-                    return;
-                }
-
-                let atualizadas = 0;
-                let detalhes = [];
-
-                for (const guerra of guerrasFiltradas) {
-                    const jogadoresA = players.filter(p => p.equipeId === guerra.claDesafianteId);
-                    const jogadoresB = players.filter(p => p.equipeId === guerra.claDesafiadoId);
-                    const comissaoA = comissao.filter(c => c.equipeId === guerra.claDesafianteId);
-                    const comissaoB = comissao.filter(c => c.equipeId === guerra.claDesafiadoId);
-
-                    let gloriaA = 0, gloriaB = 0;
-                    jogadoresA.forEach(p => { gloriaA += getGlaciaGuerra(p.id, guerra); });
-                    jogadoresB.forEach(p => { gloriaB += getGlaciaGuerra(p.id, guerra); });
-                    comissaoA.forEach(c => { gloriaA += getGlaciaGuerra(c.id, guerra); });
-                    comissaoB.forEach(c => { gloriaB += getGlaciaGuerra(c.id, guerra); });
-
-                    const claA = equipes.find(e => e.id === guerra.claDesafianteId);
-                    const claB = equipes.find(e => e.id === guerra.claDesafiadoId);
-
-                    let vencedorId = null;
-                    let vencedorNome = 'Empate';
-                    if (gloriaA > gloriaB) {
-                        vencedorId = guerra.claDesafianteId;
-                        vencedorNome = claA ? claA.nome : 'Clã A';
-                    } else if (gloriaB > gloriaA) {
-                        vencedorId = guerra.claDesafiadoId;
-                        vencedorNome = claB ? claB.nome : 'Clã B';
-                    }
-
-                    await window.updateDoc(window.doc(window.db, 'guerrasClas', guerra.id), {
-                        gloriaDesafiante: gloriaA,
-                        gloriaDesafiado: gloriaB,
-                        vencedorId: vencedorId,
-                        vencedorNome: vencedorNome
-                    });
-
-                    atualizadas++;
-                    detalhes.push(`${claA ? claA.nome : 'Clã A'} (${gloriaA}) vs ${claB ? claB.nome : 'Clã B'} (${gloriaB}) → 🏆 ${vencedorNome}`);
-                }
-
-                if (container) {
-                    container.innerHTML = `
-                        <p class="text-center text-green-400 mb-2">✅ ${atualizadas} guerra(s) recalculada(s)!</p>
-                        <div class="text-xs text-gray-400 space-y-1 max-h-48 overflow-y-auto">
-                            ${detalhes.map(d => `<p>${d}</p>`).join('')}
-                        </div>
-                    `;
-                }
-
-                // Refresh display
-                renderArenaClas();
-                if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
-
-            } catch (e) {
-                if (container) {
-                    container.innerHTML = '<p class="text-center text-red-400">❌ Erro: ' + e.message + '</p>';
-                }
-            }
-        }
-        window.recalcularGuerrasPorPeriodo = recalcularGuerrasPorPeriodo;
-
-
-
-function renderAdminArena() {
+        function renderAdminArena() {
             renderPainelBatalhas();
             const pendentes = duelos.filter(d => d.status === 'pendente');
             const ativos = duelos.filter(d => d.status === 'ativo');
@@ -5101,7 +4216,7 @@ function renderAdminArena() {
                                 })()}
                             </div>
                             <div class="flex gap-2">
-                                <button onclick="reativarDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-400 text-sm font-bold hover:bg-purple-500/30"><i class="fas fa-undo-alt mr-1"></i>Reativar</button>
+                                
                                 <button onclick="excluirDuelo('${d.id}')" class="px-3 py-1 rounded-lg bg-red-500/20 text-red-400 text-sm font-bold hover:bg-red-500/30"><i class="fas fa-trash-alt mr-1"></i>Excluir</button>
                             </div>
                         </div>
@@ -5124,7 +4239,7 @@ function renderAdminArena() {
                                 <div class="flex items-center gap-3">
                                     ${claA && claA.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
                                     <span class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
-                                    <span class="text-gray-500">${getGlaciaGuerraCla(g.claDesafianteId, g)} ⚔️ ${getGlaciaGuerraCla(g.claDesafiadoId, g)}</span>
+                                    <span class="text-gray-500">${g.gloriaDesafiante !== undefined ? g.gloriaDesafiante : getGlaciaGuerraCla(g.claDesafianteId, g)} ⚔️ ${g.gloriaDesafiado !== undefined ? g.gloriaDesafiado : getGlaciaGuerraCla(g.claDesafiadoId, g)}</span>
                                     ${claB && claB.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
                                     <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                                     ${g.vencedorNome ? `<span class="text-green-400 text-sm">🏆 ${g.vencedorNome}</span>` : '<span class="text-yellow-400 text-sm">🤝 Empate</span>'}
@@ -5241,7 +4356,7 @@ function renderAdminArena() {
                     const diasPassados = Math.floor(horasPassadas / 24);
                     const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
                     const diasRestantes = Math.max(0, totalDias - diasPassados);
-                    diasInfo = `<p class="text-center text-xs text-gray-500 mt-1"><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')} · Dia ${diaAtual} de ${totalDias} · ${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}</p>`;
+                    diasInfo = `<p class="text-center text-xs text-gray-500 mt-1"><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')} · Dia ${diaAtual} de ${totalDias} · ${formatarTempoRestante(d.dataFim)}</p>`;
                 }
 
                 meuDueloContent.innerHTML = `
@@ -5289,7 +4404,7 @@ function renderAdminArena() {
                                     const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
                                     return diasPassados < 2;
                                 })();
-                                return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-3 py-1.5 rounded bg-[#C8A25A]/15 text-[#C8A25A] text-xs font-bold hover:bg-[#C8A25A]/30 border border-[#C8A25A]/20 transition-all">
+                                return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-3 py-1.5 rounded bg-\[\#C8A25A\]/15 text-[#C8A25A] text-xs font-bold hover:bg-\[\#C8A25A\]/30 border border-[#C8A25A]/20 transition-all">
                                 <i class="fas fa-scroll mr-1"></i>Torcer
                             </button>` : `<span class="px-2 py-1 rounded bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Encerrado</span>`;
                             })()}
@@ -5323,7 +4438,7 @@ function renderAdminArena() {
                         diasInfo = `<div class="flex justify-between text-xs text-gray-400 mt-1 px-1">
                             <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')}</span>
                             <span class="font-bold text-[#C8A25A]">Dia ${diaAtual} de ${totalDias}</span>
-                            <span>${diasRestantes} dia${diasRestantes !== 1 ? 's' : ''} restante${diasRestantes !== 1 ? 's' : ''}</span>
+                            <span>${formatarTempoRestante(d.dataFim)}</span>
                         </div>`;
                     }
                     return `
@@ -5361,7 +4476,7 @@ function renderAdminArena() {
                                         const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
                                         return diasPassados < 2;
                                     })();
-                                    return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-3 py-1.5 rounded bg-[#C8A25A]/15 text-[#C8A25A] text-xs font-bold hover:bg-[#C8A25A]/30 border border-[#C8A25A]/20 transition-all">
+                                    return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-3 py-1.5 rounded bg-\[\#C8A25A\]/15 text-[#C8A25A] text-xs font-bold hover:bg-\[\#C8A25A\]/30 border border-[#C8A25A]/20 transition-all">
                                         <i class="fas fa-scroll mr-1"></i>Torcer
                                     </button>` : `<span class="px-2 py-1 rounded bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Encerrado</span>`;
                                 })()}
@@ -5855,7 +4970,7 @@ function renderAdminArena() {
                             <div class="flex justify-between items-center text-xs text-gray-400 mt-1 mb-3 px-1">
                                 <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicioDisplay.toLocaleDateString('pt-BR')}</span>
                                 <span class="font-bold text-[#C8A25A]">Dia ${info.diaAtual} de ${info.totalDias}</span>
-                                <span>${info.diasRestantes} dia${info.diasRestantes !== 1 ? 's' : ''} restante${info.diasRestantes !== 1 ? 's' : ''}</span>
+                                <span>${formatarTempoRestante(info.dataFim)}</span>
                             </div>
                             ${renderTorcidometroGuerra(g)}
                             <div class="mt-4 p-3 rounded-xl bg-gray-800/50 border border-[#C8A25A]/20">
@@ -5877,7 +4992,7 @@ function renderAdminArena() {
                                             const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
                                             return diasPassados < 2;
                                         })();
-                                        return podeTorcer ? `<button onclick="abrirModalTorcida('guerra', '${g.id}')" class="px-4 py-2 rounded-lg bg-[#C8A25A]/15 text-[#C8A25A] text-sm font-bold hover:bg-[#C8A25A]/30 border border-[#C8A25A]/20 transition-all">
+                                        return podeTorcer ? `<button onclick="abrirModalTorcida('guerra', '${g.id}')" class="px-4 py-2 rounded-lg bg-\[\#C8A25A\]/15 text-[#C8A25A] text-sm font-bold hover:bg-\[\#C8A25A\]/30 border border-[#C8A25A]/20 transition-all">
                                             <i class="fas fa-scroll mr-1"></i>Torcer
                                         </button>` : `<span class="px-3 py-2 rounded-lg bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Apostas encerradas</span>`;
                                     })()}
@@ -5904,7 +5019,7 @@ function renderAdminArena() {
                             <div class="flex items-center gap-3">
                                 ${claA && claA.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claA.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claA.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claA ? claA.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold text-sm" style="color: ${claA ? claA.cor : '#C8A25A'}">${claA ? claA.nome : 'Clã A'}</span>
-                                <span class="text-gray-500">${getGlaciaGuerraCla(g.claDesafianteId, g)} ⚔️ ${getGlaciaGuerraCla(g.claDesafiadoId, g)}</span>
+                                <span class="text-gray-500">${g.gloriaDesafiante !== undefined ? g.gloriaDesafiante : getGlaciaGuerraCla(g.claDesafianteId, g)} ⚔️ ${g.gloriaDesafiado !== undefined ? g.gloriaDesafiado : getGlaciaGuerraCla(g.claDesafiadoId, g)}</span>
                                 ${claB && claB.brasao ? `<div class="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center" style="border-color: ${claB.cor}; background: #0B0A0A;"><img src="${getBrasaoUrl(claB.brasao)}" class="w-full h-full object-contain p-0.5" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>🛡️</span>';"></div>` : `<div class="w-8 h-8 rounded-full flex items-center justify-center text-xs" style="background: ${claB ? claB.cor : '#C8A25A'};">🛡️</div>`}
                                 <span class="font-bold text-sm" style="color: ${claB ? claB.cor : '#C8A25A'}">${claB ? claB.nome : 'Clã B'}</span>
                             </div>
@@ -6372,6 +5487,26 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
 function getPlayerStats(playerId) {
             const playerEvents = events.filter(e => e.jogadorId === playerId);
+            playerEventsCache = playerEvents;
+
+            // Popular select de meses
+            const mesSelect = document.getElementById('album-filtro-mes');
+            if (mesSelect) {
+                while (mesSelect.options.length > 1) {
+                    mesSelect.remove(1);
+                }
+                const mesesUnicos = [...new Set(playerEvents.map(e => {
+                    const d = e.data || e.createdAt;
+                    return d ? d.substring(0, 7) : null;
+                }).filter(Boolean))].sort().reverse();
+                mesesUnicos.forEach(mes => {
+                    const option = document.createElement('option');
+                    option.value = mes;
+                    const [ano, mesNum] = mes.split('-');
+                    option.textContent = `${mesNum}/${ano}`;
+                    mesSelect.appendChild(option);
+                });
+            }
             const today = new Date();
             today.setHours(12, 0, 0, 0);
 
@@ -7201,7 +6336,6 @@ function calcConquistas(pid) {
             });
             const result = Object.entries(weeks).filter(([k, v]) => v >= meta).map(([k, v]) => ({ weekKey: k, total: v }));
             if (pid === 'glaucia' || (players.find(p => p.id === pid) || {}).nome === 'Glaucia') {
-                console.log('[DEBUG getWeeklyAchievements] pid:', pid, 'meta:', meta, 'weeks:', weeks, 'result:', result);
             }
             return result;
         }
@@ -7214,7 +6348,6 @@ function calcConquistas(pid) {
                 const player = players.find(p => p.id === pid) || comissao.find(c => c.id === pid);
                 if (!player) return;
                 const alvoNome = player.nome + ' ' + (player.sobrenome || '');
-                console.log('checkAndSaveConquistas para', pid, alvoNome, 'isComissao:', isComissao, 'monthTotal:', monthTotal);
 
                 // Use conquistasConfig from Firebase (merged with defaults) so theme changes don't break history
                 const cfgListSave = conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT;
@@ -7239,9 +6372,7 @@ function calcConquistas(pid) {
                         valorAtual = conq.currentDayTotal;
                     } else if (periodo === 'week') {
                         // Verificar todas as semanas desde o início
-                        console.log('Verificando feito semanal:', cfg.id, nome, 'meta:', meta);
                         const achievements = getWeeklyAchievements(pid, meta);
-                        console.log('Achievements encontrados:', achievements.length, achievements);
                         for (const ach of achievements) {
                             const jaExiste = conquistasHistorico.some(ch =>
                                 ch.jogadorId === pid &&
@@ -7267,18 +6398,15 @@ function calcConquistas(pid) {
                                         premio: premio,
                                         createdAt: new Date().toISOString()
                                     });
-                                    console.log('Feito semanal SALVO:', cfg.id, ach.weekKey, ach.total);
                                 } catch (e) {
                                     console.error('Erro ao salvar feito semanal:', e);
                                 }
                             } else {
-                                console.log('Feito semanal já existe:', cfg.id, ach.weekKey);
                             }
                         }
                     } else if (periodo === 'month') {
                         isUnlocked = monthTotal >= meta;
                         valorAtual = monthTotal;
-                        console.log('Feito mensal:', cfg.id, 'meta:', meta, 'valor:', monthTotal, 'unlocked:', isUnlocked);
                     }
 
                     if (isUnlocked && periodo !== 'week') {
@@ -7308,7 +6436,6 @@ function calcConquistas(pid) {
                                     premio: premio,
                                     createdAt: new Date().toISOString()
                                 });
-                                console.log('Feito mensal/diário SALVO:', cfg.id, periodo, valorAtual);
                             } catch (e) {
                                 console.error('Erro ao salvar feito:', e);
                             }
@@ -7320,7 +6447,6 @@ function calcConquistas(pid) {
                                     valorAtingido: valorAtual,
                                     dataConquista: hoje
                                 });
-                                console.log('Feito atualizado:', cfg.id, 'valor:', valorAtual);
                             } catch (e) {
                                 console.error('Erro ao atualizar feito:', e);
                             }
@@ -7437,7 +6563,139 @@ function renderConquistasHistorico(pid) {
                 }).join('');
             };
 
-async function showAlbum(playerId) {
+
+        // ===== FILTRO DE EVENTOS NO PERFIL =====
+        let playerEventsCache = [];
+        let filtroAtualAlbum = 'todos';
+
+        function filtrarEventosAlbum(filtro) {
+            const buttons = document.querySelectorAll('.filtro-evento');
+            buttons.forEach(btn => {
+                if (btn.dataset.filtro === filtro) {
+                    btn.classList.remove('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
+                    btn.classList.add('bg-\[\#C8A25A\]', 'text-[#0B0A0A]');
+                } else {
+                    btn.classList.remove('bg-\[\#C8A25A\]', 'text-[#0B0A0A]');
+                    btn.classList.add('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
+                }
+            });
+
+            const eventsDiv = document.getElementById('album-events');
+            if (!eventsDiv || !playerEventsCache || playerEventsCache.length === 0) {
+                if (eventsDiv) eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento registrado.</p>';
+                return;
+            }
+
+            // Filtro por mês
+            const mesSelect = document.getElementById('album-filtro-mes');
+            const mesFiltro = mesSelect ? mesSelect.value : 'todos';
+
+            let filtered = [...playerEventsCache];
+
+            // Filtro por tipo
+            if (filtro !== 'todos') {
+                if (filtro === 'batalha') {
+                    filtered = filtered.filter(e => 
+                        ['duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(e.subtipo)
+                    );
+                } else if (filtro === 'elogio') {
+                    filtered = filtered.filter(e => 
+                        e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado'
+                    );
+                } else {
+                    filtered = filtered.filter(e => e.tipo === filtro);
+                }
+            }
+
+            // Filtro por mês
+            if (mesFiltro !== 'todos') {
+                filtered = filtered.filter(e => {
+                    const d = e.data || e.createdAt;
+                    return d && d.substring(0, 7) === mesFiltro;
+                });
+            }
+
+            if (filtered.length === 0) {
+                eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento nesta categoria.</p>';
+                return;
+            }
+
+            eventsDiv.innerHTML = filtered.map(e => {
+                let icon = '', color = '', sign = '';
+                if (e.tipo === 'gol') { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = '+'; }
+                else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; sign = '+'; }
+                else if (e.tipo === 'punicao') { icon = '👎'; color = 'text-red-400'; sign = '-'; }
+                else if (e.subtipo === 'elogio-recebido') { icon = '💬'; color = 'text-green-400'; sign = '+'; }
+                else if (e.subtipo === 'elogio-dado') { icon = '💬'; color = 'text-blue-400'; sign = '+'; }
+                else { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = e.valor >= 0 ? '+' : '-'; }
+                return `<div class="flex items-center justify-between p-2 rounded-lg bg-[#ECE8E1]/5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">${icon}</span>
+                        <div>
+                            <p class="text-sm font-medium ${color}">${e.subtipoLabel || e.subtipo || e.tipo}</p>
+                            <p class="text-xs text-gray-500">${formatarData(e.data || e.createdAt)} · ${e.observacao || ''}</p>
+                        </div>
+                    </div>
+                    <span class="font-bold ${color}">${sign}${Math.abs(e.valor || 0)}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function filtrarEventosAlbum(filtro) {
+            filtroAtualAlbum = filtro;
+            const container = document.getElementById('album-events');
+            if (!container) return;
+            document.querySelectorAll('.filtro-evento').forEach(btn => {
+                if (btn.dataset.filtro === filtro) {
+                    btn.classList.remove('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
+                    btn.classList.add('bg-\[\#C8A25A\]', 'text-[#0B0A0A]');
+                } else {
+                    btn.classList.remove('bg-\[\#C8A25A\]', 'text-[#0B0A0A]');
+                    btn.classList.add('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
+                }
+            });
+            const mesSelect = document.getElementById('album-filtro-mes');
+            const mesFiltro = mesSelect ? mesSelect.value : 'todos';
+            let filtered = playerEventsCache || [];
+            if (filtro !== 'todos') {
+                if (filtro === 'gol') {
+                    filtered = filtered.filter(e => (e.tipo === 'gol' && !['elogio-recebido','elogio-dado','duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra','cartao-verde','benção-dos-deuses','benção dos deuses'].includes(e.subtipo)) || e.tipo === 'figurinha');
+                } else if (filtro === 'punicao') {
+                    filtered = filtered.filter(e => e.tipo === 'punicao' && !['cartao-verde','benção-dos-deuses','benção dos deuses'].includes(e.subtipo));
+                } else if (filtro === 'elogio') {
+                    filtered = filtered.filter(e => e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado');
+                } else if (filtro === 'batalha') {
+                    filtered = filtered.filter(e => ['duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(e.subtipo));
+                }
+            }
+            if (mesFiltro !== 'todos') {
+                filtered = filtered.filter(e => {
+                    const d = e.data || e.createdAt;
+                    return d && typeof d === 'string' && d.substring(0, 7) === mesFiltro;
+                });
+            }
+            if (filtered.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento nesta categoria.</p>';
+                return;
+            }
+            container.innerHTML = filtered.map(e => {
+                let icon = '⚔️', color = 'text-[#ECE8E1]', sign = '+';
+                if (e.tipo === 'gol') {
+                    if (e.subtipo === 'elogio-recebido') { icon = '💬'; color = 'text-green-400'; }
+                    else if (e.subtipo === 'elogio-dado') { icon = '💬'; color = 'text-blue-400'; }
+                    else if (['duelo-vitoria','guerra-cla','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(e.subtipo)) { icon = '⚔️'; color = 'text-orange-400'; }
+                    else if (e.subtipo === 'duelo-derrota' || e.subtipo === 'guerra-cla-derrota') { icon = '💀'; color = 'text-red-400'; sign = ''; }
+                    else if (e.subtipo === 'cartao-verde' || e.subtipo === 'benção-dos-deuses') { icon = '🜂'; color = 'text-green-400'; }
+                } else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; }
+                else if (e.tipo === 'punicao') { icon = '👎'; color = 'text-red-400'; sign = '-'; }
+                const val = Number(e.valor) || 0;
+                const valStr = val > 0 ? '+' + val : String(val);
+                const dataStr = e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR') : '';
+                return '<div class="flex items-center justify-between p-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-all event-row"><div class="flex items-center gap-2 flex-1 min-w-0"><span class="text-sm">' + icon + '</span><div class="min-w-0"><p class="text-sm font-semibold truncate">' + (e.observacao || e.subtipoLabel || e.subtipo || 'Evento') + '</p><p class="text-xs text-gray-500">' + dataStr + '</p></div></div><span class="font-bold ' + color + ' ml-2">' + valStr + '</span></div>';
+            }).join('');
+        }
+
+        async function showAlbum(playerId) {
             if (typeof equipes === 'undefined') { equipes = []; }
             const player = players.find(p => p.id === playerId);
             if (!player) return;
@@ -7451,6 +6709,7 @@ async function showAlbum(playerId) {
                 if (el) el.classList.add('hidden');
             });
             const stats = getPlayerStats(playerId);
+            playerEventsCache = events.filter(e => e.jogadorId === playerId);
             const playerEvents = events.filter(e => e.jogadorId === playerId).sort((a, b) => {
                 const da = getBRDate(a.data);
                 const db = getBRDate(b.data);
@@ -7645,7 +6904,6 @@ async function showAlbum(playerId) {
                 seenNames.add(nome);
                 return true;
             });
-            console.log('Mural de feitos:', cfgListAlbumDedup.length, 'cards únicos');
             const CONQUISTAS = cfgListAlbumDedup.map(cfg => {
                 const meta = cfg.meta || cfg.goals || 0;
                 const periodo = cfg.periodo || cfg.period || 'month';
@@ -11031,7 +10289,6 @@ async function loadConquistasConfig() {
                         }
                     });
                     conquistasConfig = Object.values(byName).sort((a, b) => a.meta - b.meta);
-                    console.log('ConquistasConfig carregado:', conquistasConfig.length, 'itens');
                     renderConquistasConfigList();
                     updateConquistaAdminSelect();
                 });
@@ -11256,7 +10513,6 @@ function editarConquistaConfig(conqId) {
                 const docId = c && c._docId ? c._docId : null;
                 if (!docId) {
                     showToast('Este feito é padrão e não pode ser excluído. Edite-o ou recrie.', 'error');
-                    console.log('Feito sem _docId:', conqId, c);
                     return;
                 }
                 await window.deleteDoc(window.doc(window.db, 'conquistasConfig', docId));
@@ -11461,12 +10717,9 @@ function editarConquistaConfig(conqId) {
                 return p.nome && p.nome.toLowerCase().indexOf('glaucia') !== -1; 
             });
             if (!glaucia) {
-                console.log('Glaucia não encontrada');
-                console.log('Jogadores:', players.map(function(p) { return p.nome; }));
                 return;
             }
             var pid = glaucia.id;
-            console.log('=== GLAUCIA: ' + glaucia.nome + ' (ID: ' + pid + ') ===');
 
             // Semana 27/07 - 02/08
             var ws = new Date(2026, 6, 27); // 27/07
@@ -11498,11 +10751,22 @@ function editarConquistaConfig(conqId) {
                 }
             });
 
-            console.log('Eventos na semana 27/07-02/08:');
             console.table(lista);
-            console.log('TOTAL: ' + total);
             return { total: total, eventos: lista };
         };
+    
+        // Listener para select de meses na crônica
+        document.addEventListener('DOMContentLoaded', function() {
+            const mesSelect = document.getElementById('album-filtro-mes');
+            if (mesSelect) {
+                mesSelect.addEventListener('change', function() {
+                    if (typeof filtrarEventosAlbum === 'function') {
+                        filtrarEventosAlbum(filtroAtualAlbum);
+                    }
+                });
+            }
+        });
+
     </script>
 
 
