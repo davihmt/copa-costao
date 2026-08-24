@@ -3018,7 +3018,9 @@ function getDueloAtivo(jogadorId) {
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
                     // IGNORAR eventos de bônus de duelo (não fazem parte do placar da guerra)
                     if (ev.subtipo === 'duelo-vitoria' || ev.subtipo === 'duelo-derrota' || 
-                        ev.subtipo === 'torcida-sabio') {
+                        ev.subtipo === 'torcida-sabio' ||
+                        ev.subtipo === 'guerra-cla' || ev.subtipo === 'guerra-cla-derrota' ||
+                        ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra') {
                         continue; // skip
                     }
                     const val = Number(ev.valor) || 0;
@@ -6568,78 +6570,7 @@ function renderConquistasHistorico(pid) {
         let playerEventsCache = [];
         let filtroAtualAlbum = 'todos';
 
-        function filtrarEventosAlbum(filtro) {
-            const buttons = document.querySelectorAll('.filtro-evento');
-            buttons.forEach(btn => {
-                if (btn.dataset.filtro === filtro) {
-                    btn.classList.remove('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
-                    btn.classList.add('bg-\[\#C8A25A\]', 'text-[#0B0A0A]');
-                } else {
-                    btn.classList.remove('bg-\[\#C8A25A\]', 'text-[#0B0A0A]');
-                    btn.classList.add('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
-                }
-            });
-
-            const eventsDiv = document.getElementById('album-events');
-            if (!eventsDiv || !playerEventsCache || playerEventsCache.length === 0) {
-                if (eventsDiv) eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento registrado.</p>';
-                return;
-            }
-
-            // Filtro por mês
-            const mesSelect = document.getElementById('album-filtro-mes');
-            const mesFiltro = mesSelect ? mesSelect.value : 'todos';
-
-            let filtered = [...playerEventsCache];
-
-            // Filtro por tipo
-            if (filtro !== 'todos') {
-                if (filtro === 'batalha') {
-                    filtered = filtered.filter(e => 
-                        ['duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(e.subtipo)
-                    );
-                } else if (filtro === 'elogio') {
-                    filtered = filtered.filter(e => 
-                        e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado'
-                    );
-                } else {
-                    filtered = filtered.filter(e => e.tipo === filtro);
-                }
-            }
-
-            // Filtro por mês
-            if (mesFiltro !== 'todos') {
-                filtered = filtered.filter(e => {
-                    const d = e.data || e.createdAt;
-                    return d && d.substring(0, 7) === mesFiltro;
-                });
-            }
-
-            if (filtered.length === 0) {
-                eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum evento nesta categoria.</p>';
-                return;
-            }
-
-            eventsDiv.innerHTML = filtered.map(e => {
-                let icon = '', color = '', sign = '';
-                if (e.tipo === 'gol') { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = '+'; }
-                else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; sign = '+'; }
-                else if (e.tipo === 'punicao') { icon = '👎'; color = 'text-red-400'; sign = '-'; }
-                else if (e.subtipo === 'elogio-recebido') { icon = '💬'; color = 'text-green-400'; sign = '+'; }
-                else if (e.subtipo === 'elogio-dado') { icon = '💬'; color = 'text-blue-400'; sign = '+'; }
-                else { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = e.valor >= 0 ? '+' : '-'; }
-                return `<div class="flex items-center justify-between p-2 rounded-lg bg-[#ECE8E1]/5">
-                    <div class="flex items-center gap-2">
-                        <span class="text-lg">${icon}</span>
-                        <div>
-                            <p class="text-sm font-medium ${color}">${e.subtipoLabel || e.subtipo || e.tipo}</p>
-                            <p class="text-xs text-gray-500">${formatarData(e.data || e.createdAt)} · ${e.observacao || ''}</p>
-                        </div>
-                    </div>
-                    <span class="font-bold ${color}">${sign}${Math.abs(e.valor || 0)}</span>
-                </div>`;
-            }).join('');
-        }
+        
 
         async function filtrarEventosAlbum(filtro) {
             filtroAtualAlbum = filtro;
