@@ -2645,13 +2645,20 @@ function getTodayStr() {
         }
 
         // Auto-finalizar duelos que passaram do prazo (dataFim)
+        let _verificandoDuelos = false;
         async function verificarDuelosExpirados() {
-            if (!events || events.length === 0) return;
-            const agoraBR = getBRDate(new Date());
-            agoraBR.setHours(23, 59, 59, 999);
-            const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agoraBR);
-            for (const duelo of expirados) {
-                try { await executarFinalizacaoDuelo(duelo, true); } catch (e) {}
+            if (_verificandoDuelos) { console.log('Verificação de duelos já em andamento, ignorando.'); return; }
+            _verificandoDuelos = true;
+            try {
+                if (!events || events.length === 0) return;
+                const agoraBR = getBRDate(new Date());
+                agoraBR.setHours(23, 59, 59, 999);
+                const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agoraBR);
+                for (const duelo of expirados) {
+                    try { await executarFinalizacaoDuelo(duelo, true); } catch (e) {}
+                }
+            } finally {
+                _verificandoDuelos = false;
             }
         }
 
@@ -2837,16 +2844,28 @@ function getTodayStr() {
                 return { status: 'ativa', diaAtual: 1, totalDias: 7, diasRestantes: 6 };
             }
 
-            const inicio = new Date(dataInicioStr);
-            const fim = new Date(dataFimStr);
-            const agora = new Date();
+            // Extrair datas em timezone LOCAL (ignorar Z/UTC)
+            const m1 = String(dataInicioStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            const m2 = String(dataFimStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+            let inicio, fim, agora;
+            if (m1) {
+                inicio = new Date(Number(m1[1]), Number(m1[2])-1, Number(m1[3]), 0, 0, 0);
+            } else {
+                inicio = new Date(dataInicioStr);
+            }
+            if (m2) {
+                fim = new Date(Number(m2[1]), Number(m2[2])-1, Number(m2[3]), 23, 59, 59);
+            } else {
+                fim = new Date(dataFimStr);
+            }
+            agora = new Date();
 
             const inicioDia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
             const fimDia = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate());
             const agoraDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
 
             // GUERRAS DE CLÃ = SEMPRE 7 DIAS (segunda a domingo)
-            // Não usar a diferença real entre dataInicio e dataFim
             const totalDias = 7;
 
             if (agoraDia < inicioDia) {
@@ -2920,14 +2939,23 @@ function getDueloAtivo(jogadorId) {
             for (const ev of playerEvents) {
                 let evTs = null;
 
-                // PRIORIDADE 1: data (YYYY-MM-DD) - data REAL do evento
+                // PRIORIDADE 1: data (YYYY-MM-DD) - data REAL do evento em timezone LOCAL
                 if (ev.data) {
-                    evTs = new Date(ev.data + 'T23:59:59').getTime();
+                    const dm = String(ev.data).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (dm) {
+                        evTs = new Date(Number(dm[1]), Number(dm[2])-1, Number(dm[3]), 23, 59, 59).getTime();
+                    } else {
+                        evTs = new Date(ev.data + 'T23:59:59').getTime();
+                    }
                 }
                 // PRIORIDADE 2: createdAt (hora exata de criação no Firebase)
-                // Fallback apenas se não houver data do evento
                 else if (ev.createdAt) {
-                    evTs = new Date(ev.createdAt).getTime();
+                    const cm = String(ev.createdAt).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (cm) {
+                        evTs = new Date(Number(cm[1]), Number(cm[2])-1, Number(cm[3]), 23, 59, 59).getTime();
+                    } else {
+                        evTs = new Date(ev.createdAt).getTime();
+                    }
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
@@ -2954,17 +2982,21 @@ function getDueloAtivo(jogadorId) {
         // Guerras de clã: glórias contam a partir da segunda-feira da semana de início
         function getInicioEfetivoGuerra(dataInicioStr) {
             if (!dataInicioStr) return null;
-            const inicio = new Date(dataInicioStr);
-            const diaSemana = inicio.getDay(); // 0=dom, 1=seg, 2=ter, ..., 6=sab
+            // Extrair YYYY-MM-DD da string (ignorar timezone UTC/Z)
+            const match = String(dataInicioStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!match) return dataInicioStr;
+            const [_, ano, mes, dia] = match.map(Number);
+            // Criar data em timezone LOCAL (Brasília) às 00:01
+            const inicio = new Date(ano, mes - 1, dia, 0, 1, 0, 0);
+            const diaSemana = inicio.getDay(); // 0=dom, 1=seg, ..., 6=sab
 
             // Se já é segunda (1), retorna a própria data
-            if (diaSemana === 1) return dataInicioStr;
+            if (diaSemana === 1) return inicio.toISOString();
 
             // Se for antes de segunda, calcular a próxima segunda
             const diasAteSegunda = diaSemana === 0 ? 1 : 8 - diaSemana;
-            const segunda = new Date(inicio);
-            segunda.setDate(inicio.getDate() + diasAteSegunda);
-            segunda.setHours(0, 1, 0, 0);
+            const segunda = new Date(ano, mes - 1, dia, 0, 1, 0, 0);
+            segunda.setDate(segunda.getDate() + diasAteSegunda);
             return segunda.toISOString();
         }
 
@@ -2982,15 +3014,27 @@ function getDueloAtivo(jogadorId) {
             }
 
             const inicioEfetivo = getInicioEfetivoGuerra(inicioStr);
-            const inicio = new Date(inicioEfetivo || inicioStr);
-            // Usar dataFim do Firebase se existir (ex: guerra reativada para terminar hoje)
-            // Senão, calcular inicio + 7 dias como padrão
+            // Criar datas em timezone LOCAL para evitar problemas com UTC
+            let inicio;
+            if (inicioEfetivo) {
+                const m = inicioEfetivo.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (m) inicio = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0, 1, 0);
+                else inicio = new Date(inicioEfetivo);
+            } else {
+                const m = String(inicioStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (m) inicio = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0, 1, 0);
+                else inicio = new Date(inicioStr);
+            }
+            // Usar dataFim do Firebase se existir
             let fim;
             if (guerra.dataFim) {
-                fim = new Date(guerra.dataFim);
+                const m = String(guerra.dataFim).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (m) fim = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 23, 59, 59);
+                else fim = new Date(guerra.dataFim);
             } else {
                 fim = new Date(inicio);
                 fim.setDate(inicio.getDate() + 7);
+                fim.setHours(23, 59, 59, 999);
             }
             const agora = new Date();
             const inicioTs = inicio.getTime();
@@ -3005,14 +3049,24 @@ function getDueloAtivo(jogadorId) {
             for (const ev of playerEvents) {
                 let evTs = null;
 
-                // PRIORIDADE 1: data (YYYY-MM-DD) - usar FIM do dia (23:59:59)
-                // Isso garante consistência com getPlayerStats que usa 'data'
+                // PRIORIDADE 1: data (YYYY-MM-DD) - usar FIM do dia (23:59:59) em timezone LOCAL
+                // Extrair ano/mes/dia para evitar inconsistência de timezone
                 if (ev.data) {
-                    evTs = new Date(ev.data + 'T23:59:59').getTime();
+                    const dm = String(ev.data).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (dm) {
+                        evTs = new Date(Number(dm[1]), Number(dm[2])-1, Number(dm[3]), 23, 59, 59).getTime();
+                    } else {
+                        evTs = new Date(ev.data + 'T23:59:59').getTime();
+                    }
                 }
                 // PRIORIDADE 2: createdAt (hora real de criação no Firebase)
                 else if (ev.createdAt) {
-                    evTs = new Date(ev.createdAt).getTime();
+                    const cm = String(ev.createdAt).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (cm) {
+                        evTs = new Date(Number(cm[1]), Number(cm[2])-1, Number(cm[3]), 23, 59, 59).getTime();
+                    } else {
+                        evTs = new Date(ev.createdAt).getTime();
+                    }
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
@@ -3136,6 +3190,17 @@ function getDueloAtivo(jogadorId) {
         }
 
         async function executarFinalizacaoDuelo(duelo, autoFinalizado = false) {
+            // 🔒 PROTEÇÃO: Ler estado ATUAL do Firebase (não confiar na memória)
+            const dueloRef = window.doc(window.db, 'duelos', duelo.id);
+            const dueloSnap = await window.getDoc(dueloRef);
+            const dueloAtual = dueloSnap.exists() ? dueloSnap.data() : duelo;
+
+            // Se já foi finalizado e bônus aplicados, sair imediatamente
+            if (dueloAtual.status === 'finalizado' && dueloAtual.bonusAplicados) {
+                console.log('Duelo ' + duelo.id + ' já finalizado, ignorando.');
+                return { vencedorId: dueloAtual.vencedorId, vencedorNome: dueloAtual.vencedorNome || '', gloriaA: dueloAtual.gloriaDesafiante || 0, gloriaB: dueloAtual.gloriaDesafiado || 0 };
+            }
+
             const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
             const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
             let vencedorId = null;
@@ -3143,7 +3208,8 @@ function getDueloAtivo(jogadorId) {
             if (gloriaA > gloriaB) { vencedorId = duelo.desafianteId; vencedorNome = duelo.desafianteNome; }
             else if (gloriaB > gloriaA) { vencedorId = duelo.desafiadoId; vencedorNome = duelo.desafiadoNome; }
 
-            await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), {
+            // Atualizar status primeiro (para bloquear outras chamadas)
+            await window.updateDoc(dueloRef, {
                 status: 'finalizado',
                 gloriaDesafiante: gloriaA,
                 gloriaDesafiado: gloriaB,
@@ -3158,10 +3224,19 @@ function getDueloAtivo(jogadorId) {
             await atualizarDueloHistorico(duelo.desafiadoId, vencedorId === duelo.desafiadoId, vencedorId === null, duelo.id);
             await resolverTorcidas(duelo.id, vencedorId);
 
-            if (vencedorId && !duelo.bonusAplicados) {
+            // 🔒 Verificar NOVAMENTE no Firebase se bônus já foram aplicados (proteção contra race condition)
+            const checkSnap = await window.getDoc(dueloRef);
+            const checkData = checkSnap.exists() ? checkSnap.data() : {};
+            if (checkData.bonusAplicados) {
+                console.log('Bônus do duelo ' + duelo.id + ' já aplicados por outra instância.');
+                return { vencedorId, vencedorNome, gloriaA, gloriaB };
+            }
+
+            if (vencedorId) {
                 const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafiadoId;
                 const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
 
+                // 🔒 Verificar duplicata no Firebase (não só na memória)
                 const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
                 if (!existeVitoria) {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
@@ -3181,7 +3256,7 @@ function getDueloAtivo(jogadorId) {
                         dueloId: duelo.id, createdAt: new Date().toISOString()
                     });
                 }
-                await window.updateDoc(window.doc(window.db, 'duelos', duelo.id), { bonusAplicados: true });
+                await window.updateDoc(dueloRef, { bonusAplicados: true });
             }
             return { vencedorId, vencedorNome, gloriaA, gloriaB };
         }
@@ -4200,7 +4275,7 @@ function renderTorcidasGuerraAdmin() {
 
             // Excluir / Reativar Duelos Finalizados
             const excluirDuelosEl = document.getElementById('admin-arena-excluir-duelos');
-            const duelosFinalizados = duelos.filter(d => d.status === 'finalizado');
+            const duelosFinalizados = duelos.filter(d => d.status === 'finalizado').sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
             if (excluirDuelosEl) {
                 if (duelosFinalizados.length > 0) {
                     excluirDuelosEl.innerHTML = duelosFinalizados.map(d => `
@@ -4271,9 +4346,9 @@ function renderTorcidasGuerraAdmin() {
 
 
         function getDueloVitoriaBadge(playerId) {
-            const vitorias = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId);
-            if (vitorias.length === 0) return '';
-            return `<div class="vitoria-duelo-badge">${vitorias.length} Vitória${vitorias.length > 1 ? 's' : ''}</div>`;
+            const vitorias = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
+            if (vitorias === 0) return '';
+            return `<div class="vitoria-duelo-badge">${vitorias} Vitória${vitorias > 1 ? 's' : ''}</div>`;
         }function getDueloBadge(playerId) {
             // Show active duels - posicionado na parte inferior direita para não sobrepor elogio
             const dueloAtivo = duelos.find(d => d.status === 'ativo' && (d.desafianteId === playerId || d.desafiadoId === playerId));
@@ -4294,10 +4369,24 @@ function renderTorcidasGuerraAdmin() {
 
         // ===== HOME BADGE: Série Invicta =====
         function getStreakBadge(playerId) {
-            // Mostrar vitórias em duelos no canto inferior esquerdo
-            const vitorias = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
-            if (vitorias === 0) return '';
-            return `<div class="absolute z-30 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-[#FFD700] px-2 py-1 rounded text-xs font-bold border border-[#FFD700]" style="bottom:6px;left:6px;box-shadow:0 0 10px rgba(255,215,0,0.3);">👑 ${vitorias}</div>`;
+            // Calcular streak ATUAL a partir dos duelos finalizados (não do histórico corrompido)
+            const duelosJogador = duelos
+                .filter(d => d.status === 'finalizado' && (d.desafianteId === playerId || d.desafiadoId === playerId))
+                .sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
+
+            let streakAtual = 0;
+            for (const d of duelosJogador) {
+                if (!d.vencedorId) {
+                    streakAtual = 0; // empate reseta
+                } else if (d.vencedorId === playerId) {
+                    streakAtual++; // vitória aumenta
+                } else {
+                    streakAtual = 0; // derrota reseta
+                }
+            }
+
+            if (streakAtual < 2) return ''; // Só mostra se streak atual for 2+
+            return `<div class="absolute z-30 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-[#FFD700] px-2 py-1 rounded text-xs font-bold border border-[#FFD700]" style="bottom:6px;left:6px;box-shadow:0 0 10px rgba(255,215,0,0.3);">👑 ${streakAtual}</div>`;
         }
 
         function getGuerraVencedoraBadge(playerId) {
@@ -5044,7 +5133,7 @@ function renderTorcidasGuerraAdmin() {
 
             // Recalcular ranking diretamente dos duelos finalizados existentes
             // (ignora duelosHistorico órfão de duelos excluídos)
-            const duelosFinalizados = duelos.filter(d => d.status === 'finalizado');
+            const duelosFinalizados = duelos.filter(d => d.status === 'finalizado').sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
             const statsMap = {};
 
             duelosFinalizados.forEach(d => {
@@ -5125,14 +5214,14 @@ function renderTorcidasGuerraAdmin() {
                             <p class="text-2xl font-black text-[#C8A25A]">${d.pontos || 0}</p>
                             <p class="text-xs text-gray-400">pontos</p>
                             ${(d.streakAtual || 0) > 0 ? `<p class="text-xs text-green-400 font-bold">🔥 Série: ${d.streakAtual}</p>` : ''}
-                            ${(d.streakMax || 0) >= 2 ? `<p class="text-xs text-yellow-400 font-bold">🏆 Máx: ${d.streakMax}</p>` : ''}
+                            ${(d.streakAtual || 0) >= 2 ? `<p class="text-xs text-yellow-400 font-bold">🔥 Lendário</p>` : ''}
                         </div>
                     </div>
                 `;
             }).join('');
 
-            // Hall dos Lendários (streakMax >= 3)
-            const lendarios = sorted.filter(d => (d.streakMax || 0) >= 2);
+            // Hall dos Lendários (streakAtual >= 2)
+            const lendarios = sorted.filter(d => (d.streakAtual || 0) >= 2);
             if (lendarios.length > 0) {
                 hallList.innerHTML = lendarios.map(d => {
                     const player = players.find(p => p.id === d.jogadorId);
@@ -5142,8 +5231,8 @@ function renderTorcidasGuerraAdmin() {
                         <div class="glass rounded-xl p-4 text-center border-2 border-yellow-500/30" style="box-shadow: 0 0 20px rgba(200,162,90,0.1);">
                             <img src="${photoUrl}" class="w-20 h-20 rounded-full object-cover border-2 border-yellow-400 mx-auto mb-2" onerror="this.style.display='none'">
                             <p class="font-bold text-yellow-400">${nome}</p>
-                            <p class="text-2xl font-black">🔥 ${d.streakMax}</p>
-                            <p class="text-xs text-gray-400">vitórias consecutivas</p>
+                            <p class="text-2xl font-black">🔥 ${d.streakAtual}</p>
+                            <p class="text-xs text-gray-400">vitórias consecutivas (atual)</p>
                         </div>
                     `;
                 }).join('');
@@ -5760,19 +5849,20 @@ async function renderPlayers() {
                         const stats = getPlayerStats(p.id);
                         const eq = equipes.find(e => e.id === p.equipeId);
                         // Calcular streakMax diretamente dos duelos finalizados (ignora duelosHistorico corrompido)
-                        const duelosJogador = duelos.filter(d => d.status === 'finalizado' && (d.desafianteId === p.id || d.desafiadoId === p.id));
-                        let streakAtual = 0, streakMax = 0;
-                        duelosJogador.forEach(d => {
+                        const duelosJogador = duelos
+                            .filter(d => d.status === 'finalizado' && (d.desafianteId === p.id || d.desafiadoId === p.id))
+                            .sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
+                        let streakAtual = 0;
+                        for (const d of duelosJogador) {
                             if (!d.vencedorId) {
-                                streakAtual = 0; // empate
+                                streakAtual = 0; // empate reseta
                             } else if (d.vencedorId === p.id) {
-                                streakAtual++;
-                                if (streakAtual > streakMax) streakMax = streakAtual;
+                                streakAtual++; // vitória aumenta
                             } else {
-                                streakAtual = 0; // derrota
+                                streakAtual = 0; // derrota reseta
                             }
-                        });
-                        const isLegendary = streakMax >= 2;
+                        }
+                        const isLegendary = streakAtual >= 2;
                         const eqNome = eq ? eq.nome : null;
                         const eqCor = eq ? eq.cor : null;
                         const eqBrasao = eq && eq.brasao ? getBrasaoUrl(eq.brasao) : null;
@@ -6657,17 +6747,16 @@ function renderConquistasHistorico(pid) {
             // Calcular streakMax diretamente dos duelos finalizados (ignora duelosHistorico corrompido)
             const duelosJogador = duelos.filter(d => d.status === 'finalizado' && (d.desafianteId === playerId || d.desafiadoId === playerId));
             let streakAtual = 0, streakMax = 0;
-            duelosJogador.forEach(d => {
+            for (const d of duelosJogador) {
                 if (!d.vencedorId) {
-                    streakAtual = 0;
+                    streakAtual = 0; // empate reseta
                 } else if (d.vencedorId === playerId) {
-                    streakAtual++;
-                    if (streakAtual > streakMax) streakMax = streakAtual;
+                    streakAtual++; // vitória aumenta
                 } else {
-                    streakAtual = 0;
+                    streakAtual = 0; // derrota reseta
                 }
-            });
-            const isLegendary = streakMax >= 2;
+            }
+            const isLegendary = streakAtual >= 2;
 
             const albumNomeEl = document.getElementById('album-player-name2');
             if (albumNomeEl) {
@@ -6693,7 +6782,7 @@ function renderConquistasHistorico(pid) {
                     banner.style.cssText = 'background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.05)); border: 2px solid #FFD700; box-shadow: 0 0 30px rgba(255,215,0,0.2);';
                     banner.innerHTML = `
                         <p class="text-2xl font-black text-[#FFD700] mb-1" style="font-family: 'Cinzel', serif;">🔥 GUERREIRO LENDÁRIO 🔥</p>
-                        <p class="text-sm text-gray-400">${streakMax} vitórias consecutivas em duelos</p>
+                        <p class="text-sm text-gray-400">${streakAtual} vitórias consecutivas em duelos</p>
                         <p class="text-xs text-gray-500 mt-1">Alcançou o status de Lendário na Arena</p>
                     `;
                     albumContent.insertBefore(banner, albumContent.firstChild);
