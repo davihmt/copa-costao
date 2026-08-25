@@ -3257,6 +3257,22 @@ function getDueloAtivo(jogadorId) {
                     });
                 }
                 await window.updateDoc(dueloRef, { bonusAplicados: true });
+            } else {
+                // EMPATE: criar evento neutro para ambos os jogadores
+                const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
+
+                for (const jogadorId of [duelo.desafianteId, duelo.desafiadoId]) {
+                    const existeEmpate = eventoDueloExiste(jogadorId, 'duelo-empate', duelo.id);
+                    if (!existeEmpate) {
+                        await window.addDoc(window.collection(window.db, 'eventos'), {
+                            jogadorId: jogadorId, tipo: 'gol', subtipo: 'duelo-empate',
+                            subtipoLabel: '⚖️ Empate em Duelo', valor: 0, data: dataEvento,
+                            observacao: 'Empate no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
+                            dueloId: duelo.id, createdAt: new Date().toISOString()
+                        });
+                    }
+                }
+                await window.updateDoc(dueloRef, { bonusAplicados: true });
             }
             return { vencedorId, vencedorNome, gloriaA, gloriaB };
         }
@@ -5576,7 +5592,43 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             return '';
         };
 
-function getPlayerStats(playerId) {
+// ===== PADRÃO DE ÍCONES E CORES DOS EVENTOS =====
+        function getEventoIconeCor(evento) {
+            const tipo = evento.tipo;
+            const subtipo = evento.subtipo;
+
+            // Glória / Gol
+            if (tipo === 'gol') {
+                if (subtipo === 'elogio-recebido') return { icone: '💬', cor: 'text-green-400', bg: 'bg-green-900/10', border: 'border-green-500/20', titulo: 'text-green-400' };
+                if (subtipo === 'elogio-dado') return { icone: '💬', cor: 'text-blue-400', bg: 'bg-blue-900/10', border: 'border-blue-500/20', titulo: 'text-blue-400' };
+                if (subtipo === 'duelo-vitoria') return { icone: '⚔️', cor: 'text-orange-400', bg: 'bg-orange-900/10', border: 'border-orange-500/20', titulo: 'text-orange-400' };
+                if (subtipo === 'duelo-derrota') return { icone: '⚔️', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' };
+                if (subtipo === 'duelo-empate') return { icone: '⚖️', cor: 'text-gray-400', bg: 'bg-gray-800/30', border: 'border-gray-500/20', titulo: 'text-gray-400' };
+                if (subtipo === 'guerra-cla') return { icone: '🛡️', cor: 'text-[#C8A25A]', bg: 'bg-[#C8A25A]/10', border: 'border-[#C8A25A]/20', titulo: 'text-[#C8A25A]' };
+                if (subtipo === 'guerra-cla-derrota') return { icone: '🛡️', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' };
+                if (subtipo === 'torcida-sabio') return { icone: '👁️', cor: 'text-cyan-400', bg: 'bg-cyan-900/10', border: 'border-cyan-500/20', titulo: 'text-cyan-400' };
+                if (subtipo === 'torcida-sabio-guerra') return { icone: '👁️', cor: 'text-cyan-400', bg: 'bg-cyan-900/10', border: 'border-cyan-500/20', titulo: 'text-cyan-400' };
+                if (subtipo === 'torcida-participante-guerra') return { icone: '👁️', cor: 'text-cyan-400', bg: 'bg-cyan-900/10', border: 'border-cyan-500/20', titulo: 'text-cyan-400' };
+                if (subtipo === 'cartao-verde' || subtipo === 'benção-dos-deuses') return { icone: '🜂', cor: 'text-green-400', bg: 'bg-green-900/10', border: 'border-green-500/20', titulo: 'text-green-400' };
+                return { icone: '⚔️', cor: 'text-[#C8A25A]', bg: 'bg-[#C8A25A]/10', border: 'border-[#C8A25A]/20', titulo: 'text-[#C8A25A]' }; // Gol padrão
+            }
+
+            // Figurinha / Runa
+            if (tipo === 'figurinha') return { icone: 'runa', cor: 'text-yellow-400', bg: 'bg-yellow-900/10', border: 'border-yellow-500/20', titulo: 'text-yellow-400' };
+
+            // Punição
+            if (tipo === 'punicao') {
+                if (subtipo === 'duelo-derrota') return { icone: '⚔️', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' };
+                if (subtipo === 'duelo-empate') return { icone: '⚖️', cor: 'text-gray-400', bg: 'bg-gray-800/30', border: 'border-gray-500/20', titulo: 'text-gray-400' };
+                if (subtipo === 'guerra-cla-derrota') return { icone: '🛡️', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' };
+                return { icone: '🚨', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' }; // Punição padrão = sirene
+            }
+
+            return { icone: '📜', cor: 'text-gray-400', bg: 'bg-gray-800/30', border: 'border-gray-500/20', titulo: 'text-gray-400' };
+        }
+        // ===== FIM PADRÃO =====
+
+        function getPlayerStats(playerId) {
             const playerEvents = events.filter(e => e.jogadorId === playerId);
             playerEventsCache = playerEvents;
 
@@ -6686,7 +6738,7 @@ function renderConquistasHistorico(pid) {
                 } else if (filtro === 'elogio') {
                     filtered = filtered.filter(e => e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado');
                 } else if (filtro === 'batalha') {
-                    filtered = filtered.filter(e => ['duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(e.subtipo));
+                    filtered = filtered.filter(e => ['duelo-vitoria','duelo-derrota','duelo-empate','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(e.subtipo));
                 }
             }
             if (mesFiltro !== 'todos') {
@@ -6700,19 +6752,20 @@ function renderConquistasHistorico(pid) {
                 return;
             }
             container.innerHTML = filtered.map(e => {
-                let icon = '⚔️', color = 'text-[#ECE8E1]', sign = '+';
-                if (e.tipo === 'gol') {
-                    if (e.subtipo === 'elogio-recebido') { icon = '💬'; color = 'text-green-400'; }
-                    else if (e.subtipo === 'elogio-dado') { icon = '💬'; color = 'text-blue-400'; }
-                    else if (['duelo-vitoria','guerra-cla','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(e.subtipo)) { icon = '⚔️'; color = 'text-orange-400'; }
-                    else if (e.subtipo === 'duelo-derrota' || e.subtipo === 'guerra-cla-derrota') { icon = '💀'; color = 'text-red-400'; sign = ''; }
-                    else if (e.subtipo === 'cartao-verde' || e.subtipo === 'benção-dos-deuses') { icon = '🜂'; color = 'text-green-400'; }
-                } else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; }
-                else if (e.tipo === 'punicao') { icon = '👎'; color = 'text-red-400'; sign = '-'; }
+                const estilo = getEventoIconeCor(e);
                 const val = Number(e.valor) || 0;
                 const valStr = val > 0 ? '+' + val : String(val);
                 const dataStr = e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR') : '';
-                return '<div class="flex items-center justify-between p-2 rounded-lg bg-gray-800/30 hover:bg-gray-800/50 transition-all event-row"><div class="flex items-center gap-2 flex-1 min-w-0"><span class="text-sm">' + icon + '</span><div class="min-w-0"><p class="text-sm font-semibold truncate">' + (e.observacao || e.subtipoLabel || e.subtipo || 'Evento') + '</p><p class="text-xs text-gray-500">' + dataStr + '</p></div></div><span class="font-bold ' + color + ' ml-2">' + valStr + '</span></div>';
+                // Figurinha: mostrar imagem em miniatura
+                let iconDisplay = estilo.icone;
+                if (e.tipo === 'figurinha' || (e.subtipo && e.subtipo.includes('figurinha'))) {
+                    const imgFile = e.subtipoImg || STICKER_IMG_MAP[e.subtipo] || '';
+                    const imgUrl = imgFile ? getImageUrl(imgFile) : '';
+                    if (imgUrl) {
+                        iconDisplay = '<img src="' + imgUrl + '" style="width:24px;height:24px;object-fit:contain;border-radius:4px;">';
+                    }
+                }
+                return '<div class="flex items-center justify-between p-2 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-center gap-2 flex-1 min-w-0"><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-semibold truncate ' + estilo.titulo + '">' + (e.observacao || e.subtipoLabel || e.subtipo || 'Evento') + '</p><p class="text-xs text-gray-500">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2">' + valStr + '</span></div>';
             }).join('');
         }
 
@@ -6745,8 +6798,10 @@ function renderConquistasHistorico(pid) {
             // Badge de vitórias em duelos no perfil
             const vitoriasDuelo = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
             // Calcular streakMax diretamente dos duelos finalizados (ignora duelosHistorico corrompido)
-            const duelosJogador = duelos.filter(d => d.status === 'finalizado' && (d.desafianteId === playerId || d.desafiadoId === playerId));
-            let streakAtual = 0, streakMax = 0;
+            const duelosJogador = duelos
+                .filter(d => d.status === 'finalizado' && (d.desafianteId === playerId || d.desafiadoId === playerId))
+                .sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
+            let streakAtual = 0;
             for (const d of duelosJogador) {
                 if (!d.vencedorId) {
                     streakAtual = 0; // empate reseta
@@ -7079,26 +7134,30 @@ function renderConquistasHistorico(pid) {
                 eventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum feito registrado</p>';
             } else {
                 eventsDiv.innerHTML = playerEvents.map(e => {
-                    let icon = '', color = '', sign = '';
-                    if (e.tipo === 'gol') { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = '+'; }
-                    else if (e.tipo === 'figurinha') {
+                    const estilo = getEventoIconeCor(e);
+                    const val = Number(e.valor) || 0;
+                    const valStr = val > 0 ? '+' + val : String(val);
+
+                    // Figurinha: mostrar imagem em miniatura
+                    let iconDisplay = estilo.icone;
+                    if (e.tipo === 'figurinha' || (e.subtipo && e.subtipo.includes('figurinha'))) {
                         const imgFile = e.subtipoImg || STICKER_IMG_MAP[e.subtipo] || '';
                         const imgUrl = imgFile ? getImageUrl(imgFile) : '';
-                        icon = imgUrl ? `<img src="${imgUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:4px;">` : '🎴';
-                        color = 'text-yellow-400'; sign = '+';
+                        if (imgUrl) {
+                            iconDisplay = `<img src="${imgUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:4px;">`;
+                        }
                     }
-                    else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
 
                     return `
-                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg ${estilo.bg} ${estilo.border} border">
                             <div class="flex items-center gap-3">
-                                <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${icon}</span>
+                                <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconDisplay}</span>
                                 <div>
-                                    <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
+                                    <p class="text-sm font-semibold ${estilo.titulo}">${e.subtipoLabel || e.tipo}</p>
                                     <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
                                 </div>
                             </div>
-                            <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
+                            <span class="font-bold ${estilo.cor}">${valStr}</span>
                         </div>
                     `;
                 }).join('');
