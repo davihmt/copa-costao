@@ -2097,10 +2097,16 @@
                         <!-- FEITOS RETROATIVOS -->
                         <div class="glass rounded-2xl p-6 max-w-2xl mb-6 mt-8">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-scroll mr-2 text-[#C8A25A]"></i>Feitos Retroativos</h4>
-                            <p class="text-gray-400 text-sm mb-4">Processa e adiciona automaticamente todas as feitos alcançadas desde <strong>01/07/2026</strong> até hoje. Verifica dia a dia, semana a semana e mês a mês.</p>
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-400 mb-2">Data Inicial</label>
-                                <input type="date" id="ret-data-inicio" value="2026-07-01" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                            <p class="text-gray-400 text-sm mb-4">Processa e adiciona automaticamente todas as feitos alcançadas no período selecionado. Deixe a Data Final em branco para processar até hoje. Verifica dia a dia, semana a semana e mês a mês.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Data Inicial</label>
+                                    <input type="date" id="ret-data-inicio" value="2026-07-01" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Data Final</label>
+                                    <input type="date" id="ret-data-fim" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                </div>
                             </div>
                             <button onclick="processarConquistasRetroativas()" class="w-full py-3 rounded-xl btn-primary text-[#ECE8E1] font-bold text-lg">
                                 <i class="fas fa-wand-magic-sparkles mr-2"></i>Processar Feitos Retroativos
@@ -6523,7 +6529,7 @@ function calcConquistas(pid) {
                                 try {
                                     await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
                                         jogadorId: pid,
-                                        jogadorNome: alvoNome,
+                                        jogadorNome: player.nome + ' ' + (player.sobrenome || ''),
                                         conquistaId: cfg.id,
                                         conquistaNome: nome,
                                         conquistaImg: img,
@@ -6561,7 +6567,7 @@ function calcConquistas(pid) {
                             try {
                                 await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
                                     jogadorId: pid,
-                                    jogadorNome: alvoNome,
+                                    jogadorNome: player.nome + ' ' + (player.sobrenome || ''),
                                     conquistaId: cfg.id,
                                     conquistaNome: nome,
                                     conquistaImg: img,
@@ -8164,6 +8170,8 @@ async function lancarGols() {
                     createdAt: new Date().toISOString()
                 });
                 showToast(`${qtd} gol(s) lançado(s)!`, 'success');
+                // Verificar conquistas automáticas
+                verificarConquistasAutomaticas(paraId, data);
                 setTimeout(() => {
                     renderPlayers();
                     renderRanking();
@@ -8274,6 +8282,7 @@ async function lancarPunicao() {
                     createdAt: new Date().toISOString()
                 });
                 showToast(`${map[tipo].label} aplicada!`, 'success');
+                verificarConquistasAutomaticas(paraId, data);
                 document.getElementById('pun-qtd').value = '';
             } catch (e) {
                 showToast('Erro ao aplicar julgamento', 'error');
@@ -10032,7 +10041,7 @@ async function concederConquista() {
             try {
                 await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
                     jogadorId: jogadorId,
-                    jogadorNome: alvoNome,
+                    jogadorNome: player.nome + ' ' + (player.sobrenome || ''),
                     conquistaId: tipo,
                     conquistaNome: cfg.nome || cfg.name || '',
                     conquistaImg: cfg.img || '',
@@ -10046,7 +10055,7 @@ async function concederConquista() {
                     premio: premio,
                     createdAt: new Date().toISOString()
                 });
-                showToast(`Conquista "${tesouro || cfg.name}" concedida a ${player.nome}!`, 'success');
+                showToast(`Conquista "${cfg.nome || cfg.name || premio}" concedida a ${player.nome}!`, 'success');
                 document.getElementById('conq-valor').value = '';
                 document.getElementById('conq-obs').value = '';
                 document.getElementById('conq-premio').value = '';
@@ -10175,6 +10184,7 @@ function renderAdminConquistas() {
 
 async function processarConquistasRetroativas() {
             const dataInicio = document.getElementById('ret-data-inicio').value;
+            const dataFim = document.getElementById('ret-data-fim').value || getHojeBrasilia();
             if (!dataInicio) { showToast('Informe a data inicial', 'error'); return; }
 
             const progressDiv = document.getElementById('ret-progress');
@@ -10185,8 +10195,7 @@ async function processarConquistasRetroativas() {
             statusText.textContent = 'Analisando guerreiroes...';
 
             const inicio = new Date(dataInicio + 'T00:00:00');
-            const hoje = new Date();
-            hoje.setHours(23, 59, 59, 999);
+            const fim = new Date(dataFim + 'T23:59:59');
 
             let totalAdicionadas = 0;
             const configs = conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT;
@@ -10205,7 +10214,7 @@ async function processarConquistasRetroativas() {
                 playerEvents.forEach(e => {
                     if (!e.data) return;
                     const evDate = new Date(e.data + 'T12:00:00');
-                    if (evDate < inicio || evDate > hoje) return;
+                    if (evDate < inicio || evDate > fim) return;
 
                     const val = Number(e.valor) || 0;
                     let score = 0;
@@ -10231,7 +10240,7 @@ async function processarConquistasRetroativas() {
                         );
                         if (!jaExiste) {
                             await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
-                                jogadorId: player.id, jogadorNome: alvoNome,
+                                jogadorId: player.id, jogadorNome: player.nome + ' ' + (player.sobrenome || ''),
                                 conquistaId: 'massacre', conquistaNome: 'MASSACRE!!!', conquistaImg: '+14.png',
                                 periodo: 'day', meta: 14, valorAtingido: total, dataConquista: dk,
                                 pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', createdAt: new Date().toISOString()
@@ -10248,7 +10257,7 @@ async function processarConquistasRetroativas() {
                         );
                         if (!jaExiste) {
                             await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
-                                jogadorId: player.id, jogadorNome: alvoNome,
+                                jogadorId: player.id, jogadorNome: player.nome + ' ' + (player.sobrenome || ''),
                                 conquistaId: 'furia-de-odin', conquistaNome: 'FÚRIA DE ODIN!!!', conquistaImg: '+30.png',
                                 periodo: 'week', meta: 30, valorAtingido: total, dataConquista: wk,
                                 pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', createdAt: new Date().toISOString()
@@ -10293,7 +10302,7 @@ async function processarConquistasRetroativas() {
                                 }
 
                                 await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
-                                    jogadorId: player.id, jogadorNome: alvoNome,
+                                    jogadorId: player.id, jogadorNome: player.nome + ' ' + (player.sobrenome || ''),
                                     conquistaId: cfg.id, conquistaNome: cfg.nome || cfg.name || '', conquistaImg: cfg.img || '',
                                     periodo: 'month', meta: cfg.meta || cfg.goals || 0, valorAtingido: total, dataConquista: dataAtingida,
                                     pago: false, dataPagamento: null, observacao: 'Conquista retroativa (automática)', premio: cfg.premio || (CONQUISTAS_DEFAULT.find(c => c.id === cfg.id) && CONQUISTAS_DEFAULT.find(c => c.id === cfg.id).premio) || '', createdAt: new Date().toISOString()
@@ -10310,6 +10319,125 @@ async function processarConquistasRetroativas() {
             showToast(`${totalAdicionadas} feitos retroativos processadas!`, 'success');
             renderAdminConquistas();
         }
+
+        // ===== VERIFICAÇÃO AUTOMÁTICA DE CONQUISTAS =====
+        async function verificarConquistasAutomaticas(jogadorId, dataReferencia) {
+            const player = players.find(p => p.id === jogadorId);
+            if (!player) return;
+
+            const configs = conquistasConfig.length > 0 ? conquistasConfig : CONQUISTAS_DEFAULT;
+            const playerEvents = events.filter(e => e.jogadorId === jogadorId);
+            const dataRef = dataReferencia || getHojeBrasilia();
+
+            // Calcular totais por período
+            const evDate = new Date(dataRef + 'T12:00:00');
+
+            // DIA
+            let totalDia = 0;
+            playerEvents.forEach(e => {
+                if (!e.data) return;
+                const d = new Date(e.data + 'T12:00:00');
+                if (d.toDateString() !== evDate.toDateString()) return;
+                const val = Number(e.valor) || 0;
+                if (e.tipo === 'gol' || e.tipo === 'figurinha') totalDia += val;
+                else if (e.tipo === 'punicao') totalDia -= Math.abs(val);
+            });
+
+            // SEMANA
+            const wkRef = getWeekRangeBrasilia(dataRef);
+            let totalSemana = 0;
+            playerEvents.forEach(e => {
+                if (!e.data) return;
+                const d = new Date(e.data + 'T12:00:00');
+                if (d < wkRef.monday || d > wkRef.sunday) return;
+                const val = Number(e.valor) || 0;
+                if (e.tipo === 'gol' || e.tipo === 'figurinha') totalSemana += val;
+                else if (e.tipo === 'punicao') totalSemana -= Math.abs(val);
+            });
+
+            // MÊS
+            const mk = dataRef.substring(0, 7);
+            let totalMes = 0;
+            playerEvents.forEach(e => {
+                if (!e.data) return;
+                if (!e.data.startsWith(mk)) return;
+                const val = Number(e.valor) || 0;
+                if (e.tipo === 'gol' || e.tipo === 'figurinha') totalMes += val;
+                else if (e.tipo === 'punicao') totalMes -= Math.abs(val);
+            });
+
+            const alvoNome = player.nome + ' ' + (player.sobrenome || '');
+
+            for (const cfg of configs) {
+                // Verificar tipoAlvo
+                const tipoAlvo = cfg.tipoAlvo || 'guerreiro';
+                if (tipoAlvo === 'comissao') continue; // Só guerreiros e ambos
+
+                let total = 0;
+                let dataConquista = dataRef;
+                let periodoLabel = '';
+
+                if (cfg.periodo === 'day') {
+                    total = totalDia;
+                    periodoLabel = 'dia';
+                } else if (cfg.periodo === 'week') {
+                    total = totalSemana;
+                    dataConquista = getDiaBrasilia(wkRef.monday.toISOString());
+                    periodoLabel = 'semana';
+                } else if (cfg.periodo === 'month') {
+                    total = totalMes;
+                    dataConquista = mk + '-01';
+                    periodoLabel = 'mês';
+                }
+
+                const meta = cfg.meta || cfg.goals || 0;
+                if (total >= meta) {
+                    // Verificar se já existe
+                    const jaExiste = conquistasHistorico.some(ch =>
+                        ch.jogadorId === jogadorId && 
+                        ch.conquistaId === cfg.id && 
+                        ch.dataConquista === dataConquista
+                    );
+
+                    if (!jaExiste) {
+                        await window.addDoc(window.collection(window.db, 'conquistasHistorico'), {
+                            jogadorId: jogadorId,
+                            jogadorNome: player.nome + ' ' + (player.sobrenome || ''),
+                            conquistaId: cfg.id,
+                            conquistaNome: cfg.nome || cfg.name || '',
+                            conquistaImg: cfg.img || '',
+                            periodo: cfg.periodo,
+                            meta: meta,
+                            valorAtingido: total,
+                            dataConquista: dataConquista,
+                            pago: false,
+                            dataPagamento: null,
+                            observacao: `Conquista automática (${periodoLabel})`,
+                            premio: cfg.premio || '',
+                            createdAt: new Date().toISOString()
+                        });
+                        console.log(`🏆 Conquista automática: ${cfg.nome} para ${alvoNome} (${total} ${periodoLabel})`);
+                    }
+                }
+            }
+        }
+
+        // ===== HELPER getWeekRangeBrasilia =====
+        function getWeekRangeBrasilia(dateStr) {
+            const d = new Date(dateStr + 'T12:00:00');
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(d.getFullYear(), d.getMonth(), diff, 0, 0, 0);
+            const sunday = new Date(d.getFullYear(), d.getMonth(), diff + 6, 23, 59, 59, 999);
+            return { monday, sunday };
+        }
+
+        // ===== HELPER getDiaBrasilia =====
+        function getDiaBrasilia(dateStr) {
+            const d = new Date(dateStr);
+            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        }
+
 
         // ===== FIGURINHAS CONFIG CRUD =====
         var figurinhasConfig = [];
