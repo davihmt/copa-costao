@@ -3906,7 +3906,7 @@ function renderTorcidasGuerraAdmin() {
                                 const player = players.find(p => p.id === ev.jogadorId);
                                 const com = comissao.find(c => c.id === ev.jogadorId);
                                 const nome = player ? player.nome + ' ' + (player.sobrenome || '') : (com ? com.nome : ev.jogadorId);
-                                const data = ev.data || ev.createdAt ? new Date(ev.data || ev.createdAt).toLocaleDateString('pt-BR') : '';
+                                const data = ev.data || ev.createdAt ? getBRDate(ev.data || ev.createdAt).toLocaleDateString('pt-BR') : '';
                                 const isAcerto = ev.valor > 0;
                                 return `
                                     <div class="flex items-center justify-between p-2 rounded-lg bg-gray-800/30">
@@ -6312,7 +6312,7 @@ async function renderPlayers() {
             }
 
             container.innerHTML = elogiosRecentes.map(e => {
-                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                const data = e.data ? getBRDate(e.data).toLocaleDateString('pt-BR') : '';
                 const tipoLabel = e.paraTipo === 'jogador' ? '⚔️' : e.paraTipo === 'comissao' ? '⭐' : '👔';
                 const tipoText = e.paraTipo === 'jogador' ? 'Guerreiro' : e.paraTipo === 'comissao' ? 'Conselho dos Sábios' : 'Anciões do Reino';
                 return `
@@ -6354,7 +6354,7 @@ async function renderPlayers() {
 
             container.classList.remove('hidden');
             list.innerHTML = elogiosJogador.map(e => {
-                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                const data = e.data ? getBRDate(e.data).toLocaleDateString('pt-BR') : '';
                 return `
                     <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/30">
                         <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#C8A25A] to-[#8C6239] flex items-center justify-center text-[#ECE8E1] font-bold text-xs flex-shrink-0">
@@ -6756,7 +6756,7 @@ function renderConquistasHistorico(pid) {
                 const estilo = getEventoIconeCor(e);
                 const val = Number(e.valor) || 0;
                 const valStr = val > 0 ? '+' + val : String(val);
-                const dataStr = e.data ? new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR') : '';
+                const dataStr = e.data ? getBRDate(e.data).toLocaleDateString('pt-BR') : '';
                 // Figurinha: mostrar imagem em miniatura
                 let iconDisplay = estilo.icone;
                 if (e.tipo === 'figurinha' || (e.subtipo && e.subtipo.includes('figurinha'))) {
@@ -7568,7 +7568,7 @@ function getTorcidasConsecutivas(comissaoId) {
                     elogiosDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum honraria recebido ainda</p>';
                 } else {
                     elogiosDiv.innerHTML = elogiosComissao.map(e => {
-                        const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                        const data = e.data ? getBRDate(e.data).toLocaleDateString('pt-BR') : '';
                         return `
                             <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/30">
                                 <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#C8A25A] to-[#8C6239] flex items-center justify-center text-[#ECE8E1] font-bold text-xs flex-shrink-0">
@@ -8214,6 +8214,11 @@ async function lancarFigurinha() {
 
                 await Promise.all(promises);
                 showToast(`${map[tipo].label} (+${map[tipo].val}) lançada para ${selectedFigPlayers.size} guerreiro(es)!`, 'success');
+
+                  // Verificar conquistas automáticas
+                  for (const jogadorId of selectedFigPlayers) {
+                      verificarConquistasAutomaticas(jogadorId, data);
+                  }
                 selectedFigPlayers.clear();
                 renderFigPlayersGrid();
             } catch (e) {
@@ -9449,7 +9454,7 @@ function renderElogiosAdmin() {
             }
 
             container.innerHTML = honrarias.map(e => {
-                const data = e.data ? new Date(e.data).toLocaleDateString('pt-BR') : '';
+                const data = e.data ? getBRDate(e.data).toLocaleDateString('pt-BR') : '';
                 return `
                     <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
                         <div class="flex items-center gap-3">
@@ -10433,10 +10438,7 @@ async function processarConquistasRetroativas() {
         }
 
         // ===== HELPER getDiaBrasilia =====
-        function getDiaBrasilia(dateStr) {
-            const d = new Date(dateStr);
-            return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        }
+        
 
 
         // ===== FIGURINHAS CONFIG CRUD =====
