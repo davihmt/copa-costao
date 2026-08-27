@@ -4394,24 +4394,10 @@ function renderTorcidasGuerraAdmin() {
 
         // ===== HOME BADGE: Série Invicta =====
         function getStreakBadge(playerId) {
-            // Calcular streak ATUAL a partir dos duelos finalizados (não do histórico corrompido)
-            const duelosJogador = duelos
-                .filter(d => d.status === 'finalizado' && (d.desafianteId === playerId || d.desafiadoId === playerId))
-                .sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
-
-            let streakAtual = 0;
-            for (const d of duelosJogador) {
-                if (!d.vencedorId) {
-                    streakAtual = 0; // empate reseta
-                } else if (d.vencedorId === playerId) {
-                    streakAtual++; // vitória aumenta
-                } else {
-                    streakAtual = 0; // derrota reseta
-                }
-            }
-
-            if (streakAtual < 2) return ''; // Só mostra se streak atual for 2+
-            return `<div class="absolute z-30 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-[#FFD700] px-2 py-1 rounded text-xs font-bold border border-[#FFD700]" style="bottom:6px;left:6px;box-shadow:0 0 10px rgba(255,215,0,0.3);">👑 ${streakAtual}</div>`;
+            // Badge inferior esquerdo: contabiliza VITÓRIAS TOTAIS em duelo (não streak)
+            const vitorias = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
+            if (vitorias === 0) return '';
+            return `<div class="absolute z-30 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-[#FFD700] px-2 py-1 rounded text-xs font-bold border border-[#FFD700]" style="bottom:6px;left:6px;box-shadow:0 0 10px rgba(255,215,0,0.3);">👑 ${vitorias}</div>`;
         }
 
         function getGuerraVencedoraBadge(playerId) {
@@ -4431,7 +4417,7 @@ function renderTorcidasGuerraAdmin() {
             const ultimas2 = guerrasCla.slice(0, 2);
             const venceu2 = ultimas2.every(g => g.vencedorId === player.equipeId);
             if (!venceu2) return '';
-            return `<div class="absolute z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-2 py-1 rounded text-xs font-bold border border-yellow-300" style="top:6px;left:6px;">🏆 Clã Invicto</div>`;
+            return `<div class="absolute z-30 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-1.5 py-0.5 rounded text-[10px] font-bold border border-yellow-300" style="top:6px;left:6px;white-space:nowrap;">🏆 Clã Invicto</div>`;
         }
 
         
@@ -5949,10 +5935,10 @@ async function renderPlayers() {
                         return `
                             <div class="player-card card-hover relative ${isLegendary ? 'legendary' : ''}" style="border-color: ${isLegendary ? '#FFD700' : borderColor};" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
                             ${isLegendary ? '<div class="legendary-badge">🔥 Lendário</div>' : ''}
+                            ${getGuerraVencedoraBadge(p.id)}
                             ${elogioBadge}
                             ${dueloBadge}
-                            ${streakBadge}
-                            ${getGuerraVencedoraBadge(p.id)}
+                            ${getStreakBadge(p.id)}
                             ${getPatenteBadge(p.id, 'home')}
                         ${bencaoBadge}
                             <div class="relative mx-auto" style="width:120px;">
