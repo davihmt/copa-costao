@@ -3195,20 +3195,20 @@ function getDueloAtivo(jogadorId) {
             // 🔒 PROTEÇÃO: Ler estado ATUAL do Firebase (não confiar na memória)
             const dueloRef = window.doc(window.db, 'duelos', duelo.id);
             const dueloSnap = await window.getDoc(dueloRef);
-            const dueloAtual = dueloSnap.exists() ? dueloSnap.data() : duelo;
+            const d = dueloSnap.exists() ? dueloSnap.data() : duelo;
 
             // Se já foi finalizado e bônus aplicados, sair imediatamente
-            if (dueloAtual.status === 'finalizado' && dueloAtual.bonusAplicados) {
-                console.log('Duelo ' + duelo.id + ' já finalizado, ignorando.');
-                return { vencedorId: dueloAtual.vencedorId, vencedorNome: dueloAtual.vencedorNome || '', gloriaA: dueloAtual.gloriaDesafiante || 0, gloriaB: dueloAtual.gloriaDesafiado || 0 };
+            if (d.status === 'finalizado' && d.bonusAplicados) {
+                console.log('Duelo ' + d.id + ' já finalizado, ignorando.');
+                return { vencedorId: d.vencedorId, vencedorNome: d.vencedorNome || '', gloriaA: d.gloriaDesafiante || 0, gloriaB: d.gloriaDesafiado || 0 };
             }
 
-            const gloriaA = getGlaciaDuelo(duelo.desafianteId, duelo);
-            const gloriaB = getGlaciaDuelo(duelo.desafiadoId, duelo);
+            const gloriaA = getGlaciaDuelo(d.desafianteId, d);
+            const gloriaB = getGlaciaDuelo(d.desafiadoId, d);
             let vencedorId = null;
             let vencedorNome = '';
-            if (gloriaA > gloriaB) { vencedorId = duelo.desafianteId; vencedorNome = duelo.desafianteNome; }
-            else if (gloriaB > gloriaA) { vencedorId = duelo.desafiadoId; vencedorNome = duelo.desafiadoNome; }
+            if (gloriaA > gloriaB) { vencedorId = d.desafianteId; vencedorNome = d.desafianteNome; }
+            else if (gloriaB > gloriaA) { vencedorId = d.desafiadoId; vencedorNome = d.desafiadoNome; }
 
             // Atualizar status primeiro (para bloquear outras chamadas)
             await window.updateDoc(dueloRef, {
@@ -3222,55 +3222,62 @@ function getDueloAtivo(jogadorId) {
                 torcidasResolvidas: true
             });
 
-            await atualizarDueloHistorico(duelo.desafianteId, vencedorId === duelo.desafianteId, vencedorId === null, duelo.id);
-            await atualizarDueloHistorico(duelo.desafiadoId, vencedorId === duelo.desafiadoId, vencedorId === null, duelo.id);
-            await resolverTorcidas(duelo.id, vencedorId);
+            await atualizarDueloHistorico(d.desafianteId, vencedorId === d.desafianteId, vencedorId === null, d.id);
+            await atualizarDueloHistorico(d.desafiadoId, vencedorId === d.desafiadoId, vencedorId === null, d.id);
+            await resolverTorcidas(d.id, vencedorId);
 
             // 🔒 Verificar NOVAMENTE no Firebase se bônus já foram aplicados (proteção contra race condition)
             const checkSnap = await window.getDoc(dueloRef);
             const checkData = checkSnap.exists() ? checkSnap.data() : {};
             if (checkData.bonusAplicados) {
-                console.log('Bônus do duelo ' + duelo.id + ' já aplicados por outra instância.');
+                console.log('Bônus do duelo ' + d.id + ' já aplicados por outra instância.');
                 return { vencedorId, vencedorNome, gloriaA, gloriaB };
             }
 
             if (vencedorId) {
-                const perdedorId = vencedorId === duelo.desafianteId ? duelo.desafiadoId : duelo.desafiadoId;
-                const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
+                const perdedorId = vencedorId === d.desafianteId ? d.desafiadoId : d.desafianteId;
+                const dataEvento = d.dataInicio ? d.dataInicio.split('T')[0] : getHojeBrasilia();
+
+                // 🔒 Segurança: só criar eventos para participantes reais do duelo
+                const participantes = [d.desafianteId, d.desafiadoId];
+                if (!participantes.includes(vencedorId) || !participantes.includes(perdedorId)) {
+                    console.error('IDs inválidos no duelo ' + d.id);
+                    return { vencedorId, vencedorNome, gloriaA, gloriaB };
+                }
 
                 // 🔒 Verificar duplicata no Firebase (não só na memória)
-                const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', duelo.id);
+                const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', d.id);
                 if (!existeVitoria) {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
                         jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
                         subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: dataEvento,
-                        observacao: 'Vitória no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                        dueloId: duelo.id, createdAt: new Date().toISOString()
+                        observacao: 'Vitória no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
+                        dueloId: d.id, createdAt: new Date().toISOString()
                     });
                 }
 
-                const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', duelo.id);
+                const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', d.id);
                 if (!existeDerrota) {
                     await window.addDoc(window.collection(window.db, 'eventos'), {
                         jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
                         subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: dataEvento,
-                        observacao: 'Derrota no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                        dueloId: duelo.id, createdAt: new Date().toISOString()
+                        observacao: 'Derrota no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
+                        dueloId: d.id, createdAt: new Date().toISOString()
                     });
                 }
                 await window.updateDoc(dueloRef, { bonusAplicados: true });
             } else {
                 // EMPATE: criar evento neutro para ambos os jogadores
-                const dataEvento = duelo.dataInicio ? duelo.dataInicio.split('T')[0] : getHojeBrasilia();
+                const dataEvento = d.dataInicio ? d.dataInicio.split('T')[0] : getHojeBrasilia();
 
-                for (const jogadorId of [duelo.desafianteId, duelo.desafiadoId]) {
-                    const existeEmpate = eventoDueloExiste(jogadorId, 'duelo-empate', duelo.id);
+                for (const jogadorId of [d.desafianteId, d.desafiadoId]) {
+                    const existeEmpate = eventoDueloExiste(jogadorId, 'duelo-empate', d.id);
                     if (!existeEmpate) {
                         await window.addDoc(window.collection(window.db, 'eventos'), {
                             jogadorId: jogadorId, tipo: 'gol', subtipo: 'duelo-empate',
                             subtipoLabel: '⚖️ Empate em Duelo', valor: 0, data: dataEvento,
-                            observacao: 'Empate no duelo: ' + duelo.desafianteNome + ' vs ' + duelo.desafiadoNome,
-                            dueloId: duelo.id, createdAt: new Date().toISOString()
+                            observacao: 'Empate no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
+                            dueloId: d.id, createdAt: new Date().toISOString()
                         });
                     }
                 }
