@@ -9205,10 +9205,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const today = getHojeBrasilia();
                 const hojeBrasilia = getHojeBrasilia();
 
-                // Check limits using ONLY Firebase data (honrarias array synced via onSnapshot)
-                const elogiosHoje = honrarias.filter(e => {
-                    if (!e.data) return false;
-                    return getDiaBrasilia(e.data) === hojeBrasilia;
+                // 🔒 VALIDAÇÃO DIRETA NO FIREBASE (evita race condition com array em memória)
+                const elogiosRef = window.collection(window.db, 'elogios');
+                const elogiosSnap = await window.getDocs(elogiosRef);
+                const elogiosHoje = [];
+                elogiosSnap.forEach(doc => {
+                    const e = doc.data();
+                    if (e.data === hojeBrasilia) elogiosHoje.push(e);
                 });
 
                 const jaEnviou = elogiosHoje.filter(e => e.deId === deId && e.deTipo === deTipo).length;
