@@ -1564,6 +1564,30 @@
                                 <i class="fas fa-skull mr-2"></i>Aplicar Julgamento
                             </button>
                         </div>
+
+                        <!-- JULGAMENTO POR VENDA -->
+                        <div class="mt-8">
+                            <h3 class="text-2xl font-bold mb-6"><i class="fas fa-gavel mr-2 text-red-400"></i>Julgamento por Venda</h3>
+                            <div class="glass rounded-2xl p-6 max-w-3xl">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Guerreiro</label>
+                                    <select id="jul-jogador" onchange="renderJulgamentoVenda()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                        <option value="">Selecione um guerreiro</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-semibold text-gray-400 mb-2">Período</label>
+                                    <select id="jul-mes" onchange="renderJulgamentoVenda()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                                        <option value="todos">Todos os meses</option>
+                                    </select>
+                                </div>
+                                <div id="jul-resumo" class="hidden mb-4"></div>
+                                <div id="jul-runas" class="space-y-2">
+                                    <p class="text-gray-500 text-center py-4">Selecione um guerreiro para ver as runas vendidas.</p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Conselho dos Sábios -->
@@ -2314,6 +2338,26 @@
         const ADMIN_PASSWORD = 'costao2026';
         const REPO_BASE = 'https://davihmt.github.io/copa-costao/';
         const CACHE_VERSION = '?v=2.2_' + new Date().toISOString().split('T')[0]; // Daily cache bust
+
+        const STICKER_IMG_MAP = {
+            'master-verao': 'master-verao.png',
+            'master-inverno': 'master-inverno.png',
+            'luxo-verao': 'luxo-verao.png',
+            'luxo-inverno': 'luxo-inverno.png',
+            'luxo-salta': 'luxo-salta.png',
+            'luxo-alta': 'luxo-alta.png',
+            'luxo-media': 'luxo-media.png',
+            'virada': 'virada.png',
+            '125k': '125k.png',
+            '100k': '100k.png',
+            '75k': '75k.png',
+            '60k': '60k.png',
+            '42k': '42k.png',
+            '30k': '30k.png',
+            '15k': '15k.png',
+            'c+': 'c+.png'
+        };
+
         const FOTOS_BASE = './Fotos/';
         
         
@@ -5622,6 +5666,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                 if (subtipo === 'duelo-derrota') return { icone: '⚔️', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' };
                 if (subtipo === 'duelo-empate') return { icone: '⚖️', cor: 'text-gray-400', bg: 'bg-gray-800/30', border: 'border-gray-500/20', titulo: 'text-gray-400' };
                 if (subtipo === 'guerra-cla-derrota') return { icone: '🛡️', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' };
+                if (subtipo === 'cancelamento-runas') return { icone: 'runa', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' };
                 return { icone: '🚨', cor: 'text-red-400', bg: 'bg-red-900/10', border: 'border-red-500/20', titulo: 'text-red-400' }; // Punição padrão = sirene
             }
 
@@ -6758,15 +6803,58 @@ function renderConquistasHistorico(pid) {
                 const valStr = val > 0 ? '+' + val : String(val);
                 const dataStr = e.data ? getBRDate(e.data).toLocaleDateString('pt-BR') : '';
                 // Figurinha: mostrar imagem em miniatura
-                let iconDisplay = estilo.icone;
-                if (e.tipo === 'figurinha' || (e.subtipo && e.subtipo.includes('figurinha'))) {
-                    const imgFile = e.subtipoImg || STICKER_IMG_MAP[e.subtipo] || '';
+                                let iconDisplay = estilo.icone;
+                if (e.tipo === 'figurinha' || (e.subtipo && e.subtipo.includes('figurinha')) || (e.subtipo === 'cancelamento-runas' || (e.subtipo && e.subtipo.startsWith('cancelamento')))) {
+                    let imgFile = e.subtipoImg || '';
+                    // Se não tem subtipoImg (evento antigo), tenta extrair do nome da runa
+                    if (!imgFile && (e.subtipo === 'cancelamento-runas' || (e.subtipo && e.subtipo.startsWith('cancelamento')))) {
+                        const nomeRuna = extrairNomeRuna(e).toLowerCase();
+                        const mapaNomes = {
+                            'master verão': 'master-verao', 'master verao': 'master-verao',
+                            'master inverno': 'master-inverno',
+                            'luxo verão': 'luxo-verao', 'luxo verao': 'luxo-verao',
+                            'luxo inverno': 'luxo-inverno',
+                            'luxo s. alta': 'luxo-salta', 'luxo salta': 'luxo-salta',
+                            'luxo alta': 'luxo-alta',
+                            'luxo média': 'luxo-media', 'luxo media': 'luxo-media',
+                            'virada épica': 'virada', 'virada': 'virada',
+                            '125.000 pt': '125k', '125k': '125k',
+                            '100.000 pt': '100k', '100k': '100k',
+                            '75.000 pt': '75k', '75k': '75k',
+                            '60.000 pt': '60k', '60k': '60k',
+                            '42.000 pt': '42k', '42k': '42k',
+                            '30.000 pt': '30k', '30k': '30k',
+                            '15.000 pt': '15k', '15k': '15k',
+                            'c+ diamante': 'c+', 'c+': 'c+'
+                        };
+                        const runaId = mapaNomes[nomeRuna];
+                        if (runaId) imgFile = STICKER_IMG_MAP[runaId] || '';
+                    }
                     const imgUrl = imgFile ? getImageUrl(imgFile) : '';
                     if (imgUrl) {
                         iconDisplay = '<img src="' + imgUrl + '" style="width:24px;height:24px;object-fit:contain;border-radius:4px;">';
                     }
                 }
-                return '<div class="flex items-center justify-between p-2 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-center gap-2 flex-1 min-w-0"><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-semibold truncate ' + estilo.titulo + '">' + (e.observacao || e.subtipoLabel || e.subtipo || 'Evento') + '</p><p class="text-xs text-gray-500">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2">' + valStr + '</span></div>';
+                // Layout especial para Elogios
+                if (e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado') {
+                    const tituloElogio = e.subtipo === 'elogio-recebido' ? 'Honra Recebido' : 'Honra Dado';
+                    const corElogio = e.subtipo === 'elogio-recebido' ? 'text-green-400' : 'text-blue-400';
+                    return '<div class="flex items-start justify-between p-3 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-start gap-3 flex-1 min-w-0"><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-bold ' + corElogio + '">' + tituloElogio + '</p><p class="text-xs text-gray-300 mt-1 leading-relaxed">' + (e.observacao || e.subtipoLabel || '') + '</p><p class="text-xs text-gray-500 mt-1 text-left">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2 text-lg">' + valStr + '</span></div>';
+                }
+                // Layout especial para Cancelamento de Runa (novo e antigo)
+                if (e.subtipo === 'cancelamento-runas' || (e.subtipo && e.subtipo.startsWith('cancelamento'))) {
+                    let nomeRuna = extrairNomeRuna(e);
+                    // Se não conseguiu extrair, busca a runa original pelo figurinhaId
+                    if (nomeRuna === 'Runa' && e.figurinhaId) {
+                        const runaOriginal = events.find(ev => ev.id === e.figurinhaId && ev.tipo === 'figurinha');
+                        if (runaOriginal) {
+                            nomeRuna = runaOriginal.subtipoLabel || runaOriginal.subtipo || 'Runa';
+                        }
+                    }
+                    return '<div class="flex items-start justify-between p-3 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-start gap-3 flex-1 min-w-0"><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-bold text-red-400">Cancelamento - ' + nomeRuna + '</p><p class="text-xs text-gray-500 mt-1 text-left">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2 text-lg">' + valStr + '</span></div>';
+                }
+                // Layout padrão para outros eventos
+                return '<div class="flex items-center justify-between p-2 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-center gap-2 flex-1 min-w-0"><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-semibold truncate ' + estilo.titulo + '">' + (e.subtipoLabel || e.subtipo || 'Evento') + '</p><p class="text-xs text-gray-500 text-left">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2">' + valStr + '</span></div>';
             }).join('');
         }
 
@@ -7138,29 +7226,63 @@ function renderConquistasHistorico(pid) {
                     const estilo = getEventoIconeCor(e);
                     const val = Number(e.valor) || 0;
                     const valStr = val > 0 ? '+' + val : String(val);
+                    const dataStr = e.data ? formatDate(e.data) : '';
 
-                    // Figurinha: mostrar imagem em miniatura
+                    // Figurinha / Cancelamento: mostrar imagem em miniatura
                     let iconDisplay = estilo.icone;
-                    if (e.tipo === 'figurinha' || (e.subtipo && e.subtipo.includes('figurinha'))) {
-                        const imgFile = e.subtipoImg || STICKER_IMG_MAP[e.subtipo] || '';
+                    if (e.tipo === 'figurinha' || (e.subtipo && e.subtipo.includes('figurinha')) || (e.subtipo === 'cancelamento-runas' || (e.subtipo && e.subtipo.startsWith('cancelamento')))) {
+                        let imgFile = e.subtipoImg || '';
+                        // Se não tem subtipoImg (evento antigo), tenta extrair do nome da runa
+                        if (!imgFile && (e.subtipo === 'cancelamento-runas' || (e.subtipo && e.subtipo.startsWith('cancelamento')))) {
+                            const nomeRuna = extrairNomeRuna(e).toLowerCase();
+                            // Mapear nome da runa para ID
+                            const mapaNomes = {
+                                'master verão': 'master-verao', 'master verao': 'master-verao',
+                                'master inverno': 'master-inverno',
+                                'luxo verão': 'luxo-verao', 'luxo verao': 'luxo-verao',
+                                'luxo inverno': 'luxo-inverno',
+                                'luxo s. alta': 'luxo-salta', 'luxo salta': 'luxo-salta',
+                                'luxo alta': 'luxo-alta',
+                                'luxo média': 'luxo-media', 'luxo media': 'luxo-media',
+                                'virada épica': 'virada', 'virada': 'virada',
+                                '125.000 pt': '125k', '125k': '125k',
+                                '100.000 pt': '100k', '100k': '100k',
+                                '75.000 pt': '75k', '75k': '75k',
+                                '60.000 pt': '60k', '60k': '60k',
+                                '42.000 pt': '42k', '42k': '42k',
+                                '30.000 pt': '30k', '30k': '30k',
+                                '15.000 pt': '15k', '15k': '15k',
+                                'c+ diamante': 'c+', 'c+': 'c+'
+                            };
+                            const runaId = mapaNomes[nomeRuna];
+                            if (runaId) imgFile = STICKER_IMG_MAP[runaId] || '';
+                        }
                         const imgUrl = imgFile ? getImageUrl(imgFile) : '';
                         if (imgUrl) {
                             iconDisplay = `<img src="${imgUrl}" style="width:32px;height:32px;object-fit:contain;border-radius:4px;">`;
                         }
                     }
 
-                    return `
-                        <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg ${estilo.bg} ${estilo.border} border">
-                            <div class="flex items-center gap-3">
-                                <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconDisplay}</span>
-                                <div>
-                                    <p class="text-sm font-semibold ${estilo.titulo}">${e.subtipoLabel || e.tipo}</p>
-                                    <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
-                                </div>
-                            </div>
-                            <span class="font-bold ${estilo.cor}">${valStr}</span>
-                        </div>
-                    `;
+                    // Layout especial para Elogios
+                    if (e.subtipo === 'elogio-recebido' || e.subtipo === 'elogio-dado') {
+                        const tituloElogio = e.subtipo === 'elogio-recebido' ? 'Honra Recebido' : 'Honra Dado';
+                        const corElogio = e.subtipo === 'elogio-recebido' ? 'text-green-400' : 'text-blue-400';
+                        return `<div class="flex items-start justify-between p-3 rounded-lg ${estilo.bg} ${estilo.border} border hover:bg-opacity-20 transition-all event-row"><div class="flex items-start gap-3 flex-1 min-w-0"><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">${iconDisplay}</span><div class="min-w-0"><p class="text-sm font-bold ${corElogio}">${tituloElogio}</p><p class="text-xs text-gray-300 mt-1 leading-relaxed">${e.observacao || e.subtipoLabel || ''}</p><p class="text-xs text-gray-500 mt-1 text-left">${dataStr}</p></div></div><span class="font-bold ${estilo.cor} ml-2 text-lg">${valStr}</span></div>`;
+                    }
+                    // Layout especial para Cancelamento de Runa (novo e antigo)
+                    if (e.subtipo === 'cancelamento-runas' || (e.subtipo && e.subtipo.startsWith('cancelamento'))) {
+                        let nomeRuna = extrairNomeRuna(e);
+                        // Se não conseguiu extrair, busca a runa original pelo figurinhaId
+                        if (nomeRuna === 'Runa' && e.figurinhaId) {
+                            const runaOriginal = events.find(ev => ev.id === e.figurinhaId && ev.tipo === 'figurinha');
+                            if (runaOriginal) {
+                                nomeRuna = runaOriginal.subtipoLabel || runaOriginal.subtipo || 'Runa';
+                            }
+                        }
+                        return `<div class="flex items-start justify-between p-3 rounded-lg ${estilo.bg} ${estilo.border} border hover:bg-opacity-20 transition-all event-row"><div class="flex items-start gap-3 flex-1 min-w-0"><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">${iconDisplay}</span><div class="min-w-0"><p class="text-sm font-bold text-red-400">Cancelamento - ${nomeRuna}</p><p class="text-xs text-gray-500 mt-1 text-left">${dataStr}</p></div></div><span class="font-bold ${estilo.cor} ml-2 text-lg">${valStr}</span></div>`;
+                    }
+                    // Layout padrão
+                    return `<div class="event-row flex items-center justify-between px-3 py-2 rounded-lg ${estilo.bg} ${estilo.border} border"><div class="flex items-center gap-3"><span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconDisplay}</span><div><p class="text-sm font-semibold ${estilo.titulo}">${e.subtipoLabel || e.subtipo || 'Evento'}</p><p class="text-xs text-gray-500 text-left">${dataStr}</p></div></div><span class="font-bold ${estilo.cor}">${valStr}</span></div>`;
                 }).join('');
             }showSection('album');
         };
@@ -7309,6 +7431,16 @@ function updateAdminSelects() {
                 sel.innerHTML = html;
                 sel.value = currentVal;
             });
+
+            // Popular select do Julgamento por Venda (apenas jogadores, formato simples)
+            const julSel = document.getElementById('jul-jogador');
+            if (julSel && players.length > 0) {
+                const currentVal = julSel.value;
+                let html = '<option value="">Selecione um guerreiro</option>' +
+                    players.map(p => `<option value="${p.id}">${p.nome} ${p.sobrenome || ''} (${p.time || 'Sem Casa'})</option>`).join('');
+                julSel.innerHTML = html;
+                julSel.value = currentVal;
+            }
         }
 
         // ===== SELEÇÃO MÚLTIPLA DE JOGADORES PARA FIGURINHAS =====
@@ -10974,7 +11106,220 @@ function editarConquistaConfig(conqId) {
             }
         });
 
-    </script>
+    
+
+        // ===== JULGAMENTO POR VENDA =====
+        
+        function extrairNomeRuna(e) {
+            if (e.subtipoLabel && typeof e.subtipoLabel === 'string') {
+                let nome = e.subtipoLabel;
+                const idx = nome.toLowerCase().indexOf('cancelamento');
+                if (idx !== -1) {
+                    nome = nome.substring(idx + 12);
+                }
+                nome = nome.replace(/^[\s\-\u2013\u2014]+/, '');
+                if (nome) return nome;
+            }
+            if (e.observacao && typeof e.observacao === 'string') {
+                let obs = e.observacao;
+                const idx = obs.toLowerCase().indexOf('cancelamento');
+                if (idx !== -1) {
+                    obs = obs.substring(idx + 12);
+                }
+                obs = obs.replace(/^[\s\-\u2013\u2014]+/, '');
+                const match = obs.match(/^([^(-]+)/);
+                if (match) {
+                    let nome = match[1].trim();
+                    if (nome) return nome;
+                }
+            }
+            return 'Runa';
+        }
+function renderJulgamentoVenda() {
+            const jogadorId = document.getElementById('jul-jogador').value;
+            const mesFiltro = document.getElementById('jul-mes').value;
+            const resumoEl = document.getElementById('jul-resumo');
+            const runasEl = document.getElementById('jul-runas');
+
+            if (!jogadorId) {
+                if (resumoEl) resumoEl.classList.add('hidden');
+                if (runasEl) runasEl.innerHTML = '<p class="text-gray-500 text-center py-4">Selecione um guerreiro para ver as runas vendidas.</p>';
+                return;
+            }
+
+            // Popular select de meses na primeira vez
+            const mesSelect = document.getElementById('jul-mes');
+            if (mesSelect && mesSelect.options.length <= 1) {
+                const meses = [];
+                const hoje = new Date();
+                for (let i = 0; i < 6; i++) {
+                    const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+                    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    const label = `${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+                    meses.push(`<option value="${val}">${label}</option>`);
+                }
+                mesSelect.innerHTML = '<option value="todos">Todos os meses</option>' + meses.join('');
+            }
+
+            const playerEvents = events.filter(e => e.jogadorId === jogadorId);
+            const figurinhas = playerEvents.filter(e => e.tipo === 'figurinha');
+
+            // Para "Todos os meses", usar getPlayerStats diretamente (mesma lógica do perfil)
+            let stats;
+            if (mesFiltro === 'todos') {
+                stats = getPlayerStats(jogadorId);
+            } else {
+                // Calcular manualmente com filtro de mês
+                const [ano, mes] = mesFiltro.split('-').map(Number);
+                const inicioMes = new Date(ano, mes - 1, 1);
+                const fimMes = new Date(ano, mes, 0, 23, 59, 59);
+
+                let base = 0, runas = 0, punicoes = 0, verdes = 0, elogiosRec = 0, elogiosDad = 0, batalhas = 0;
+
+                playerEvents.forEach(ev => {
+                    const evDate = getBRDate(ev.data);
+                    if (evDate < inicioMes || evDate > fimMes) return;
+                    const val = Number(ev.valor) || 0;
+
+                    if (ev.tipo === 'gol') {
+                        if (ev.subtipo === 'elogio-recebido') elogiosRec += val;
+                        else if (ev.subtipo === 'elogio-dado') elogiosDad += val;
+                        else if (['duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(ev.subtipo)) batalhas += val;
+                        else if (ev.subtipo === 'cartao-verde' || ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses') verdes += val;
+                        else base += val;
+                    } else if (ev.tipo === 'figurinha') {
+                        runas += val;
+                    } else if (ev.tipo === 'punicao') {
+                        if (ev.subtipo !== 'cartao-verde' && ev.subtipo !== 'benção-dos-deuses' && ev.subtipo !== 'benção dos deuses') punicoes += Math.abs(val);
+                    }
+                });
+
+                stats = {
+                    baseTotal: base, stickersTotal: runas, punishTotal: punicoes, verdesTotal: verdes,
+                    elogiosRecebidos: elogiosRec, elogiosDados: elogiosDad, batalhasTotal: batalhas,
+                    totalReal: base + runas + verdes + elogiosRec + elogiosDad + batalhas - punicoes
+                };
+            }
+
+            // Resumo
+            if (resumoEl) {
+                resumoEl.classList.remove('hidden');
+                resumoEl.innerHTML = `
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                        <div class="bg-gray-800/50 rounded-xl p-3 text-center">
+                            <p class="text-xs text-gray-400">Glória Base</p>
+                            <p class="text-xl font-bold text-[#C8A25A]">${stats.baseTotal || 0}</p>
+                        </div>
+                        <div class="bg-yellow-900/20 rounded-xl p-3 text-center">
+                            <p class="text-xs text-yellow-400">Runas</p>
+                            <p class="text-xl font-bold text-yellow-400">${stats.stickersTotal || 0}</p>
+                        </div>
+                        <div class="bg-red-900/20 rounded-xl p-3 text-center">
+                            <p class="text-xs text-red-400">Julgamentos</p>
+                            <p class="text-xl font-bold text-red-400">-${stats.punishTotal || 0}</p>
+                        </div>
+                        <div class="bg-green-900/20 rounded-xl p-3 text-center">
+                            <p class="text-xs text-green-400">Benções</p>
+                            <p class="text-xl font-bold text-green-400">${stats.verdesTotal || 0}</p>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-[#C8A25A]/20 to-[#8C6239]/20 rounded-xl p-3 text-center border border-[#C8A25A]/30">
+                        <p class="text-sm font-bold">Glória Válida: <span class="text-2xl font-black">${stats.totalReal || 0}</span></p>
+                    </div>
+                `;
+            }
+
+            // Filtrar runas por mês
+            let runasFiltradas = figurinhas;
+            if (mesFiltro !== 'todos') {
+                const [ano, mes] = mesFiltro.split('-').map(Number);
+                runasFiltradas = figurinhas.filter(f => {
+                    const d = getBRDate(f.data);
+                    return d.getFullYear() === ano && d.getMonth() === mes - 1;
+                });
+            }
+
+            // Verificar cancelamentos
+            const cancelamentos = playerEvents.filter(e => e.tipo === 'punicao' && e.subtipo && String(e.subtipo).includes('cancelamento'));
+            const idsCancelados = new Set(cancelamentos.map(c => c.figurinhaId).filter(Boolean));
+
+            if (!runasEl) return;
+
+            if (runasFiltradas.length === 0) {
+                runasEl.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma runa vendida neste período.</p>';
+                return;
+            }
+
+            runasEl.innerHTML = runasFiltradas.map(f => {
+                const jaCancelada = idsCancelados.has(f.id);
+                const imgFile = f.subtipoImg || STICKER_IMG_MAP[f.subtipo] || '';
+                const imgUrl = imgFile ? getImageUrl(imgFile) : '';
+                const val = f.valor || 0;
+                const dataStr = f.data ? getBRDate(f.data).toLocaleDateString('pt-BR') : '';
+                const tipoFig = f.subtipo || '';
+
+                return `
+                    <div class="glass rounded-xl p-3 flex items-center justify-between ${jaCancelada ? 'opacity-50' : ''}">
+                        <div class="flex items-center gap-3">
+                            ${imgUrl ? `<img src="${imgUrl}" class="w-12 h-12 rounded-lg object-contain bg-gray-800" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center text-lg\'>💎</div>';">` : '<div class="w-12 h-12 rounded-lg bg-gray-700 flex items-center justify-center text-lg">💎</div>'}
+                            <div>
+                                <p class="font-bold text-sm">${f.subtipoLabel || f.subtipo || 'Runa'}</p>
+                                <p class="text-xs text-gray-400">${dataStr} · +${val} glória</p>
+                                ${jaCancelada ? '<p class="text-xs text-green-400 font-bold">✅ Já cancelada</p>' : ''}
+                            </div>
+                        </div>
+                        ${!jaCancelada ? `<button onclick="executarCancelamento('${f.id}', '${jogadorId}', '${tipoFig}', ${val})" class="px-3 py-1.5 rounded-lg bg-red-500/20 text-red-400 text-xs font-bold hover:bg-red-500/30 border border-red-500/20">
+                            <i class="fas fa-undo mr-1"></i>Cancelar
+                        </button>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calcularCancelamento(tipoFigurinha, valorRuna) {
+            // Regra: deve restar no mínimo +2 glórias da runa
+            // Ex: Luxo Inverno (+4) → cancela -2 → resta +2
+            const deducao = (valorRuna || 0) - 2;
+            if (deducao <= 0) return 0; // Já está no mínimo ou abaixo, não deduz
+            return -deducao;
+        }
+
+        async function executarCancelamento(figurinhaId, jogadorId, tipoFigurinha, valorRuna) {
+            if (!confirm('Confirmar cancelamento desta runa?')) return;
+
+            const valor = calcularCancelamento(tipoFigurinha, valorRuna);
+            if (valor === 0) {
+                showToast('Esta runa já está no valor mínimo (+2). Não há o que cancelar.', 'info');
+                return;
+            }
+
+            const playerEvents = events.filter(e => e.jogadorId === jogadorId);
+            const vendaOriginal = playerEvents.find(e => e.id === figurinhaId && e.tipo === 'figurinha');
+            const dataCancelamento = vendaOriginal && vendaOriginal.data ? vendaOriginal.data : new Date().toISOString().split('T')[0];
+            const nomeRuna = vendaOriginal ? (vendaOriginal.subtipoLabel || tipoFigurinha) : (tipoFigurinha || 'Runa');
+            const imgFile = vendaOriginal ? (vendaOriginal.subtipoImg || STICKER_IMG_MAP[tipoFigurinha] || '') : (STICKER_IMG_MAP[tipoFigurinha] || '');
+
+            try {
+                await window.addDoc(window.collection(window.db, 'eventos'), {
+                    jogadorId: jogadorId,
+                    tipo: 'punicao',
+                    subtipo: 'cancelamento-runas',
+                    subtipoLabel: 'Cancelamento - ' + nomeRuna,
+                    subtipoImg: imgFile,
+                    valor: valor,
+                    data: dataCancelamento,
+                    figurinhaId: figurinhaId,
+                    observacao: 'Cancelamento - ' + nomeRuna + ' (' + valor + ' glórias — restam +' + ((valorRuna || 0) + valor) + ')',
+                    createdAt: new Date().toISOString()
+                });
+                showToast('Runa cancelada! ' + nomeRuna + ': ' + valor + ' glórias (restam +' + ((valorRuna || 0) + valor) + ')', 'success');
+                renderJulgamentoVenda();
+            } catch (e) {
+                showToast('Erro ao cancelar runa', 'error');
+            }
+        }
+
+        </script>
 
 
     <!-- Upload Preview Modal -->
