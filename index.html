@@ -3013,8 +3013,7 @@ function getDueloAtivo(jogadorId) {
                     if (ev.subtipo === 'duelo-vitoria' || ev.subtipo === 'duelo-derrota' || 
                         ev.subtipo === 'torcida-sabio' ||
                         ev.subtipo === 'guerra-cla' || ev.subtipo === 'guerra-cla-derrota' ||
-                        ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra' ||
-                        ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado') {
+                        ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra') {
                         continue; // skip
                     }
                     const val = Number(ev.valor) || 0;
@@ -3125,8 +3124,7 @@ function getDueloAtivo(jogadorId) {
                     if (ev.subtipo === 'duelo-vitoria' || ev.subtipo === 'duelo-derrota' || 
                         ev.subtipo === 'torcida-sabio' ||
                         ev.subtipo === 'guerra-cla' || ev.subtipo === 'guerra-cla-derrota' ||
-                        ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra' ||
-                        ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado') {
+                        ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra') {
                         continue; // skip
                     }
                     const val = Number(ev.valor) || 0;
