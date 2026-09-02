@@ -162,8 +162,8 @@
             animation: insigniaPulse 2s ease-in-out infinite;
         }
         @keyframes insigniaPulse {
-            0%, 100% { box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4); }
-            50% { box-shadow: 0 4px 16px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 140, 0, 0.3); }
+            0%, 100% { box-shadow: 0 2px 6px rgba(255, 215, 0, 0.3); }
+            50% { box-shadow: 0 3px 10px rgba(255, 215, 0, 0.5); }
         }
 
 @media (max-width: 768px) {
@@ -390,8 +390,8 @@
 
         /* Animação de brilho sutil para feitos */
         @keyframes forgeGlow {
-            0%, 100% { box-shadow: 0 0 5px rgba(200, 162, 90, 0.1); }
-            50% { box-shadow: 0 0 20px rgba(200, 162, 90, 0.25), 0 0 40px rgba(200, 162, 90, 0.1); }
+            0%, 100% { box-shadow: 0 0 4px rgba(200, 162, 90, 0.08); }
+            50% { box-shadow: 0 0 12px rgba(200, 162, 90, 0.18); }
         }
 
         .reward-unlocked {
@@ -485,8 +485,8 @@
         }
 
         @keyframes divineAura {
-            0%, 100% { box-shadow: 0 0 20px rgba(200, 162, 90, 0.1), 0 4px 20px rgba(0,0,0,0.6); }
-            50% { box-shadow: 0 0 40px rgba(200, 162, 90, 0.25), 0 4px 20px rgba(0,0,0,0.6); }
+            0%, 100% { box-shadow: 0 0 12px rgba(200, 162, 90, 0.08), 0 4px 20px rgba(0,0,0,0.6); }
+            50% { box-shadow: 0 0 20px rgba(200, 162, 90, 0.15), 0 4px 20px rgba(0,0,0,0.6); }
         }
 
         .photo-area.blessed-photo {
@@ -530,8 +530,8 @@
             font-size: 10px;
         }
         @keyframes flamePulse {
-            0%, 100% { box-shadow: 0 0 8px rgba(255, 107, 53, 0.4); }
-            50% { box-shadow: 0 0 16px rgba(255, 107, 53, 0.8), 0 0 24px rgba(255, 69, 0, 0.3); }
+            0%, 100% { box-shadow: 0 0 6px rgba(255, 107, 53, 0.3); }
+            50% { box-shadow: 0 0 12px rgba(255, 107, 53, 0.5); }
         }
 
         /* Badge de Vitória em Duelo - Estilo Coroa Dourada */
@@ -561,8 +561,8 @@
             font-size: 12px;
         }
         @keyframes coroaPulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.1); }
-            50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.15); }
+            0%, 100% { box-shadow: 0 0 6px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.15); }
         }
 
         /* Badge de Duelo Ativo - reposicionado */
@@ -827,12 +827,13 @@
             width: 64px;
             height: 64px;
             object-fit: contain;
-            filter: drop-shadow(0 0 15px rgba(200, 162, 90, 0.8)) drop-shadow(0 0 40px rgba(200, 162, 90, 0.4)) drop-shadow(0 0 60px rgba(255, 215, 0, 0.2));
             border-radius: 50%;
             border: 2px solid rgba(200, 162, 90, 0.7);
             background: rgba(11, 10, 10, 0.9);
             padding: 3px;
-            animation: brasaoPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 15px rgba(200, 162, 90, 0.4), 0 0 30px rgba(200, 162, 90, 0.15);
+            animation: brasaoPulse 4s ease-in-out infinite;
+            will-change: transform, opacity;
         }
         .cla-brasao-float .cla-brasao-label {
             font-family: 'Cinzel', serif;
@@ -849,8 +850,8 @@
             border: 1px solid rgba(200, 162, 90, 0.5);
         }
         @keyframes brasaoPulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(200, 162, 90, 0.8)) drop-shadow(0 0 40px rgba(200, 162, 90, 0.4)); }
-            50% { transform: scale(1.15); filter: drop-shadow(0 0 30px rgba(200, 162, 90, 1)) drop-shadow(0 0 60px rgba(200, 162, 90, 0.6)) drop-shadow(0 0 100px rgba(255, 215, 0, 0.3)); }
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.06); opacity: 1; }
         }
         @media (max-width: 768px) {
             .cla-brasao-float {
@@ -1069,8 +1070,8 @@
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
             border-bottom: 12px solid rgba(255,255,255,0.4);
-            filter: drop-shadow(0 0 4px rgba(200,230,255,0.6));
             animation: cristalBrilha 3s ease-in-out infinite;
+            will-change: opacity, transform;
         }
         @keyframes neveCai {
             0% { transform: translateY(-20px) translateX(0); opacity: 0; }
@@ -2283,7 +2284,7 @@
                     <button onclick="lancarDesafio()" class="w-full py-3 rounded-xl btn-primary text-white font-bold text-lg">
                         <i class="fas fa-shield-halved mr-2"></i>LANÇAR DESAFIO EM DUPLA
                     </button>
-                    <p class="text-xs text-gray-500 mt-3 text-center">Regras: diferença média máxima de 25 glória no mês · 1 duelo por semana · trégua de 2 semanas com a mesma dupla · ganha +4 / perde -2 · torcida acerta +1 / erra -1</p>
+                    <p class="text-xs text-gray-500 mt-3 text-center">Regras: 1 duelo por semana · trégua de 2 semanas com a mesma dupla · ganha +4 / perde -2 · torcida acerta +1 / erra -1</p>
                 </div>
 
                 <!-- Duelos Ativos da Semana -->
@@ -4365,22 +4366,6 @@ function getDueloAtivo(jogadorId) {
                     (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid));
                 if (pendente2) return { ok: false, msg: 'Um guerreiro da dupla adversária já tem um duelo pendente' };
             }
-
-            // Verificar diferença de glória (média das duplas)
-            const statsD1a = getPlayerStats(d1a);
-            const statsD2a = getPlayerStats(d2a);
-            let mediaDesafiante = statsD1a.totalMonth;
-            let mediaDesafiado = statsD2a.totalMonth;
-            if (d1b) {
-                const statsD1b = getPlayerStats(d1b);
-                mediaDesafiante = (statsD1a.totalMonth + statsD1b.totalMonth) / 2;
-            }
-            if (d2b) {
-                const statsD2b = getPlayerStats(d2b);
-                mediaDesafiado = (statsD2a.totalMonth + statsD2b.totalMonth) / 2;
-            }
-            const diff = Math.abs(mediaDesafiante - mediaDesafiado);
-            if (diff > 25) return { ok: false, msg: 'Diferença média de glória maior que 25 (' + Math.round(diff) + ')' };
 
             // Verificar trégua de 2 semanas (entre duplas)
             const duasSemanasAtras = new Date();
