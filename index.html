@@ -2077,12 +2077,19 @@
                                 <span id="album-comissao-conquistas" class="font-bold text-purple-400">0</span>
                             </div>
                         </div>
+                        <!-- Badges de Insígnias -->
+                        <div id="album-comissao-insignias-badges" class="grid grid-cols-4 gap-2 mt-3"></div>
                     </div>
                 </div>
                 <div class="lg:col-span-2 space-y-4">
                     <div class="player-card">
-                        <h3 class="text-xl font-bold mb-4"><i class="fas fa-scroll mr-2 text-[#C8A25A]"></i>Salão das Honras Recebidos</h3>
-                        <div id="album-comissao-elogios" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold"><i class="fas fa-scroll mr-2 text-[#C8A25A]"></i>Salão das Honras Recebidos</h3>
+                            <button onclick="abrirModalHonrariaComissao()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#C8A25A] to-[#8C6239] text-[#ECE8E1] text-sm font-semibold hover:shadow-lg transition-all">
+                                <i class="fas fa-heart mr-1"></i>Enviar Honraria
+                            </button>
+                        </div>
+                        <div id="album-comissao-elogios-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
                     </div>
                     <div class="player-card">
                         <h3 class="text-xl font-bold mb-4"><i class="fas fa-gem mr-2 text-yellow-400"></i>Feitos do Conselho</h3>
@@ -3588,6 +3595,7 @@
         var players = [];
         var events = [];
         let currentAlbumPlayer = null;
+        let currentAlbumComissao = null;
         let isAdmin = false;
         let currentAdminTab = 'cadastrar';
         let rankingPeriod = 'month';
@@ -8114,6 +8122,95 @@ async function renderPlayers() {
             }).join('');
         };
 
+        // ===== INSIGNIAS E HONRARIAS PARA CONSELHO DOS SÁBIOS =====
+        function renderInsigniasBadgesComissao(comissaoId) {
+            const container = document.getElementById('album-comissao-insignias-badges');
+            if (!container) return;
+
+            const insigniasRecebidas = honrarias.filter(e => e.paraId === comissaoId && e.tipo === 'insignia');
+            const contagem = {};
+            Object.keys(INSIGNIAS_CONFIG).forEach(k => contagem[k] = 0);
+            insigniasRecebidas.forEach(el => { if (contagem[el.insignia] !== undefined) contagem[el.insignia]++; });
+
+            let html = '';
+            Object.entries(INSIGNIAS_CONFIG).forEach(([tipo, config]) => {
+                const count = contagem[tipo] || 0;
+                const shining = count >= 5 ? 'shining' : '';
+                html += `
+                    <div class="insignia-badge ${shining}">
+                        <span class="insignia-icone">${config.icone}</span>
+                        <span class="insignia-nome">${config.nome}</span>
+                        <span class="insignia-count">${count}</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderElogiosAlbumComissao(comissaoId) {
+            const list = document.getElementById('album-comissao-elogios-list');
+            if (!list) return;
+
+            const lista = honrarias.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data));
+
+            if (lista.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma honraria recebida ainda.</p>';
+                return;
+            }
+
+            list.innerHTML = lista.map(el => {
+                if (el.tipo === 'insignia') {
+                    const config = INSIGNIAS_CONFIG[el.insignia] || { icone: '🏅', nome: 'Insígnia' };
+                    return `
+                        <div class="p-3 rounded-xl bg-gray-800/30 border border-[#C8A25A]/10">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xl">${config.icone}</span>
+                                <span class="font-bold text-sm text-[#C8A25A]">${config.nome}</span>
+                                <span class="text-xs text-gray-500 ml-auto">${formatDate(el.data)}</span>
+                            </div>
+                            ${getTextoHonraria(el) ? `<p class="text-xs text-gray-500 italic">"${getTextoHonraria(el)}"</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="p-3 rounded-xl bg-gray-800/30 border border-gray-700/30">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xl">💬</span>
+                                <span class="font-bold text-sm text-gray-300">Honraria</span>
+                                <span class="text-xs text-gray-500 ml-auto">${formatDate(el.data)}</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-1">de <span class="text-[#C8A25A] font-semibold">${el.deNome || 'Anônimo'}</span></p>
+                            ${getTextoHonraria(el) ? `<p class="text-xs text-gray-400 italic">"${getTextoHonraria(el)}"</p>` : ''}
+                        </div>
+                    `;
+                }
+            }).join('');
+        };
+
+        function abrirModalHonrariaComissao() {
+            // Reutiliza o modal existente, mas preenche o select "Para" com o sábio atual
+            const modal = document.getElementById('modal-honraria');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            // Preencher select "De" com todos os jogadores e comissão
+            const deSelect = document.getElementById('honraria-de');
+            if (deSelect) {
+                let opts = '<option value="">Quem está enviando</option>';
+                if (players.length > 0) {
+                    opts += '<optgroup label="⚔️ Guerreiros">' + players.map(p => `<option value="jogador|${p.id}">${p.nome} ${p.sobrenome || ''}</option>`).join('') + '</optgroup>';
+                }
+                if (comissao.length > 0) {
+                    opts += '<optgroup label="⭐ Conselho dos Sábios">' + comissao.map(c => `<option value="comissao|${c.id}">${c.nome}</option>`).join('') + '</optgroup>';
+                }
+                deSelect.innerHTML = opts;
+            }
+            // Limpar mensagem
+            const msgInput = document.getElementById('honraria-mensagem');
+            if (msgInput) msgInput.value = '';
+        }
+        window.abrirModalHonrariaComissao = abrirModalHonrariaComissao;
+
 function calcConquistas(pid) {
                 const isComissao = comissao.some(c => c.id === pid);
                 let playerEvents = events.filter(e => e.jogadorId === pid);
@@ -8563,6 +8660,7 @@ function renderConquistasHistorico(pid) {
             if (!player) return;
 
             currentAlbumPlayer = playerId;
+            currentAlbumComissao = null;
 
             // Esconder TODAS as seções primeiro
             const allSections = ['section-home', 'section-ranking', 'section-mural', 'section-admin', 'section-album', 'section-album-corpo', 'section-album-comissao'];
@@ -9292,6 +9390,7 @@ function getTorcidasConsecutivas(comissaoId) {
 
         async function showAlbumComissao(comissaoId) {
             currentAlbumPlayer = null;
+            currentAlbumComissao = comissaoId;
             const c = comissao.find(x => x.id === comissaoId);
             if (!c) return;
 
@@ -9393,29 +9492,10 @@ function getTorcidasConsecutivas(comissaoId) {
                 }
             }
 
-            // Honrarias recebidos
-            const elogiosDiv = document.getElementById('album-comissao-elogios');
-            if (elogiosDiv) {
-                if (elogiosComissao.length === 0) {
-                    elogiosDiv.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhum honraria recebido ainda</p>';
-                } else {
-                    elogiosDiv.innerHTML = elogiosComissao.map(e => {
-                        const data = e.data ? getBRDate(e.data).toLocaleDateString('pt-BR') : '';
-                        return `
-                            <div class="flex items-start gap-3 p-3 rounded-lg bg-gray-800/30">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-[#C8A25A] to-[#8C6239] flex items-center justify-center text-[#ECE8E1] font-bold text-xs flex-shrink-0">
-                                    ${e.deNome ? e.deNome.charAt(0) : '?'}
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-sm text-gray-400">${data}</p>
-                                    <p class="text-[#ECE8E1]"><span class="font-bold text-[#C8A25A]">${e.deNome || 'Anônimo'}</span></p>
-                                    <p class="text-gray-300 italic">"${e.testemunho || e.mensagem || e.elogio || e.texto || ''}"</p>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            }
+            // Honrarias recebidos — NOVO: usar renderElogiosAlbumComissao
+            renderElogiosAlbumComissao(comissaoId);
+            renderInsigniasBadgesComissao(comissaoId);
+            renderConquistasHistorico(comissaoId);
 
             // Feitos do Conselho — puxar de conquistasConfig
             const conquistasDiv = document.getElementById('album-comissao-conquistas-grid');
@@ -11169,10 +11249,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!de) { showToast('Remetente não encontrado', 'error'); return; }
 
             try {
+                const paraId = currentAlbumComissao || currentAlbumPlayer;
+                const paraNome = currentAlbumComissao 
+                    ? document.getElementById('album-comissao-nome2').textContent 
+                    : document.getElementById('album-player-name2').textContent;
+                
                 await window.addDoc(window.collection(window.db, 'elogios'), {
-                    deId, paraId: currentAlbumPlayer,
+                    deId, paraId,
                     deNome: de.nome + (de.sobrenome ? ' ' + de.sobrenome : ''),
-                    paraNome: document.getElementById('album-player-name2').textContent,
+                    paraNome,
                     tipo: 'honraria-pura',
                     mensagem,
                     data: getHojeBrasilia(),
@@ -11180,7 +11265,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 showToast('Honraria enviada com sucesso!', 'success');
                 fecharModalHonraria();
-                renderElogiosAlbum(currentAlbumPlayer);
+                if (currentAlbumComissao) {
+                    renderElogiosAlbumComissao(currentAlbumComissao);
+                } else {
+                    renderElogiosAlbum(currentAlbumPlayer);
+                }
             } catch (e) {
                 showToast('Erro ao enviar honraria', 'error');
             }
