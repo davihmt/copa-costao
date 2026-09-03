@@ -148,15 +148,15 @@
             position: absolute;
             top: 6px;
             right: 6px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #1a1a2e;
+            background: transparent;
+            color: #FFD700;
             padding: 4px 10px;
             border-radius: 4px 12px 4px 12px;
             font-size: 11px;
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
             z-index: 30;
-            border: 1px solid rgba(255, 215, 0, 0.6);
+            border: 2px solid #FFD700;
             font-family: 'Cinzel', serif;
             letter-spacing: 0.05em;
             animation: insigniaPulse 2s ease-in-out infinite;
@@ -539,7 +539,7 @@
             position: absolute;
             top: 6px;
             left: 6px;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            background: transparent;
             border: 2px solid #FFD700;
             color: #FFD700;
             padding: 3px 10px;
@@ -723,6 +723,24 @@
         @keyframes insigniaShine {
             0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); }
             50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.5), 0 0 50px rgba(255, 215, 0, 0.1); }
+        }
+
+        /* Cores distintas por tipo de insígnia */
+        .insignia-badge.badge-gratidao {
+            background: linear-gradient(145deg, rgba(139, 90, 43, 0.25), rgba(60, 40, 20, 0.4)) !important;
+            border-color: rgba(200, 140, 80, 0.4) !important;
+        }
+        .insignia-badge.badge-energia {
+            background: linear-gradient(145deg, rgba(180, 80, 20, 0.25), rgba(80, 30, 10, 0.4)) !important;
+            border-color: rgba(255, 120, 40, 0.4) !important;
+        }
+        .insignia-badge.badge-resiliencia {
+            background: linear-gradient(145deg, rgba(40, 80, 120, 0.25), rgba(15, 30, 50, 0.4)) !important;
+            border-color: rgba(80, 160, 220, 0.4) !important;
+        }
+        .insignia-badge.badge-colaboracao {
+            background: linear-gradient(145deg, rgba(80, 120, 60, 0.25), rgba(30, 50, 20, 0.4)) !important;
+            border-color: rgba(120, 180, 100, 0.4) !important;
         }
 
         /* Modal de Honraria Pura */
@@ -1936,7 +1954,15 @@
                                 </div>
                             </div>
                             <div id="album-brasao-container" style="display:none;margin-bottom:8px;"></div>
-                            <h3 id="album-player-name2" class="text-xl font-bold mb-1"></h3>
+                            <div class="flex items-center justify-center gap-2 mb-2">
+                                <h3 id="album-player-name2" class="text-xl font-bold mb-0"></h3>
+                            </div>
+                            <div class="flex items-center justify-center gap-2 mb-2">
+                                <i class="fas fa-calendar-alt text-[#C8A25A] text-sm"></i>
+                                <select id="album-filtro-periodo" onchange="mudarPeriodoAlbum(this.value)" class="bg-[#1B1A17] border border-[#C8A25A]/30 text-[#C8A25A] text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-[#C8A25A] cursor-pointer">
+                                    <option value="total">Total</option>
+                                </select>
+                            </div>
                             <p id="album-player-team" class="text-[#C8A25A] font-semibold mb-2"></p>
                             <div id="album-patentes" class="flex justify-center gap-1 mb-2 min-h-[28px]"></div>
                             <div class="space-y-2 text-sm">
@@ -2059,6 +2085,12 @@
                             <!-- honrarias removido - já aparece na linha de baixo -->
                         </div>
                         <h3 id="album-comissao-nome2" class="text-xl font-bold mb-1"></h3>
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <i class="fas fa-calendar-alt text-[#C8A25A] text-sm"></i>
+                            <select id="album-comissao-filtro-periodo" onchange="mudarPeriodoComissao(this.value)" class="bg-[#1B1A17] border border-[#C8A25A]/30 text-[#C8A25A] text-xs rounded-lg px-2 py-1 focus:outline-none focus:border-[#C8A25A] cursor-pointer">
+                                <option value="total">Total</option>
+                            </select>
+                        </div>
                         <p id="album-comissao-funcao" class="text-[#C8A25A] font-semibold mb-1"></p>
                         <p id="album-comissao-cla" class="text-yellow-400 text-sm font-bold mb-2"></p>
                         <div id="album-comissao-patentes" class="flex justify-center gap-1 mb-2 min-h-[28px]"></div>
@@ -2067,6 +2099,14 @@
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-yellow-900/20">
                                 <span class="text-yellow-400">⚔️ Glória</span>
                                 <span id="album-comissao-rec-count" class="font-bold text-yellow-400">0</span>
+                            </div>
+                            <div class="flex justify-between px-3 py-2 rounded-lg bg-amber-900/15">
+                                <span class="text-amber-400">🙏 Glórias de Insígnias</span>
+                                <span id="album-comissao-insignias-count" class="font-bold text-amber-400">0</span>
+                            </div>
+                            <div class="flex justify-between px-3 py-2 rounded-lg bg-orange-900/15">
+                                <span class="text-orange-400">🛡️ Glórias de Batalhas</span>
+                                <span id="album-comissao-batalhas-count" class="font-bold text-orange-400">0</span>
                             </div>
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-green-900/20">
                                 <span class="text-green-400">🜂 Bênção dos Deuses</span>
@@ -2097,6 +2137,11 @@
                     </div>
                     <div class="player-card">
                         <h3 class="text-xl font-bold mb-4"><i class="fas fa-scroll mr-2 text-[#C8A25A]"></i>Crônica de Feitos</h3>
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <button onclick="filtrarEventosComissao('todos')" class="filtro-comissao px-3 py-1 rounded-full text-xs font-bold bg-[#C8A25A] text-[#0B0A0A] transition-all" data-filtro="todos">Todos</button>
+                            <button onclick="filtrarEventosComissao('honraria')" class="filtro-comissao px-3 py-1 rounded-full text-xs font-bold bg-[#ECE8E1]/10 text-[#ECE8E1] hover:bg-[#ECE8E1]/20 transition-all" data-filtro="honraria">💬 Honrarias</button>
+                            <button onclick="filtrarEventosComissao('batalha')" class="filtro-comissao px-3 py-1 rounded-full text-xs font-bold bg-[#ECE8E1]/10 text-[#ECE8E1] hover:bg-[#ECE8E1]/20 transition-all" data-filtro="batalha">🛡️ Batalhas</button>
+                        </div>
                         <div id="album-comissao-events" class="space-y-2 max-h-64 overflow-y-auto"></div>
                     </div>
                 </div>
@@ -3596,6 +3641,8 @@
         var events = [];
         let currentAlbumPlayer = null;
         let currentAlbumComissao = null;
+        let filtroAtualComissao = 'todos';
+        let albumPeriodoSelecionado = 'mes-atual';
         let isAdmin = false;
         let currentAdminTab = 'cadastrar';
         let rankingPeriod = 'month';
@@ -5679,7 +5726,7 @@ function renderTorcidasGuerraAdmin() {
             // Badge inferior esquerdo: contabiliza VITÓRIAS TOTAIS em duelo (não streak)
             const vitorias = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
             if (vitorias === 0) return '';
-            return `<div class="absolute z-30 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-[#FFD700] px-2 py-1 rounded text-xs font-bold border border-[#FFD700]" style="bottom:6px;left:6px;box-shadow:0 0 10px rgba(255,215,0,0.3);">👑 ${vitorias}</div>`;
+            return `<div class="absolute z-30 text-[#FFD700] px-2 py-1 rounded text-xs font-bold border border-[#FFD700]" style="bottom:6px;left:6px;background:transparent;box-shadow:0 0 10px rgba(255,215,0,0.3);">👑 ${vitorias}</div>`;
         }
 
         function getGuerraVencedoraBadge(playerId) {
@@ -7338,6 +7385,263 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
         }
 
 
+        // ===== STATS POR PERÍODO (para filtro do perfil) =====
+        function getPlayerStatsPorPeriodo(playerId, periodo) {
+            const playerEvents = events.filter(e => e.jogadorId === playerId);
+            const hoje = new Date();
+            hoje.setHours(12, 0, 0, 0);
+
+            let baseTotal = 0, basePeriodo = 0;
+            let stickersTotal = 0, stickersPeriodo = 0;
+            let punishTotal = 0, punishPeriodo = 0;
+            let verdesTotal = 0, verdesPeriodo = 0;
+            let elogiosRecebidos = 0, elogiosRecebidosPeriodo = 0;
+            let elogiosDados = 0, elogiosDadosPeriodo = 0;
+            let batalhasTotal = 0, batalhasPeriodo = 0;
+
+            // Se periodo for um mês específico (formato YYYY-MM)
+            const isMesEspecifico = periodo !== 'total' && periodo.includes('-');
+            const [anoFiltro, mesFiltro] = isMesEspecifico ? periodo.split('-').map(Number) : [null, null];
+
+            playerEvents.forEach(ev => {
+                const evDate = getBRDate(ev.data);
+                const val = Number(ev.valor) || 0;
+                const noPeriodo = periodo === 'total' || 
+                    (isMesEspecifico && evDate.getFullYear() === anoFiltro && (evDate.getMonth() + 1) === mesFiltro);
+
+                if (ev.tipo === 'gol') {
+                    if (ev.subtipo === 'elogio-recebido') {
+                        elogiosRecebidos += val;
+                        if (noPeriodo) elogiosRecebidosPeriodo += val;
+                    } else if (ev.subtipo === 'elogio-dado') {
+                        elogiosDados += val;
+                        if (noPeriodo) elogiosDadosPeriodo += val;
+                    } else if (['duelo-vitoria','duelo-derrota','guerra-cla','guerra-cla-derrota','torcida-sabio','torcida-sabio-guerra','torcida-participante-guerra'].includes(ev.subtipo)) {
+                        batalhasTotal += val;
+                        if (noPeriodo) batalhasPeriodo += val;
+                    } else if (ev.subtipo === 'cartao-verde' || ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses') {
+                        verdesTotal += val;
+                        if (noPeriodo) verdesPeriodo += val;
+                    } else {
+                        baseTotal += val;
+                        if (noPeriodo) basePeriodo += val;
+                    }
+                } else if (ev.tipo === 'figurinha') {
+                    stickersTotal += val;
+                    if (noPeriodo) stickersPeriodo += val;
+                } else if (ev.tipo === 'punicao') {
+                    if (ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses' || ev.subtipo === 'cartao-verde') {
+                        verdesTotal += Math.abs(val);
+                        if (noPeriodo) verdesPeriodo += Math.abs(val);
+                    } else {
+                        punishTotal += Math.abs(val);
+                        if (noPeriodo) punishPeriodo += Math.abs(val);
+                    }
+                }
+            });
+
+            return {
+                baseTotal, basePeriodo,
+                stickersTotal, stickersPeriodo,
+                punishTotal, punishPeriodo,
+                verdesTotal, verdesPeriodo,
+                elogiosRecebidos, elogiosRecebidosPeriodo,
+                elogiosDados, elogiosDadosPeriodo,
+                batalhasTotal, batalhasPeriodo,
+                totalReal: baseTotal + stickersTotal + verdesTotal + elogiosRecebidos + elogiosDados + batalhasTotal - punishTotal,
+                totalPeriodo: basePeriodo + stickersPeriodo + verdesPeriodo + elogiosRecebidosPeriodo + elogiosDadosPeriodo + batalhasPeriodo - punishPeriodo
+            };
+        }
+
+        // ===== CONTROLE DE PERÍODO DO PERFIL =====
+        function preencherSelectPeriodoAlbum(playerId) {
+            const select = document.getElementById('album-filtro-periodo');
+            if (!select) return;
+
+            // Limpar opções existentes (mantém apenas "Total")
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            // Coletar meses únicos dos eventos do jogador
+            const playerEvents = events.filter(e => e.jogadorId === playerId);
+            const mesesUnicos = [...new Set(playerEvents.map(e => {
+                const d = e.data || e.createdAt;
+                return d ? d.substring(0, 7) : null;
+            }).filter(Boolean))].sort().reverse();
+
+            // Adicionar meses ao select
+            mesesUnicos.forEach(mes => {
+                const option = document.createElement('option');
+                option.value = mes;
+                const [ano, mesNum] = mes.split('-');
+                const nomesMeses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                option.textContent = `${nomesMeses[parseInt(mesNum)-1]}/${ano}`;
+                select.appendChild(option);
+            });
+
+            // SEMPRE adicionar mês atual às opções (mesmo sem eventos)
+            const hoje = new Date();
+            const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+            if (!mesesUnicos.includes(mesAtual)) {
+                const option = document.createElement('option');
+                option.value = mesAtual;
+                const nomesMeses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+                option.textContent = `${nomesMeses[parseInt(mesAtual.split('-')[1])-1]}/${mesAtual.split('-')[0]}`;
+                select.appendChild(option);
+            }
+
+            // SEMPRE selecionar mês atual por padrão
+            select.value = mesAtual;
+            albumPeriodoSelecionado = mesAtual;
+        }
+
+        function mudarPeriodoAlbum(periodo) {
+            albumPeriodoSelecionado = periodo;
+            if (currentAlbumPlayer) {
+                renderAlbumStats(currentAlbumPlayer);
+            }
+        }
+        window.mudarPeriodoAlbum = mudarPeriodoAlbum;
+
+        function renderAlbumStats(playerId) {
+            const stats = getPlayerStatsPorPeriodo(playerId, albumPeriodoSelecionado);
+
+            const totalGoalsEl = document.getElementById('album-total-goals');
+            if (totalGoalsEl) totalGoalsEl.textContent = stats.basePeriodo;
+
+            const punishmentEl = document.getElementById('album-punishment-goals');
+            if (punishmentEl) punishmentEl.textContent = '-' + stats.punishPeriodo;
+
+            const honraEl = document.getElementById('album-honra-gols');
+            if (honraEl) honraEl.textContent = stats.elogiosRecebidosPeriodo + stats.elogiosDadosPeriodo;
+
+            const batalhasEl = document.getElementById('album-batalhas-gols');
+            if (batalhasEl) batalhasEl.textContent = stats.batalhasPeriodo;
+
+            const totalRealEl = document.getElementById('album-total-real');
+            if (totalRealEl) totalRealEl.textContent = stats.totalPeriodo;
+
+            const playerTotalEl = document.getElementById('album-player-total');
+            if (playerTotalEl) playerTotalEl.textContent = stats.totalPeriodo + ' glória';
+        }
+
+        // ===== PERÍODO PARA CONSELHO DOS SÁBIOS =====
+        function getComissaoStatsPorPeriodo(comissaoId, periodo) {
+            const stats = getComissaoStats(comissaoId);
+            if (periodo === 'total') return stats;
+
+            const [ano, mes] = periodo.split('-').map(Number);
+            const inicioMes = new Date(ano, mes - 1, 1, 0, 0, 0);
+            const fimMes = new Date(ano, mes, 0, 23, 59, 59);
+
+            let baseMonth = 0, stickersMonth = 0, punicoesMonth = 0, honrariasMonth = 0, batalhasMonth = 0, conquistasMonth = 0;
+
+            const playerEvents = events.filter(e => e.jogadorId === comissaoId);
+            for (const ev of playerEvents) {
+                const d = getBRDate(ev.data || ev.createdAt);
+                if (d >= inicioMes && d <= fimMes) {
+                    const val = Number(ev.valor) || 0;
+                    if (ev.tipo === 'gol') {
+                        if (ev.subtipo === 'honraria-pura' || ev.subtipo === 'elogio-recebido') honrariasMonth += val;
+                        else if (ev.subtipo === 'guerra-cla' || ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra' || ev.subtipo === 'duelo-vitoria') batalhasMonth += val;
+                        else baseMonth += val;
+                    } else if (ev.tipo === 'figurinha') {
+                        stickersMonth += val;
+                    } else if (ev.tipo === 'punicao') {
+                        if (ev.subtipo === 'guerra-cla-derrota' || ev.subtipo === 'duelo-derrota') batalhasMonth -= Math.abs(val);
+                        else punicoesMonth += Math.abs(val);
+                    }
+                }
+            }
+
+            honrarias.forEach(el => {
+                if (!el.data) return;
+                const elDate = getBRDate(el.data);
+                if (elDate >= inicioMes && elDate <= fimMes) {
+                    if (el.paraId === comissaoId && el.paraTipo === 'comissao') honrariasMonth += 1;
+                    if (el.deId === comissaoId && el.deTipo === 'comissao') honrariasMonth += 1;
+                }
+            });
+
+            const totalMonth = baseMonth + stickersMonth;
+            const totalReal = totalMonth - punicoesMonth + honrariasMonth + batalhasMonth;
+
+            conquistasMonth = conquistasHistorico.filter(ch => {
+                const d = getBRDate(ch.dataConquista);
+                return ch.jogadorId === comissaoId && d >= inicioMes && d <= fimMes;
+            }).length;
+
+            return { totalMonth, baseMonth, stickersMonth, punicoesMonth, honrariasMonth, batalhasMonth, conquistasMonth, totalReal };
+        }
+
+        function preencherSelectPeriodoComissao(comissaoId) {
+            const select = document.getElementById('album-comissao-filtro-periodo');
+            if (!select) return;
+
+            const mesesDisponiveis = new Set();
+            mesesDisponiveis.add('total');
+
+            const playerEvents = events.filter(e => e.jogadorId === comissaoId);
+            for (const ev of playerEvents) {
+                const d = getBRDate(ev.data || ev.createdAt);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                mesesDisponiveis.add(key);
+            }
+
+            honrarias.forEach(el => {
+                if (!el.data) return;
+                if (el.paraId === comissaoId || el.deId === comissaoId) {
+                    const d = getBRDate(el.data);
+                    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    mesesDisponiveis.add(key);
+                }
+            });
+
+            conquistasHistorico.filter(ch => ch.jogadorId === comissaoId).forEach(ch => {
+                const d = getBRDate(ch.dataConquista);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                mesesDisponiveis.add(key);
+            });
+
+            const mesAtual = new Date();
+            const mesAtualKey = `${mesAtual.getFullYear()}-${String(mesAtual.getMonth() + 1).padStart(2, '0')}`;
+            mesesDisponiveis.add(mesAtualKey);
+
+            const mesesOrdenados = Array.from(mesesDisponiveis).sort().reverse();
+            const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+            select.innerHTML = mesesOrdenados.map(m => {
+                if (m === 'total') return '<option value="total">Total</option>';
+                const [ano, mes] = m.split('-').map(Number);
+                const label = `${nomesMeses[mes - 1]}/${ano}`;
+                return `<option value="${m}">${label}</option>`;
+            }).join('');
+
+            albumPeriodoSelecionado = mesAtualKey;
+            select.value = mesAtualKey;
+        }
+
+        function mudarPeriodoComissao(periodo) {
+            albumPeriodoSelecionado = periodo;
+            if (currentAlbumComissao) {
+                renderComissaoStats(currentAlbumComissao);
+            }
+        }
+        window.mudarPeriodoComissao = mudarPeriodoComissao;
+
+        function renderComissaoStats(comissaoId) {
+            const stats = getComissaoStatsPorPeriodo(comissaoId, albumPeriodoSelecionado);
+            const recCountEl = document.getElementById('album-comissao-rec-count');
+            if (recCountEl) recCountEl.textContent = stats.totalMonth;
+            const insCountEl = document.getElementById('album-comissao-insignias-count');
+            if (insCountEl) insCountEl.textContent = stats.honrariasMonth;
+            const batCountEl = document.getElementById('album-comissao-batalhas-count');
+            if (batCountEl) batCountEl.textContent = stats.batalhasMonth;
+            const conqEl = document.getElementById('album-comissao-conquistas');
+            if (conqEl) conqEl.textContent = stats.conquistasMonth;
+        }
+
         // ===== COMISSAO STATS (inclui cartões + honrarias históricos) =====
         function getComissaoStats(comissaoId) {
             const comissaoEvents = events.filter(e => e.jogadorId === comissaoId);
@@ -7637,7 +7941,7 @@ async function renderPlayers() {
                                     <img src="${photoUrl}" alt="${p.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <div class="fallback" style="display:none">${initials}</div>
                                 </div>
-                                ${eqBrasao ? `<div style="position:absolute;bottom:-8px;right:-8px;width:40px;height:40px;border-radius:50%;overflow:hidden;border:3px solid ${eqCor||borderColor};background:#0B0A0A;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,0.6),0 0 8px ${eqCor||borderColor};cursor:zoom-in;" onclick="event.stopPropagation(); window.openLightbox('${eqBrasao}', true);"><img src="${eqBrasao}" style="width:100%;height:100%;object-fit:contain;padding:2px;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:22px\'>🛡️</span>';"></div>` : ''}
+                                ${eqBrasao ? `<div style="position:absolute;bottom:-8px;right:-8px;width:40px;height:40px;border-radius:50%;overflow:hidden;border:3px solid ${eqCor||borderColor};background:transparent;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,0.6),0 0 8px ${eqCor||borderColor};cursor:zoom-in;" onclick="event.stopPropagation(); window.openLightbox('${eqBrasao}', true);"><img src="${eqBrasao}" style="width:100%;height:100%;object-fit:contain;padding:2px;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:22px\'>🛡️</span>';"></div>` : ''}
                             </div>
                             <h3 class="font-bold text-lg mt-3">${p.nome || ''}</h3>
                             <p class="text-gray-400 text-sm mb-2">${p.sobrenome || ''}</p>
@@ -7698,7 +8002,7 @@ async function renderPlayers() {
                                     <img src="${photoUrl}" alt="${c.nome}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                     <div class="fallback" style="display:none">${initials}</div>
                                 </div>
-                                ${eqComBrasao ? `<div style="position:absolute;bottom:-8px;right:-8px;width:48px;height:48px;border-radius:50%;overflow:hidden;border:3px solid ${eqComCor||borderColor};background:#0B0A0A;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,0.6),0 0 8px ${eqComCor||borderColor};cursor:zoom-in;" onclick="event.stopPropagation(); window.openLightbox('${eqComBrasao}', true);"><img src="${eqComBrasao}" style="width:100%;height:100%;object-fit:contain;padding:2px;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:22px\'>🛡️</span>';"></div>` : ''}
+                                ${eqComBrasao ? `<div style="position:absolute;bottom:-8px;right:-8px;width:48px;height:48px;border-radius:50%;overflow:hidden;border:3px solid ${eqComCor||borderColor};background:transparent;z-index:10;box-shadow:0 4px 16px rgba(0,0,0,0.6),0 0 8px ${eqComCor||borderColor};cursor:zoom-in;" onclick="event.stopPropagation(); window.openLightbox('${eqComBrasao}', true);"><img src="${eqComBrasao}" style="width:100%;height:100%;object-fit:contain;padding:2px;" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=\'font-size:22px\'>🛡️</span>';"></div>` : ''}
                             </div>
                             <h3 class="font-bold text-lg mt-3">${c.nome || ''}</h3>
                             ${(() => {
@@ -7809,7 +8113,7 @@ async function renderPlayers() {
                     return `
                         <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:opacity-80 transition-all" style="border-color: ${eq.cor};" onclick="showEquipeAlbum('${eq.id}')">
                             <div class="text-2xl w-10 text-center">${medal}</div>
-                            ${eq.brasao ? `<div class="w-[72px] h-[72px] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-[3px] cursor-zoom-in" style="border-color: ${eq.cor};background:#0B0A0A;box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px ${eq.cor}40;" onclick="event.stopPropagation(); window.openLightbox('${getBrasaoUrl(eq.brasao)}', true);"><img src="${getBrasaoUrl(eq.brasao)}" style="width:100%;height:100%;object-fit:contain;padding:4px;" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-shield-halved text-[#ECE8E1] text-2xl\'></i>';"></div>` : `<div class="w-[72px] h-[72px] rounded-full flex items-center justify-center text-[#ECE8E1] font-bold text-2xl flex-shrink-0" style="background: ${eq.cor};box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px ${eq.cor}40;"><i class="fas fa-shield-halved"></i></div>`}
+                            ${eq.brasao ? `<div class="w-[72px] h-[72px] rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-[3px] cursor-zoom-in" style="border-color: ${eq.cor};background:transparent;box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px ${eq.cor}40;" onclick="event.stopPropagation(); window.openLightbox('${getBrasaoUrl(eq.brasao)}', true);"><img src="${getBrasaoUrl(eq.brasao)}" style="width:100%;height:100%;object-fit:contain;padding:4px;" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-shield-halved text-[#ECE8E1] text-2xl\'></i>';"></div>` : `<div class="w-[72px] h-[72px] rounded-full flex items-center justify-center text-[#ECE8E1] font-bold text-2xl flex-shrink-0" style="background: ${eq.cor};box-shadow:0 4px 16px rgba(0,0,0,0.5),0 0 12px ${eq.cor}40;"><i class="fas fa-shield-halved"></i></div>`}
                             <div class="flex-1">
                                 <h4 class="font-bold">${eq.nome}</h4>
                                 <p class="text-sm text-gray-400">${eq.jogadores || 0} guerreiro(es)${eq.sábios ? ' · ' + eq.sábios + ' sábio(s)' : ''}</p>
@@ -8045,8 +8349,9 @@ async function renderPlayers() {
             Object.entries(INSIGNIAS_CONFIG).forEach(([tipo, config]) => {
                 const count = contagem[tipo] || 0;
                 const shining = count >= 5 ? 'shining' : '';
+                const tipoClass = 'badge-' + tipo;
                 html += `
-                    <div class="insignia-badge ${shining}">
+                    <div class="insignia-badge ${tipoClass} ${shining}">
                         <span class="insignia-icone">${config.icone}</span>
                         <span class="insignia-nome">${config.nome}</span>
                         <span class="insignia-count">${count}</span>
@@ -8136,8 +8441,9 @@ async function renderPlayers() {
             Object.entries(INSIGNIAS_CONFIG).forEach(([tipo, config]) => {
                 const count = contagem[tipo] || 0;
                 const shining = count >= 5 ? 'shining' : '';
+                const tipoClass = 'badge-' + tipo;
                 html += `
-                    <div class="insignia-badge ${shining}">
+                    <div class="insignia-badge ${tipoClass} ${shining}">
                         <span class="insignia-icone">${config.icone}</span>
                         <span class="insignia-nome">${config.nome}</span>
                         <span class="insignia-count">${count}</span>
@@ -8210,6 +8516,76 @@ async function renderPlayers() {
             if (msgInput) msgInput.value = '';
         }
         window.abrirModalHonrariaComissao = abrirModalHonrariaComissao;
+
+        function renderComissaoEvents(comissaoId) {
+            const container = document.getElementById('album-comissao-events');
+            if (!container) return;
+
+            let eventosComissao = events.filter(e => e.jogadorId === comissaoId).sort((a, b) => {
+                const da = getBRDate(a.data);
+                const db = getBRDate(b.data);
+                return db - da;
+            });
+
+            // Aplicar filtro
+            if (filtroAtualComissao === 'honraria') {
+                eventosComissao = eventosComissao.filter(e => 
+                    e.subtipo === 'elogio-recebido' || 
+                    e.subtipo === 'elogio-dado' ||
+                    e.subtipo === 'honraria-pura'
+                );
+            } else if (filtroAtualComissao === 'batalha') {
+                eventosComissao = eventosComissao.filter(e => 
+                    e.subtipo === 'guerra-cla' || 
+                    e.subtipo === 'guerra-cla-derrota' ||
+                    e.subtipo === 'torcida-sabio-guerra' ||
+                    e.subtipo === 'torcida-participante-guerra' ||
+                    e.subtipo === 'duelo-vitoria' ||
+                    e.subtipo === 'duelo-derrota'
+                );
+            }
+
+            if (eventosComissao.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum feito registrado</p>';
+                return;
+            }
+
+            container.innerHTML = eventosComissao.map(e => {
+                let icon = '', color = '', sign = '';
+                if (e.tipo === 'gol') { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = '+'; }
+                else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; sign = '+'; }
+                else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
+                return `
+                    <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
+                        <div class="flex items-center gap-3">
+                            <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${icon}</span>
+                            <div>
+                                <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
+                                <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
+                            </div>
+                        </div>
+                        <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filtrarEventosComissao(filtro) {
+            filtroAtualComissao = filtro;
+            document.querySelectorAll('.filtro-comissao').forEach(b => {
+                if (b.dataset.filtro === filtro) {
+                    b.classList.remove('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
+                    b.classList.add('bg-[#C8A25A]', 'text-[#0B0A0A]');
+                } else {
+                    b.classList.remove('bg-[#C8A25A]', 'text-[#0B0A0A]');
+                    b.classList.add('bg-[#ECE8E1]/10', 'text-[#ECE8E1]');
+                }
+            });
+            if (currentAlbumComissao) {
+                renderComissaoEvents(currentAlbumComissao);
+            }
+        }
+        window.filtrarEventosComissao = filtrarEventosComissao;
 
 function calcConquistas(pid) {
                 const isComissao = comissao.some(c => c.id === pid);
@@ -8669,6 +9045,7 @@ function renderConquistasHistorico(pid) {
                 if (el) el.classList.add('hidden');
             });
             const stats = getPlayerStats(playerId);
+            preencherSelectPeriodoAlbum(playerId);
             playerEventsCache = events.filter(e => e.jogadorId === playerId);
             const playerEvents = events.filter(e => e.jogadorId === playerId).sort((a, b) => {
                 const da = getBRDate(a.data);
@@ -8739,7 +9116,7 @@ function renderConquistasHistorico(pid) {
                 if (eqBrasaoAlbum) {
                     brasaoContainer.innerHTML = `<div class="brasao-perfil-jogador" style="position:relative;margin:0 auto 16px auto;cursor:pointer;" onclick="window.showEquipeAlbum('${eq.id}')" title="Ver perfil do ${eq.nome}">
                         <div style="position:absolute;inset:-6px;border-radius:50%;background:linear-gradient(135deg,#C8A25A,#FFD700,#8C6239,#C8A25A);animation:brasaoGlow 3s linear infinite;z-index:1;"></div>
-                        <div style="position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;border:4px solid #C8A25A;background:#0B0A0A;z-index:2;box-shadow:0 0 40px rgba(200,162,90,0.5),0 12px 32px rgba(0,0,0,0.6);">
+                        <div style="position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;border:4px solid #C8A25A;background:transparent;z-index:2;box-shadow:0 0 40px rgba(200,162,90,0.5),0 12px 32px rgba(0,0,0,0.6);">
                             <img src="${eqBrasaoAlbum}" style="width:100%;height:100%;object-fit:contain;padding:10px;" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;\'>🛡️</div>';">
                         </div>
                         <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#C8A25A,#8C6239);color:#0B0A0A;padding:3px 14px;border-radius:999px;font-size:11px;font-weight:900;z-index:10;white-space:nowrap;font-family:Cinzel,serif;letter-spacing:0.08em;box-shadow:0 4px 12px rgba(0,0,0,0.4);">${eq.nome}</div>
@@ -8757,24 +9134,14 @@ function renderConquistasHistorico(pid) {
             const patentesHtml = getPatenteBadge(playerId, 'perfil');
             const patentesEl = document.getElementById('album-patentes');
             if (patentesEl) patentesEl.innerHTML = patentesHtml;
-            document.getElementById('album-player-total').textContent = `${stats.totalMonth} glória`;
+
+            // Render stats conforme período selecionado
+            renderAlbumStats(playerId);
+
             const blessingIndicator = document.getElementById('album-blessing-indicator');
             if (blessingIndicator) {
                 blessingIndicator.style.display = 'none'; // Removido na temática Valhalla
             }
-            document.getElementById('album-total-goals').textContent = stats.baseMonth + stats.stickersMonth;
-            const punishVal = Number(stats.punishMonth) || 0;
-            const verdesVal = Number(stats.verdesMonth) || 0;
-            const julgamentoSaldo = punishVal - verdesVal;
-            document.getElementById('album-punishment-goals').textContent = julgamentoSaldo > 0 ? `-${julgamentoSaldo}` : (julgamentoSaldo < 0 ? `+${Math.abs(julgamentoSaldo)}` : '0');
-            document.getElementById('album-honra-gols').textContent = (stats.elogiosRecebidosMonth || 0) + (stats.elogiosDadosMonth || 0);
-
-            // Calcular glórias de Batalhas (duelos + guerras) — MÊS ATUAL
-            const batalhasTotal = stats.batalhasMonth || 0;
-            const batalhasEl = document.getElementById('album-batalhas-gols');
-            if (batalhasEl) batalhasEl.textContent = (batalhasTotal > 0 ? '+' : '') + batalhasTotal;
-
-            document.getElementById('album-total-real').textContent = stats.totalMonth;
 
             // Calcular feitos
             const conq = calcConquistas(playerId);
@@ -9404,6 +9771,7 @@ function getTorcidasConsecutivas(comissaoId) {
             const elogiosComissao = honrarias.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
             // Total de glória = honrarias (elogios) + feitos de cartão verde
             const stats = getComissaoStats(comissaoId);
+            preencherSelectPeriodoComissao(comissaoId);
             // Usar calcConquistas para garantir consistência com guerreiros (mês atual)
             const conq = calcConquistas(comissaoId);
             const conquistasCount = conq.monthTotal;
@@ -9444,7 +9812,7 @@ function getTorcidasConsecutivas(comissaoId) {
                 if (eqComBrasao) {
                     brasaoComissaoContainer.innerHTML = `<div class="brasao-perfil-cla" style="position:relative;margin:0 auto 16px auto;cursor:pointer;" onclick="window.showEquipeAlbum('${eqCom.id}')" title="Ver perfil do ${eqCom.nome}">
                         <div style="position:absolute;inset:-6px;border-radius:50%;background:linear-gradient(135deg,#C8A25A,#FFD700,#8C6239,#C8A25A);animation:brasaoGlow 3s linear infinite;z-index:1;"></div>
-                        <div style="position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;border:4px solid #C8A25A;background:#0B0A0A;z-index:2;box-shadow:0 0 40px rgba(200,162,90,0.5),0 12px 32px rgba(0,0,0,0.6);">
+                        <div style="position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;border:4px solid #C8A25A;background:transparent;z-index:2;box-shadow:0 0 40px rgba(200,162,90,0.5),0 12px 32px rgba(0,0,0,0.6);">
                             <img src="${eqComBrasao}" style="width:100%;height:100%;object-fit:contain;padding:10px;" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;\'>🛡️</div>';">
                         </div>
                         <div style="position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#C8A25A,#8C6239);color:#0B0A0A;padding:3px 14px;border-radius:999px;font-size:11px;font-weight:900;z-index:10;white-space:nowrap;font-family:Cinzel,serif;letter-spacing:0.08em;box-shadow:0 4px 12px rgba(0,0,0,0.4);">${eqCom.nome}</div>
@@ -9472,11 +9840,9 @@ function getTorcidasConsecutivas(comissaoId) {
             }
 
             if (origemEl) origemEl.textContent = c.origem || '';
-            if (recEl) recEl.textContent = stats.totalReal + ' gols';
-            if (recCountEl) recCountEl.textContent = stats.totalMonth;
+            renderComissaoStats(comissaoId);
             const bencoesEl = document.getElementById('album-comissao-bencoes-count');
             if (bencoesEl) bencoesEl.textContent = getBencoesDoMes(comissaoId);
-            if (conquistasEl) conquistasEl.textContent = conquistasCount;
 
             const photo = document.getElementById('album-comissao-photo');
             const fallback = document.getElementById('album-comissao-fallback');
@@ -9554,37 +9920,8 @@ function getTorcidasConsecutivas(comissaoId) {
                 }).join('');
             }
 
-            // CRÔNICA DE FEITOS — eventos do sábio
-            const comissaoEvents = events.filter(e => e.jogadorId === comissaoId).sort((a, b) => {
-                const da = getBRDate(a.data);
-                const db = getBRDate(b.data);
-                return db - da;
-            });
-            const comissaoEventsDiv = document.getElementById('album-comissao-events');
-            if (comissaoEventsDiv) {
-                if (comissaoEvents.length === 0) {
-                    comissaoEventsDiv.innerHTML = '<p class="text-gray-500 text-sm text-center py-4">Nenhum feito registrado</p>';
-                } else {
-                    comissaoEventsDiv.innerHTML = comissaoEvents.map(e => {
-                        let icon = '', color = '', sign = '';
-                        if (e.tipo === 'gol') { icon = '⚔️'; color = 'text-[#ECE8E1]'; sign = '+'; }
-                        else if (e.tipo === 'figurinha') { icon = '🎴'; color = 'text-yellow-400'; sign = '+'; }
-                        else if (e.tipo === 'punicao') { icon = '🚨'; color = 'text-red-400'; sign = '-'; }
-                        return `
-                            <div class="event-row flex items-center justify-between px-3 py-2 rounded-lg bg-gray-800/30">
-                                <div class="flex items-center gap-3">
-                                    <span class="text-lg" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${icon}</span>
-                                    <div>
-                                        <p class="text-sm font-semibold ${color}">${e.subtipoLabel || e.tipo}</p>
-                                        <p class="text-xs text-gray-500">${formatDate(e.data)} ${e.observacao ? '· ' + e.observacao : ''}</p>
-                                    </div>
-                                </div>
-                                <span class="font-bold ${color}">${sign}${Math.abs(e.valor)}</span>
-                            </div>
-                        `;
-                    }).join('');
-                }
-            }
+            // CRÔNICA DE FEITOS — renderizada com filtro via renderComissaoEvents
+            renderComissaoEvents(comissaoId);
 
             // Mostrar álbum comissão
             const albumEl = document.getElementById('section-album-comissao');
@@ -9936,7 +10273,7 @@ function showEquipeAlbum(equipeId) {
             geral.innerHTML = `
                 <div class="team-ranking-card mb-6" style="border-color: ${eq.cor};">
                     <div class="flex items-center gap-4">
-                        ${eq.brasao ? `<div class="w-32 h-32 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-[4px] cursor-pointer" style="border-color: ${eq.cor};background:#0B0A0A;box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 30px ${eq.cor}50;" onclick="event.stopPropagation(); window.openLightbox('${getBrasaoUrl(eq.brasao)}', true);"><img src="${getBrasaoUrl(eq.brasao)}" style="width:100%;height:100%;object-fit:contain;padding:4px;" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-shield-halved text-[#ECE8E1] text-3xl\'></i>';"></div>` : `<div class="w-20 h-20 rounded-full flex items-center justify-center text-[#ECE8E1] text-3xl flex-shrink-0" style="background: ${eq.cor};box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 16px ${eq.cor}40;"><i class="fas fa-shield-halved"></i></div>`}
+                        ${eq.brasao ? `<div class="w-32 h-32 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden border-[4px] cursor-pointer" style="border-color: ${eq.cor};background:transparent;box-shadow:0 8px 40px rgba(0,0,0,0.6),0 0 30px ${eq.cor}50;" onclick="event.stopPropagation(); window.openLightbox('${getBrasaoUrl(eq.brasao)}', true);"><img src="${getBrasaoUrl(eq.brasao)}" style="width:100%;height:100%;object-fit:contain;padding:4px;" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\'fas fa-shield-halved text-[#ECE8E1] text-3xl\'></i>';"></div>` : `<div class="w-20 h-20 rounded-full flex items-center justify-center text-[#ECE8E1] text-3xl flex-shrink-0" style="background: ${eq.cor};box-shadow:0 4px 20px rgba(0,0,0,0.5),0 0 16px ${eq.cor}40;"><i class="fas fa-shield-halved"></i></div>`}
                         <div class="flex-1">
                             <h2 class="text-2xl font-bold" style="color: ${eq.cor};">${eq.nome}</h2>
                             <p class="text-gray-400">${jogadoresEquipe.length} guerreiros${comissaoEquipe.length > 0 ? ' · ' + comissaoEquipe.length + ' sábio(s)' : ''} · ${equipeTotal} glória no período</p>
