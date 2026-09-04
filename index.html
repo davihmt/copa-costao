@@ -4251,20 +4251,28 @@ function getDueloAtivo(jogadorId) {
                 for (const ev of playerEvents) {
                     let evTs = null;
 
-                    if (ev.data) {
+                    // PRIORIDADE 1: createdAt (timestamp real do Firebase)
+                    if (ev.createdAt) {
+                        const cm = String(ev.createdAt).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                        if (cm) {
+                            // Se createdAt tem hora, usar timestamp real
+                            const fullTs = new Date(ev.createdAt).getTime();
+                            if (!isNaN(fullTs)) {
+                                evTs = fullTs;
+                            } else {
+                                evTs = new Date(Number(cm[1]), Number(cm[2])-1, Number(cm[3]), 23, 59, 59).getTime();
+                            }
+                        } else {
+                            evTs = new Date(ev.createdAt).getTime();
+                        }
+                    }
+                    // PRIORIDADE 2: data (YYYY-MM-DD) - usar FIM do dia
+                    else if (ev.data) {
                         const dm = String(ev.data).match(/^(\d{4})-(\d{2})-(\d{2})/);
                         if (dm) {
                             evTs = new Date(Number(dm[1]), Number(dm[2])-1, Number(dm[3]), 23, 59, 59).getTime();
                         } else {
                             evTs = new Date(ev.data + 'T23:59:59').getTime();
-                        }
-                    }
-                    else if (ev.createdAt) {
-                        const cm = String(ev.createdAt).match(/^(\d{4})-(\d{2})-(\d{2})/);
-                        if (cm) {
-                            evTs = new Date(Number(cm[1]), Number(cm[2])-1, Number(cm[3]), 23, 59, 59).getTime();
-                        } else {
-                            evTs = new Date(ev.createdAt).getTime();
                         }
                     }
 
@@ -5834,13 +5842,15 @@ function renderTorcidasGuerraAdmin() {
 
                 meuDueloContent.innerHTML = `
                     <div class="flex items-center justify-between gap-4 mb-4">
-                        <div class="text-center flex-1 cursor-pointer" onclick="window.showAlbum('${d.desafianteId}')">
-                            ${(() => {
-                                const p = players.find(x => x.id === d.desafianteId);
-                                const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
-                                const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                return `<div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-[#C8A25A] mb-1" style="box-shadow:0 0 15px rgba(200,162,90,0.3);"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
-                            })()}
+                        <div class="text-center flex-1 cursor-pointer">
+                            <div class="flex items-center justify-center gap-1 mb-1">
+                                ${[d.desafianteId, d.desafiante2Id].filter(Boolean).map(pid => {
+                                    const p = players.find(x => x.id === pid);
+                                    const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                                    const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
+                                    return `<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 10px rgba(200,162,90,0.3);margin-left:-8px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
+                                }).join('')}
+                            </div>
                             <p class="font-bold text-sm">${d.desafianteNome}</p>
                             <p class="text-2xl font-black text-[#C8A25A]">${gloriaA}</p>
                         </div>
@@ -5848,13 +5858,15 @@ function renderTorcidasGuerraAdmin() {
                             <p class="text-3xl font-black">⚔️</p>
                             <p class="text-xs text-gray-500">VS</p>
                         </div>
-                        <div class="text-center flex-1 cursor-pointer" onclick="window.showAlbum('${d.desafiadoId}')">
-                            ${(() => {
-                                const p = players.find(x => x.id === d.desafiadoId);
-                                const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
-                                const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                return `<div class="w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-[#C8A25A] mb-1" style="box-shadow:0 0 15px rgba(200,162,90,0.3);"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
-                            })()}
+                        <div class="text-center flex-1 cursor-pointer">
+                            <div class="flex items-center justify-center gap-1 mb-1">
+                                ${[d.desafiadoId, d.desafiado2Id].filter(Boolean).map(pid => {
+                                    const p = players.find(x => x.id === pid);
+                                    const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                                    const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
+                                    return `<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 10px rgba(200,162,90,0.3);margin-left:-8px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
+                                }).join('')}
+                            </div>
                             <p class="font-bold text-sm">${d.desafiadoNome}</p>
                             <p class="text-2xl font-black text-[#C8A25A]">${gloriaB}</p>
                         </div>
