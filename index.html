@@ -4422,14 +4422,16 @@ function getDueloAtivo(jogadorId) {
                 if (pendente2) return { ok: false, msg: 'Um guerreiro da dupla adversária já tem um duelo pendente' };
             }
 
-            // Verificar trégua de 2 semanas (entre duplas)
+            // Verificar trégua de 2 semanas (entre duplas) — ALERTA, NÃO BLOQUEIO
             const duasSemanasAtras = new Date();
             duasSemanasAtras.setDate(duasSemanasAtras.getDate() - 14);
             const truce = duelos.find(d => d.status !== 'pendente' && new Date(d.createdAt) > duasSemanasAtras && (
                 (todosDesafiantes.includes(d.desafianteId) || todosDesafiantes.includes(d.desafiante2Id)) &&
                 (todosDesafiados.includes(d.desafiadoId) || todosDesafiados.includes(d.desafiado2Id))
             ));
-            if (truce) return { ok: false, msg: 'Trégua de 2 semanas com esta dupla' };
+            if (truce) {
+                return { ok: true, alerta: '⚠️ ALERTA: Esta dupla já se enfrentou recentemente (menos de 2 semanas). O duelo será lançado mesmo assim.' };
+            }
 
             return { ok: true };
         }
@@ -4445,6 +4447,9 @@ function getDueloAtivo(jogadorId) {
 
             const check = podeDesafiar([d1a, d1b], [d2a, d2b]);
             if (!check.ok) { showToast(check.msg, 'error'); return; }
+            if (check.alerta) {
+                if (!confirm(check.alerta + '\n\nDeseja continuar e lançar o desafio?')) return;
+            }
 
             const p1a = players.find(p => p.id === d1a);
             const p2a = players.find(p => p.id === d2a);
