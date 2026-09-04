@@ -121,19 +121,20 @@
         .corpo-tecnico-card { border: 2px solid #6b7280; opacity: 0.95; }
                 .elogio-badge {
             position: absolute;
-            bottom: 6px;
-            right: 6px;
+            top: 6px;
+            right: 52px;
             background: linear-gradient(135deg, #D4A574, #C19A6B);
             color: #3D2817;
-            padding: 4px 10px;
+            padding: 3px 8px;
             border-radius: 4px 12px 4px 12px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             box-shadow: 0 2px 8px rgba(212, 165, 116, 0.4), inset 0 1px 0 rgba(255,255,255,0.2);
             z-index: 30;
             border: 1px solid rgba(139, 90, 43, 0.4);
             font-family: 'Cinzel', serif;
             letter-spacing: 0.05em;
+            white-space: nowrap;
         }
         .elogio-badge::before {
             content: '📜';
@@ -335,15 +336,18 @@
                 inset 0 0 20px rgba(0, 0, 0, 0.3) !important;
         }
 
-        /* Honraria badge */
+        /* Honraria badge - canto superior direito, à esquerda da insígnia */
         .elogio-badge {
             position: absolute;
-            bottom: 6px;
-            right: 6px;
+            top: 6px;
+            right: 52px;
             background: linear-gradient(135deg, #7A1F1F, #5A1515) !important;
-            border: 2px solid rgba(200, 162, 90, 0.3) !important;
+            border: 1px solid rgba(200, 162, 90, 0.3) !important;
             box-shadow: 0 2px 10px rgba(122, 31, 31, 0.4) !important;
             font-family: 'Cinzel', serif;
+            padding: 3px 8px;
+            font-size: 10px;
+            white-space: nowrap;
         }
 
         /* Scrollbar medieval */
@@ -565,27 +569,41 @@
             50% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.15); }
         }
 
-        /* Badge de Duelo Ativo - reposicionado */
+        /* Badge de Duelo Ativo - canto inferior direito, nomes verticais */
         .duelo-ativo-badge {
             position: absolute;
             bottom: 6px;
             right: 6px;
-            background: linear-gradient(135deg, #7A1F1F, #5A1515);
-            color: #ECE8E1;
-            padding: 5px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 800;
+            background: linear-gradient(135deg, #B8860B, #8B4513);
+            color: #FFF8DC;
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
             font-family: 'Cinzel', serif;
-            border: 1px solid rgba(200, 162, 90, 0.4);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+            border: 1px solid #FFD700;
+            box-shadow: 0 2px 15px rgba(184, 134, 11, 0.4), inset 0 1px 0 rgba(255,255,255,0.1);
             z-index: 25;
             animation: elogioPulse 2s ease-in-out infinite;
+            text-align: center;
+            line-height: 1.3;
+            min-width: 70px;
+            max-width: 130px;
         }
-        .duelo-ativo-badge::before {
-            content: '⚔️';
-            margin-right: 5px;
+        .duelo-ativo-badge .duelo-nome {
+            font-size: 9px;
+            opacity: 0.95;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 110px;
+            text-align: center;
+            margin: 0 auto;
+        }
+        .duelo-ativo-badge .duelo-icone {
             font-size: 13px;
+            margin: 2px 0;
+            text-align: center;
         }
 
         .blessing-flash {
@@ -5709,19 +5727,38 @@ function renderTorcidasGuerraAdmin() {
             if (vitorias === 0) return '';
             return `<div class="vitoria-duelo-badge">${vitorias} Vitória${vitorias > 1 ? 's' : ''}</div>`;
         }function getDueloBadge(playerId) {
-            // Show active duels - posicionado na parte inferior direita para não sobrepor elogio
-            const dueloAtivo = duelos.find(d => d.status === 'ativo' && (d.desafianteId === playerId || d.desafiadoId === playerId));
+            // Verifica TODOS os jogadores da dupla (desafiante1, desafiante2, desafiado1, desafiado2)
+            const dueloAtivo = duelos.find(d => d.status === 'ativo' && (
+                d.desafianteId === playerId || d.desafiante2Id === playerId ||
+                d.desafiadoId === playerId || d.desafiado2Id === playerId
+            ));
             if (dueloAtivo) {
-                const isDesafiante = dueloAtivo.desafianteId === playerId;
-                const adversario = isDesafiante ? dueloAtivo.desafiadoNome : dueloAtivo.desafianteNome;
-                return `<div class="duelo-ativo-badge" onclick="event.stopPropagation(); showSection('arena'); setArenaTab('individuais');" style="cursor:pointer;">${adversario}</div>`;
+                const todosDesafiantes = [dueloAtivo.desafianteId, dueloAtivo.desafiante2Id].filter(Boolean);
+                const todosDesafiados = [dueloAtivo.desafiadoId, dueloAtivo.desafiado2Id].filter(Boolean);
+                const isDesafiante = todosDesafiantes.includes(playerId);
+                const duplaAdversaria = isDesafiante ? todosDesafiados : todosDesafiantes;
+                // Pegar nomes dos adversários
+                const nomesAdversarios = duplaAdversaria.map(id => {
+                    const p = players.find(x => x.id === id);
+                    return p ? (p.nome + (p.sobrenome ? ' ' + p.sobrenome : '')) : '?';
+                });
+                const nome1 = nomesAdversarios[0] || '?';
+                const nome2 = nomesAdversarios[1] || '';
+                const htmlNomes = nome2 
+                    ? `<div class="duelo-nome">${nome1}</div><div class="duelo-icone">⚔️</div><div class="duelo-nome">${nome2}</div>`
+                    : `<div class="duelo-nome">${nome1}</div><div class="duelo-icone">⚔️</div>`;
+                return `<div class="duelo-ativo-badge" onclick="event.stopPropagation(); showSection('arena'); setArenaTab('individuais');" style="cursor:pointer;" title="Duelo ativo vs ${nomesAdversarios.join(' & ')}">${htmlNomes}</div>`;
             }
             // Show pending duels
-            const dueloPendente = duelos.find(d => d.status === 'pendente' && (d.desafianteId === playerId || d.desafiadoId === playerId));
+            const dueloPendente = duelos.find(d => d.status === 'pendente' && (
+                d.desafianteId === playerId || d.desafiante2Id === playerId ||
+                d.desafiadoId === playerId || d.desafiado2Id === playerId
+            ));
             if (dueloPendente) {
-                const isDesafiante = dueloPendente.desafianteId === playerId;
-                const label = isDesafiante ? 'AGUARDANDO' : 'DESAFIADO';
-                return `<div class="duelo-ativo-badge" onclick="event.stopPropagation(); showSection('arena'); setArenaTab('individuais');" style="background:linear-gradient(135deg,#B8860B,#8B6914);border-color:#FFD700;cursor:pointer;">${label}</div>`;
+                const isDesafiante = dueloPendente.desafianteId === playerId || dueloPendente.desafiante2Id === playerId;
+                const label = isDesafiante ? '⏳' : '❓';
+                const texto = isDesafiante ? 'Aguardando' : 'Desafiado';
+                return `<div class="duelo-ativo-badge" onclick="event.stopPropagation(); showSection('arena'); setArenaTab('individuais');" style="cursor:pointer;" title="${texto}"><div class="duelo-icone">${label}</div><div class="duelo-nome">${texto}</div></div>`;
             }
             return '';
         }
