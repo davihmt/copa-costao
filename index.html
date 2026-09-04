@@ -5843,28 +5843,28 @@ function renderTorcidasGuerraAdmin() {
                 meuDueloContent.innerHTML = `
                     <div class="flex items-center justify-between gap-4 mb-4">
                         <div class="text-center flex-1 cursor-pointer">
-                            <div class="flex items-center justify-center gap-1 mb-1">
+                            <div class="flex items-center justify-center gap-0 mb-2">
                                 ${[d.desafianteId, d.desafiante2Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                    return `<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 10px rgba(200,162,90,0.3);margin-left:-8px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
+                                    return `<div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 15px rgba(200,162,90,0.3);margin-left:-10px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
                                 }).join('')}
                             </div>
                             <p class="font-bold text-sm">${d.desafianteNome}</p>
                             <p class="text-2xl font-black text-[#C8A25A]">${gloriaA}</p>
                         </div>
-                        <div class="text-center">
+                        <div class="text-center px-2">
                             <p class="text-3xl font-black">⚔️</p>
                             <p class="text-xs text-gray-500">VS</p>
                         </div>
                         <div class="text-center flex-1 cursor-pointer">
-                            <div class="flex items-center justify-center gap-1 mb-1">
+                            <div class="flex items-center justify-center gap-0 mb-2">
                                 ${[d.desafiadoId, d.desafiado2Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                    return `<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 10px rgba(200,162,90,0.3);margin-left:-8px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
+                                    return `<div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 15px rgba(200,162,90,0.3);margin-left:-10px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
                                 }).join('')}
                             </div>
                             <p class="font-bold text-sm">${d.desafiadoNome}</p>
@@ -5916,11 +5916,7 @@ function renderTorcidasGuerraAdmin() {
                         const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
                         const diasPassados = Math.floor(horasPassadas / 24);
                         const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
-                        diasInfo = `<div class="flex justify-between text-xs text-gray-400 mt-1 px-1">
-                            <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicio.toLocaleDateString('pt-BR')} ${String(inicio.getHours()).padStart(2,'0')}:${String(inicio.getMinutes()).padStart(2,'0')}</span>
-                            <span class="font-bold text-[#C8A25A]">Dia ${diaAtual} de ${totalDias}</span>
-                            <span>${formatarTempoRestante(d.dataFim)}</span>
-                        </div>`;
+                        diasInfo = `<span class="text-xs text-[#C8A25A] font-bold"><i class="fas fa-calendar mr-1"></i>Dia ${diaAtual} de ${totalDias}</span><span class="text-xs text-gray-500 ml-2">${formatarTempoRestante(d.dataFim)}</span>`;
                     }
 
                     const desafiantes = [d.desafianteId, d.desafiante2Id].filter(Boolean);
@@ -5929,34 +5925,51 @@ function renderTorcidasGuerraAdmin() {
                     const gloriaB = getGlaciaDuelo(d.desafiadoId, d);
 
                     return `
-                        <div class="glass rounded-xl p-4">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    ${desafiantes.map(pid => {
-                                        const p = players.find(x => x.id === pid);
-                                        const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
-                                        const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                        return `<div class="w-8 h-8 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold'>${ini}</div>';"></div>`;
-                                    }).join('')}
-                                    <span class="font-bold text-sm">${d.desafianteNome}</span>
-                                    <span class="text-[#C8A25A] font-black">${gloriaA}</span>
-                                    <span class="text-gray-500">⚔️</span>
-                                    <span class="text-[#C8A25A] font-black">${gloriaB}</span>
-                                    <span class="font-bold text-sm">${d.desafiadoNome}</span>
-                                    ${desafiados.map(pid => {
-                                        const p = players.find(x => x.id === pid);
-                                        const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
-                                        const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                        return `<div class="w-8 h-8 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class='w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-xs font-bold'>${ini}</div>';"></div>`;
-                                    }).join('')}
+                        <div class="glass rounded-xl p-3 sm:p-4">
+                            <!-- Linha 1: Duplas e Placar -->
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <!-- Dupla Desafiante -->
+                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                    <div class="flex -space-x-2 shrink-0">
+                                        ${desafiantes.map(pid => {
+                                            const p = players.find(x => x.id === pid);
+                                            const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                                            const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
+                                            return `<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;z-index:1;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-[10px] font-bold\'>${ini}</div>';"></div>`;
+                                        }).join('')}
+                                    </div>
+                                    <span class="font-bold text-xs sm:text-sm truncate">${d.desafianteNome}</span>
                                 </div>
-                                <span class="text-xs text-green-400 font-bold">EM ANDAMENTO</span>
+                                <!-- Placar Central -->
+                                <div class="text-center shrink-0 px-2">
+                                    <span class="text-[#C8A25A] font-black text-sm sm:text-base">${gloriaA}</span>
+                                    <span class="text-gray-500 text-xs mx-1">⚔️</span>
+                                    <span class="text-[#C8A25A] font-black text-sm sm:text-base">${gloriaB}</span>
+                                </div>
+                                <!-- Dupla Desafiada -->
+                                <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                                    <span class="font-bold text-xs sm:text-sm truncate text-right">${d.desafiadoNome}</span>
+                                    <div class="flex -space-x-2 shrink-0">
+                                        ${desafiados.map(pid => {
+                                            const p = players.find(x => x.id === pid);
+                                            const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
+                                            const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
+                                            return `<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;z-index:1;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-[10px] font-bold\'>${ini}</div>';"></div>`;
+                                        }).join('')}
+                                    </div>
+                                </div>
                             </div>
-                            ${diasInfo}
+                            <!-- Linha 2: Info + Status -->
+                            <div class="flex items-center justify-between mb-2">
+                                <div class="flex items-center gap-2">
+                                    ${diasInfo}
+                                </div>
+                                <span class="text-[10px] sm:text-xs text-green-400 font-bold bg-green-400/10 px-2 py-0.5 rounded-full border border-green-400/20">EM ANDAMENTO</span>
+                            </div>
                             ${renderTorcidometro(d)}
-                            <div class="p-2 rounded-lg bg-gray-800/30 border border-[#C8A25A]/10">
+                            <div class="mt-2 p-2 rounded-lg bg-gray-800/30 border border-[#C8A25A]/10">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-400"><i class="fas fa-eye mr-1 text-[#C8A25A]"></i>Torcida</span>
+                                    <span class="text-xs text-gray-400"><i class="fas fa-eye mr-1 text-[#C8A25A]"></i>Torcida · ${d.apostas ? d.apostas.length : 0} sábio(s)</span>
                                     ${(() => {
                                     const podeTorcer = !d.dataInicio || (() => {
                                         const inicio = new Date(d.dataInicio);
@@ -5964,12 +5977,11 @@ function renderTorcidasGuerraAdmin() {
                                         const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
                                         return diasPassados < 2;
                                     })();
-                                    return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-3 py-1.5 rounded bg-#C8A25A/15 text-[#C8A25A] text-xs font-bold hover:bg-#C8A25A/30 border border-[#C8A25A]/20 transition-all">
+                                    return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-2 py-1 rounded bg-[#C8A25A]/15 text-[#C8A25A] text-xs font-bold hover:bg-[#C8A25A]/30 border border-[#C8A25A]/20 transition-all">
                                         <i class="fas fa-scroll mr-1"></i>Torcer
                                     </button>` : `<span class="px-2 py-1 rounded bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Encerrado</span>`;
                                 })()}
                                 </div>
-                                <p class="text-xs text-gray-500 mt-1">${d.apostas ? d.apostas.length : 0} sábio(s) já torceram</p>
                                 ${d.apostas && d.apostas.length > 0 ? `<div class="mt-1 flex flex-wrap gap-1">${d.apostas.map(a => `<span class="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">✓ ${a.participanteNome || a.comissaoNome}</span>`).join('')}</div>` : ''}
                             </div>
                         </div>
