@@ -210,6 +210,7 @@
                 radial-gradient(ellipse at 20% 0%, rgba(140, 98, 57, 0.08) 0%, transparent 50%),
                 radial-gradient(ellipse at 80% 100%, rgba(122, 31, 31, 0.06) 0%, transparent 50%),
                 url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C8A25A' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            padding-top: 80px;
         }
 
         /* Cards de pedra/metal */
@@ -1009,7 +1010,7 @@
             pointer-events: none;
             z-index: 0;
         }
-        body.tema-montanha main, body.tema-montanha header {
+        body.tema-montanha main {
             position: relative;
             z-index: 1;
         }
@@ -1433,7 +1434,7 @@
                 0 0 30px rgba(255, 69, 0, 0.15),
                 0 4px 20px rgba(0, 0, 0, 0.6),
                 inset 0 1px 0 rgba(255, 200, 100, 0.08) !important;
-            position: relative !important;
+            /* position: fixed mantido */
         }
         /* Magma nas pontas da barra */
         body.tema-fogo header::before,
@@ -1514,7 +1515,7 @@
             box-shadow: 
                 0 4px 30px rgba(176, 210, 230, 0.08),
                 inset 0 1px 0 rgba(255,255,255,0.05) !important;
-            position: relative !important;
+            /* position: fixed mantido */
         }
         /* Icicles - pingos de gelo na borda inferior */
         body.tema-gelo header::after {
@@ -1592,7 +1593,7 @@
             box-shadow: 
                 0 4px 20px rgba(160, 82, 45, 0.3),
                 inset 0 1px 0 rgba(220, 140, 60, 0.1) !important;
-            position: relative !important;
+            /* position: fixed mantido */
         }
         /* Rebites nas bordas */
         body.tema-ferro header::before {
@@ -1669,7 +1670,7 @@
             backdrop-filter: blur(4px) !important;
             border-bottom: 1px solid rgba(0, 255, 127, 0.12) !important;
             box-shadow: 0 4px 30px rgba(0, 255, 127, 0.06) !important;
-            position: relative !important;
+            /* position: fixed mantido */
             overflow: hidden !important;
         }
         /* Aurora no fundo do header */
@@ -1728,7 +1729,7 @@
             backdrop-filter: blur(8px) !important;
             border-bottom: 1px solid rgba(34, 85, 34, 0.25) !important;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
-            position: relative !important;
+            /* position: fixed mantido */
             overflow: hidden !important;
         }
         /* Silhuetas de montanhas no menu */
@@ -1855,7 +1856,7 @@
         <div id="lightbox-counter" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/50 px-4 py-2 rounded-full text-[#ECE8E1] text-sm font-semibold"></div>
     </div>
     <!-- Header -->
-    <header class="glass sticky top-0 z-50 px-4 py-3">
+    <header class="glass fixed top-0 left-0 right-0 z-[100] px-4 py-3">
         <div class="max-w-7xl mx-auto flex items-center justify-center">
             <nav class="flex gap-2 flex-wrap justify-center w-full">
                 <button onclick="showSection('home')" id="nav-home" class="px-3 py-2 rounded-lg font-semibold tab-active transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
@@ -5841,22 +5842,22 @@ function renderTorcidasGuerraAdmin() {
                 }
 
                 meuDueloContent.innerHTML = `
-                    <div class="flex items-center justify-between gap-4 mb-4">
+                    <div class="flex items-center justify-between gap-2 sm:gap-4 mb-4">
                         <div class="text-center flex-1 cursor-pointer">
                             <div class="flex items-center justify-center gap-0 mb-2">
                                 ${[d.desafianteId, d.desafiante2Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                    return `<div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 15px rgba(200,162,90,0.3);margin-left:-10px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
+                                    return `<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 20px rgba(200,162,90,0.4);margin-left:-12px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
                                 }).join('')}
                             </div>
-                            <p class="font-bold text-sm">${d.desafianteNome}</p>
+                            <p class="font-bold text-xs sm:text-sm leading-tight">${d.desafianteNome}</p>
                             <p class="text-2xl font-black text-[#C8A25A]">${gloriaA}</p>
                         </div>
-                        <div class="text-center px-2">
-                            <p class="text-3xl font-black">⚔️</p>
-                            <p class="text-xs text-gray-500">VS</p>
+                        <div class="text-center px-1 sm:px-2 shrink-0">
+                            <p class="text-2xl sm:text-3xl font-black">⚔️</p>
+                            <p class="text-[10px] sm:text-xs text-gray-500">VS</p>
                         </div>
                         <div class="text-center flex-1 cursor-pointer">
                             <div class="flex items-center justify-center gap-0 mb-2">
@@ -5864,10 +5865,10 @@ function renderTorcidasGuerraAdmin() {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                    return `<div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 15px rgba(200,162,90,0.3);margin-left:-10px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-sm\'>${ini}</div>';"></div>`;
+                                    return `<div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-[#C8A25A]" style="box-shadow:0 0 20px rgba(200,162,90,0.4);margin-left:-12px;" onclick="window.showAlbum('${pid}')"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white font-bold text-lg\'>${ini}</div>';"></div>`;
                                 }).join('')}
                             </div>
-                            <p class="font-bold text-sm">${d.desafiadoNome}</p>
+                            <p class="font-bold text-xs sm:text-sm leading-tight">${d.desafiadoNome}</p>
                             <p class="text-2xl font-black text-[#C8A25A]">${gloriaB}</p>
                         </div>
                     </div>
@@ -5926,45 +5927,46 @@ function renderTorcidasGuerraAdmin() {
 
                     return `
                         <div class="glass rounded-xl p-3 sm:p-4">
-                            <!-- Linha 1: Duplas e Placar -->
+                            <!-- Linha 1: Nomes das duplas + placar -->
                             <div class="flex items-center justify-between gap-2 mb-2">
-                                <!-- Dupla Desafiante -->
-                                <div class="flex items-center gap-2 flex-1 min-w-0">
-                                    <div class="flex -space-x-2 shrink-0">
+                                <div class="flex-1 min-w-0 text-left">
+                                    <p class="font-bold text-[11px] sm:text-sm leading-tight">${d.desafianteNome}</p>
+                                </div>
+                                <div class="shrink-0 text-center px-1">
+                                    <span class="text-[#C8A25A] font-black text-sm sm:text-base">${gloriaA}</span>
+                                    <span class="text-gray-500 text-[10px] mx-0.5">⚔️</span>
+                                    <span class="text-[#C8A25A] font-black text-sm sm:text-base">${gloriaB}</span>
+                                </div>
+                                <div class="flex-1 min-w-0 text-right">
+                                    <p class="font-bold text-[11px] sm:text-sm leading-tight">${d.desafiadoNome}</p>
+                                </div>
+                            </div>
+                            <!-- Linha 2: Fotos + info -->
+                            <div class="flex items-center justify-between gap-2 mb-2">
+                                <div class="flex items-center gap-1">
+                                    <div class="flex -space-x-1.5">
                                         ${desafiantes.map(pid => {
                                             const p = players.find(x => x.id === pid);
                                             const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                             const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                            return `<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;z-index:1;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-[10px] font-bold\'>${ini}</div>';"></div>`;
+                                            return `<div class="w-7 h-7 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;z-index:1;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-[8px] font-bold\'>${ini}</div>';"></div>`;
                                         }).join('')}
                                     </div>
-                                    <span class="font-bold text-xs sm:text-sm truncate">${d.desafianteNome}</span>
                                 </div>
-                                <!-- Placar Central -->
-                                <div class="text-center shrink-0 px-2">
-                                    <span class="text-[#C8A25A] font-black text-sm sm:text-base">${gloriaA}</span>
-                                    <span class="text-gray-500 text-xs mx-1">⚔️</span>
-                                    <span class="text-[#C8A25A] font-black text-sm sm:text-base">${gloriaB}</span>
+                                <div class="flex items-center gap-2">
+                                    ${diasInfo}
+                                    <span class="text-[10px] sm:text-xs text-green-400 font-bold bg-green-400/10 px-2 py-0.5 rounded-full border border-green-400/20 whitespace-nowrap">EM ANDAMENTO</span>
                                 </div>
-                                <!-- Dupla Desafiada -->
-                                <div class="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                                    <span class="font-bold text-xs sm:text-sm truncate text-right">${d.desafiadoNome}</span>
-                                    <div class="flex -space-x-2 shrink-0">
+                                <div class="flex items-center gap-1">
+                                    <div class="flex -space-x-1.5">
                                         ${desafiados.map(pid => {
                                             const p = players.find(x => x.id === pid);
                                             const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                             const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
-                                            return `<div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;z-index:1;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-[10px] font-bold\'>${ini}</div>';"></div>`;
+                                            return `<div class="w-7 h-7 sm:w-9 sm:h-9 rounded-full overflow-hidden border border-[#C8A25A] cursor-pointer" onclick="window.showAlbum('${pid}')" style="flex-shrink:0;z-index:1;"><img src="${url}" class="w-full h-full object-cover" style="object-position: center 20%;" onerror="this.style.display='none';this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C8A25A] to-[#8C6239] text-white text-[8px] font-bold\'>${ini}</div>';"></div>`;
                                         }).join('')}
                                     </div>
                                 </div>
-                            </div>
-                            <!-- Linha 2: Info + Status -->
-                            <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center gap-2">
-                                    ${diasInfo}
-                                </div>
-                                <span class="text-[10px] sm:text-xs text-green-400 font-bold bg-green-400/10 px-2 py-0.5 rounded-full border border-green-400/20">EM ANDAMENTO</span>
                             </div>
                             ${renderTorcidometro(d)}
                             <div class="mt-2 p-2 rounded-lg bg-gray-800/30 border border-[#C8A25A]/10">
@@ -7898,6 +7900,7 @@ function getElogiosRecebidosHoje(playerId, tipo) {
             return honrarias.filter(e =>
                 e.paraId === playerId &&
                 e.paraTipo === tipo &&
+                e.tipo !== 'insignia' &&
                 getDiaBrasilia(e.data) === hoje
             );
         };
@@ -11653,12 +11656,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const paraId = currentAlbumComissao || currentAlbumPlayer;
+                const paraTipo = currentAlbumComissao ? 'comissao' : 'jogador';
                 const paraNome = currentAlbumComissao 
                     ? document.getElementById('album-comissao-nome2').textContent 
                     : document.getElementById('album-player-name2').textContent;
                 
                 await window.addDoc(window.collection(window.db, 'elogios'), {
-                    deId, paraId,
+                    deId, paraId, paraTipo,
                     deNome: de.nome + (de.sobrenome ? ' ' + de.sobrenome : ''),
                     paraNome,
                     tipo: 'honraria-pura',
