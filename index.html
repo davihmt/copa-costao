@@ -476,6 +476,7 @@
         /* Mobile menu */
         @media (max-width: 768px) {
             .logo-img-main { max-height: 60px; width: auto; }
+            body { padding-top: 130px !important; }
         }
 
 
@@ -4332,44 +4333,38 @@ function getDueloAtivo(jogadorId) {
                 return stats.totalWeek || 0;
             }
 
-            const inicioEfetivo = getInicioEfetivoGuerra(inicioStr);
             // Criar datas em timezone LOCAL para evitar problemas com UTC
             let inicio;
-            if (inicioEfetivo) {
-                const m = inicioEfetivo.match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (m) inicio = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0, 1, 0);
-                else inicio = new Date(inicioEfetivo);
+            const m = String(inicioStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (m) {
+                inicio = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0, 1, 0);
             } else {
-                const m = String(inicioStr).match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (m) inicio = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 0, 1, 0);
-                else inicio = new Date(inicioStr);
+                inicio = new Date(inicioStr);
             }
+
             // Usar dataFim do Firebase se existir
             let fim;
             if (guerra.dataFim) {
-                const m = String(guerra.dataFim).match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (m) fim = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 23, 59, 59);
-                else fim = new Date(guerra.dataFim);
+                const m2 = String(guerra.dataFim).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (m2) {
+                    fim = new Date(Number(m2[1]), Number(m2[2])-1, Number(m2[3]), 23, 59, 59);
+                } else {
+                    fim = new Date(guerra.dataFim);
+                }
             } else {
                 fim = new Date(inicio);
-                fim.setDate(inicio.getDate() + 7);
+                fim.setDate(inicio.getDate() + 6); // Domingo 23:59 (7 dias = semana completa)
                 fim.setHours(23, 59, 59, 999);
             }
-            const agora = new Date();
+
             const inicioTs = inicio.getTime();
             const fimTs = fim.getTime();
-
-            if (agora.getTime() < inicioTs) {
-                return 0;
-            }
 
             const playerEvents = events.filter(e => e.jogadorId === jogadorId);
             let total = 0;
             for (const ev of playerEvents) {
                 let evTs = null;
 
-                // PRIORIDADE 1: data (YYYY-MM-DD) - usar FIM do dia (23:59:59) em timezone LOCAL
-                // Extrair ano/mes/dia para evitar inconsistência de timezone
                 if (ev.data) {
                     const dm = String(ev.data).match(/^(\d{4})-(\d{2})-(\d{2})/);
                     if (dm) {
@@ -4377,9 +4372,7 @@ function getDueloAtivo(jogadorId) {
                     } else {
                         evTs = new Date(ev.data + 'T23:59:59').getTime();
                     }
-                }
-                // PRIORIDADE 2: createdAt (hora real de criação no Firebase)
-                else if (ev.createdAt) {
+                } else if (ev.createdAt) {
                     const cm = String(ev.createdAt).match(/^(\d{4})-(\d{2})-(\d{2})/);
                     if (cm) {
                         evTs = new Date(Number(cm[1]), Number(cm[2])-1, Number(cm[3]), 23, 59, 59).getTime();
@@ -4389,12 +4382,12 @@ function getDueloAtivo(jogadorId) {
                 }
 
                 if (evTs !== null && evTs >= inicioTs && evTs <= fimTs) {
-                    // IGNORAR eventos de bônus de duelo (não fazem parte do placar da guerra)
+                    // IGNORAR eventos de bônus de duelo/guerra (não fazem parte do placar)
                     if (ev.subtipo === 'duelo-vitoria' || ev.subtipo === 'duelo-derrota' || 
                         ev.subtipo === 'torcida-sabio' ||
                         ev.subtipo === 'guerra-cla' || ev.subtipo === 'guerra-cla-derrota' ||
                         ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra') {
-                        continue; // skip
+                        continue;
                     }
                     const val = Number(ev.valor) || 0;
                     if (ev.tipo === 'gol') {
@@ -7516,6 +7509,12 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                 elogiosRecebidos, elogiosRecebidosPeriodo,
                 elogiosDados, elogiosDadosPeriodo,
                 batalhasTotal, batalhasPeriodo,
+                conquistasPeriodo: conquistasHistorico.filter(ch => {
+                    if (ch.jogadorId !== playerId) return false;
+                    if (periodo === 'total') return true;
+                    const d = getBRDate(ch.dataConquista);
+                    return isMesEspecifico && d.getFullYear() === anoFiltro && (d.getMonth() + 1) === mesFiltro;
+                }).length,
                 totalReal: baseTotal + stickersTotal + verdesTotal + elogiosRecebidos + elogiosDados + batalhasTotal - punishTotal,
                 totalPeriodo: basePeriodo + stickersPeriodo + verdesPeriodo + elogiosRecebidosPeriodo + elogiosDadosPeriodo + batalhasPeriodo - punishPeriodo
             };
@@ -7592,6 +7591,13 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
             const playerTotalEl = document.getElementById('album-player-total');
             if (playerTotalEl) playerTotalEl.textContent = stats.totalPeriodo + ' glória';
+
+            // Feitos filtrados por período
+            const conquistasEl = document.getElementById('album-conquistas-count');
+            if (conquistasEl) conquistasEl.textContent = stats.conquistasPeriodo || 0;
+
+            // Insígnias filtradas por período
+            renderInsigniasBadgesPorPeriodo(playerId, albumPeriodoSelecionado);
         }
 
         // ===== PERÍODO PARA CONSELHO DOS SÁBIOS =====
@@ -7708,6 +7714,33 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             if (batCountEl) batCountEl.textContent = stats.batalhasMonth;
             const conqEl = document.getElementById('album-comissao-conquistas');
             if (conqEl) conqEl.textContent = stats.conquistasMonth;
+
+            // Insígnias filtradas por período (comissão)
+            const comissaoInsigniasContainer = document.getElementById('album-comissao-insignias-badges');
+            if (comissaoInsigniasContainer) {
+                if (albumPeriodoSelecionado === 'total') {
+                    renderInsigniasBadgesComissao(comissaoId);
+                } else {
+                    const [ano, mes] = albumPeriodoSelecionado.split('-').map(Number);
+                    const inicioMes = new Date(ano, mes - 1, 1, 0, 0, 0);
+                    const fimMes = new Date(ano, mes, 0, 23, 59, 59);
+                    const insigniasFiltradas = honrarias.filter(e => {
+                        if (e.paraId !== comissaoId || e.tipo !== 'insignia') return false;
+                        const d = getBRDate(e.data || e.createdAt);
+                        return d >= inicioMes && d <= fimMes;
+                    });
+                    const contagem = {};
+                    Object.keys(INSIGNIAS_CONFIG).forEach(k => contagem[k] = 0);
+                    insigniasFiltradas.forEach(el => { if (contagem[el.insignia] !== undefined) contagem[el.insignia]++; });
+                    let html = '';
+                    Object.entries(INSIGNIAS_CONFIG).forEach(([tipo, config]) => {
+                        const count = contagem[tipo] || 0;
+                        const shining = count >= 5 ? 'shining' : '';
+                        html += `<div class="insignia-badge badge-${tipo} ${shining}"><span class="insignia-icone">${config.icone}</span><span class="insignia-nome">${config.nome}</span><span class="insignia-count">${count}</span></div>`;
+                    });
+                    comissaoInsigniasContainer.innerHTML = html;
+                }
+            }
         }
 
         // ===== COMISSAO STATS (inclui cartões + honrarias históricos) =====
@@ -7742,6 +7775,11 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                         if (isSameWeek(evDate, today)) baseWeek += val;
                         if (isSameMonth(evDate, today)) baseMonth += val;
                     }
+                } else if (ev.tipo === 'figurinha') {
+                    stickersTotal += val;
+                    if (isSameDay(evDate, today)) stickersDay += val;
+                    if (isSameWeek(evDate, today)) stickersWeek += val;
+                    if (isSameMonth(evDate, today)) stickersMonth += val;
                 } else if (ev.tipo === 'punicao') {
                     if (ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses' || ev.subtipo === 'cartao-verde') {
                         verdesTotal += Math.abs(val);
@@ -8409,7 +8447,52 @@ async function renderPlayers() {
             const container = document.getElementById('album-insignias-badges');
             if (!container) return;
 
-            const insigniasRecebidas = honrarias.filter(e => e.paraId === playerId && e.tipo === 'insignia');
+            const insigniasRecebidas = honrarias.filter(e => 
+                e.paraId === playerId && 
+                e.tipo === 'insignia'
+            );
+            const contagem = {};
+            Object.keys(INSIGNIAS_CONFIG).forEach(k => contagem[k] = 0);
+            insigniasRecebidas.forEach(el => { if (contagem[el.insignia] !== undefined) contagem[el.insignia]++; });
+
+            let html = '';
+            Object.entries(INSIGNIAS_CONFIG).forEach(([tipo, config]) => {
+                const count = contagem[tipo] || 0;
+                const shining = count >= 5 ? 'shining' : '';
+                const tipoClass = 'badge-' + tipo;
+                html += `
+                    <div class="insignia-badge ${tipoClass} ${shining}">
+                        <span class="insignia-icone">${config.icone}</span>
+                        <span class="insignia-nome">${config.nome}</span>
+                        <span class="insignia-count">${count}</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderInsigniasBadgesPorPeriodo(playerId, periodo) {
+            const container = document.getElementById('album-insignias-badges');
+            if (!container) return;
+
+            let insigniasRecebidas;
+            if (periodo === 'total') {
+                insigniasRecebidas = honrarias.filter(e => 
+                    e.paraId === playerId && 
+                    e.tipo === 'insignia'
+                );
+            } else {
+                const [ano, mes] = periodo.split('-').map(Number);
+                const inicioMes = new Date(ano, mes - 1, 1, 0, 0, 0);
+                const fimMes = new Date(ano, mes, 0, 23, 59, 59);
+                insigniasRecebidas = honrarias.filter(e => {
+                    if (e.paraId !== playerId || e.tipo !== 'insignia') return false;
+                    const d = getBRDate(e.data || e.createdAt);
+                    return d >= inicioMes && d <= fimMes;
+                });
+            }
+
             const contagem = {};
             Object.keys(INSIGNIAS_CONFIG).forEach(k => contagem[k] = 0);
             insigniasRecebidas.forEach(el => { if (contagem[el.insignia] !== undefined) contagem[el.insignia]++; });
@@ -8459,7 +8542,10 @@ async function renderPlayers() {
             const list = document.getElementById('album-elogios-list');
             if (!container || !list) return;
 
-            const lista = honrarias.filter(e => e.paraId === jogadorId).sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data));
+            const lista = honrarias.filter(e => 
+                e.paraId === jogadorId && 
+                e.paraTipo === 'jogador'
+            ).sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data));
 
             if (lista.length === 0) {
                 list.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma honraria recebida ainda.</p>';
@@ -8527,7 +8613,10 @@ async function renderPlayers() {
             const list = document.getElementById('album-comissao-elogios-list');
             if (!list) return;
 
-            const lista = honrarias.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data));
+            const lista = honrarias.filter(e => 
+                e.paraId === comissaoId && 
+                e.paraTipo === 'comissao'
+            ).sort((a, b) => new Date(b.createdAt || b.data) - new Date(a.createdAt || a.data));
 
             if (lista.length === 0) {
                 list.innerHTML = '<p class="text-gray-500 text-center py-4">Nenhuma honraria recebida ainda.</p>';
@@ -9449,7 +9538,7 @@ function renderConquistasHistorico(pid) {
 
             // Render Salão das Honras
             renderElogiosAlbum(playerId);
-            renderInsigniasBadges(playerId);
+            renderInsigniasBadgesPorPeriodo(playerId, albumPeriodoSelecionado);
             renderConquistasHistorico(playerId);
 
             const eventsDiv = document.getElementById('album-events');
