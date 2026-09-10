@@ -70,7 +70,7 @@
         .reward-box { background: rgba(200, 162, 90, 0.1); border: 1px solid rgba(200, 162, 90, 0.3); }
         .reward-locked { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); opacity: 0.5; }
         .reward-unlocked { background: rgba(200, 162, 90, 0.15); border: 1px solid rgba(200, 162, 90, 0.5); box-shadow: 0 0 15px rgba(200, 162, 90, 0.2); }
-        .toast { animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s; }
+        .toast { animation: slideIn 0.3s ease, fadeOut 0.4s ease 4.6s; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
         .rank-1 { border-color: #C8A25A; box-shadow: 0 0 20px rgba(200, 162, 90, 0.3); }
@@ -470,6 +470,27 @@
         /* Toast */
         .toast { 
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(200, 162, 90, 0.1) !important; 
+        }
+
+        /* Toast container — acima do header fixo (z-100) e do lightbox, abaixo do modal admin (z-200) */
+        #toast-container {
+            top: 100px;
+            z-index: 150;
+            max-width: 360px;
+        }
+        @media (max-width: 768px) {
+            /* No mobile o header é mais alto (~150px) — toasts em largura total abaixo dele */
+            #toast-container {
+                top: 160px;
+                left: 12px;
+                right: 12px;
+                max-width: none;
+            }
+            #toast-container .toast {
+                width: 100%;
+                max-width: none;
+                text-align: center;
+            }
         }
 
         /* Celebration photo container */
@@ -11177,7 +11198,7 @@ async function excluirEvento(eventId) {
             toast.className = `toast ${colors[type] || colors.info} text-[#ECE8E1] px-6 py-3 rounded-xl shadow-lg font-semibold flex items-center gap-2`;
             toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-times' : 'fa-info-circle'}"></i> ${message}`;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => toast.remove(), 5000);
         }
 
 
@@ -13578,7 +13599,7 @@ function editarConquistaConfig(conqId) {
             toast.className = `toast px-4 py-3 rounded-xl text-white font-semibold shadow-lg ${colors[type] || colors.info}`;
             toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'} mr-2"></i>${message}`;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => toast.remove(), 5000);
         }
 
         // Make functions available globally for onclick handlers
