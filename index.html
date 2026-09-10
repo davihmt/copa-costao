@@ -87,6 +87,11 @@
         .event-row:hover { background: rgba(255,255,255,0.05); }
         .hidden { display: none !important; }
         .fade-in { animation: fadeIn 0.4s ease; }
+        /* Performance: seções ocultas não renderizam layout */
+        section.hidden {
+            content-visibility: auto;
+            contain-intrinsic-size: 0 500px;
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .mobile-menu { display: none; }
         .celebration-photo-container { width: 100%; border-radius: 16px; overflow: hidden; position: relative; background: linear-gradient(145deg, #1B1A17, #0B0A0A); display: flex; align-items: center; justify-content: center; }
@@ -993,12 +998,18 @@
         
         /* ===== MONTANHA ===== */
         body.tema-montanha {
-            background-color: #020302 !important;
-            background-image: url('montanha-fundo.png') !important;
-            background-size: cover !important;
-            background-position: center top !important;
-            background-attachment: fixed !important;
-            background-repeat: no-repeat !important;
+            background-color: #030502 !important;
+            background-image: 
+                /* Camada 1: Céu noturno nas montanhas - azul escuro no topo */
+                radial-gradient(ellipse at 50% 0%, rgba(20, 40, 60, 0.25) 0%, transparent 60%),
+                /* Camada 2: Névoa dourada do amanhecer nas montanhas */
+                radial-gradient(ellipse at 30% 40%, rgba(139, 90, 43, 0.12) 0%, transparent 50%),
+                /* Camada 3: Brilho verde de musgo/luminescência */
+                radial-gradient(ellipse at 70% 60%, rgba(34, 85, 34, 0.15) 0%, transparent 55%),
+                /* Camada 4: Calor vulcânico subterrâneo */
+                radial-gradient(ellipse at 50% 100%, rgba(255, 69, 0, 0.08) 0%, transparent 50%),
+                /* Camada 5: Textura de rocha/pedra */
+                url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23224422' fill-opacity='0.04'%3E%3Cpath d='M0 0h40v40H0zm40 40h40v40H40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
         /* Overlay escuro sutil para legibilidade */
         body.tema-montanha::before {
@@ -1006,14 +1017,86 @@
             position: fixed;
             inset: 0;
             background: 
-                radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.1) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 100%, rgba(0,0,0,0.4) 0%, transparent 60%);
+                /* Vignette escuro nas bordas */
+                radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.4) 100%);
             pointer-events: none;
             z-index: 0;
         }
         body.tema-montanha main {
             position: relative;
             z-index: 1;
+        }
+        /* Cores do tema montanha para cards e elementos */
+        body.tema-montanha .player-card,
+        body.tema-montanha .glass,
+        body.tema-montanha .team-ranking-card {
+            background: linear-gradient(145deg, #0d1209, #050803) !important;
+            border: 1px solid rgba(60, 100, 50, 0.25) !important;
+            box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.7),
+                inset 0 1px 0 rgba(100, 160, 80, 0.05) !important;
+        }
+        body.tema-montanha .player-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(80, 130, 60, 0.3), transparent);
+        }
+        body.tema-montanha .photo-area {
+            border: 3px solid #3a5a2a !important;
+            box-shadow: 
+                0 0 15px rgba(60, 100, 50, 0.2),
+                inset 0 0 20px rgba(0, 0, 0, 0.4) !important;
+        }
+        body.tema-montanha .btn-primary {
+            background: linear-gradient(135deg, #2a4a1a, #1a3010) !important;
+            border: 1px solid rgba(80, 130, 60, 0.4) !important;
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(100, 160, 80, 0.1) !important;
+        }
+        body.tema-montanha .btn-primary:hover {
+            background: linear-gradient(135deg, #3a5a2a, #2a4018) !important;
+            box-shadow: 
+                0 6px 25px rgba(60, 100, 50, 0.2),
+                inset 0 1px 0 rgba(100, 160, 80, 0.15) !important;
+        }
+        body.tema-montanha .tab-active {
+            background: linear-gradient(135deg, #2a4a1a, #1a3010) !important;
+            box-shadow: 0 2px 10px rgba(60, 100, 50, 0.2) !important;
+        }
+        body.tema-montanha .filter-btn.active {
+            background: linear-gradient(135deg, #2a4a1a, #1a3010) !important;
+            border-color: transparent !important;
+            box-shadow: 0 2px 10px rgba(60, 100, 50, 0.2) !important;
+        }
+        body.tema-montanha .gradient-text {
+            background: linear-gradient(135deg, #7ab868, #4a7a3a) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+        }
+        body.tema-montanha .rank-1 {
+            border-color: #7ab868 !important;
+            box-shadow: 0 0 25px rgba(122, 184, 104, 0.2), inset 0 1px 0 rgba(255,255,255,0.05) !important;
+        }
+        body.tema-montanha .rank-2 {
+            border-color: #5a8a4a !important;
+            box-shadow: 0 0 15px rgba(90, 138, 74, 0.15) !important;
+        }
+        body.tema-montanha .rank-3 {
+            border-color: #3a6a2a !important;
+            box-shadow: 0 0 10px rgba(58, 106, 42, 0.12) !important;
+        }
+        body.tema-montanha .stat-box {
+            background: rgba(60, 100, 50, 0.08) !important;
+            border: 1px solid rgba(60, 100, 50, 0.2) !important;
+        }
+        body.tema-montanha .reward-unlocked {
+            animation: montanhaGlow 3s ease-in-out infinite;
+        }
+        @keyframes montanhaGlow {
+            0%, 100% { box-shadow: 0 0 4px rgba(80, 130, 60, 0.1); }
+            50% { box-shadow: 0 0 12px rgba(80, 130, 60, 0.25); }
         }
         
         
@@ -1033,33 +1116,30 @@
         /* ===== FOGO ===== */
         #tema-efeitos.tema-fogo {
             background:
-                radial-gradient(ellipse at 30% 100%, rgba(255,69,0,0.10), transparent 60%),
-                radial-gradient(ellipse at 70% 100%, rgba(255,140,0,0.07), transparent 60%);
+                radial-gradient(ellipse at 30% 100%, rgba(255,69,0,0.08), transparent 60%),
+                radial-gradient(ellipse at 70% 100%, rgba(255,140,0,0.05), transparent 60%);
         }
         #tema-efeitos.tema-fogo .chama {
-            position: absolute; bottom: 0; width: 100%; height: 200px;
-            background: radial-gradient(ellipse at 30% 100%, rgba(255,69,0,0.24), transparent 50%),
-                        radial-gradient(ellipse at 70% 100%, rgba(255,140,0,0.18), transparent 50%);
+            position: absolute; bottom: 0; width: 100%; height: 150px;
+            background: radial-gradient(ellipse at 30% 100%, rgba(255,69,0,0.15), transparent 50%),
+                        radial-gradient(ellipse at 70% 100%, rgba(255,140,0,0.10), transparent 50%);
             animation: chamaSobe 3s ease-in-out infinite;
         }
         #tema-efeitos.tema-fogo .faisca {
-            position: absolute; width: 3px; height: 3px; border-radius: 50%;
-            background: rgba(255,200,0,0.65); box-shadow: 0 0 4px rgba(255,140,0,0.55);
+            position: absolute; width: 2px; height: 2px; border-radius: 50%;
+            background: rgba(255,200,0,0.5); box-shadow: 0 0 3px rgba(255,140,0,0.4);
             animation: faiscaSobe 2s linear infinite;
         }
-        /* Brasas maiores */
         #tema-efeitos.tema-fogo .brasa {
-            position: absolute; width: 5px; height: 5px; border-radius: 50%;
-            background: rgba(255,100,0,0.8); box-shadow: 0 0 10px rgba(255,69,0,0.7), 0 0 20px rgba(255,140,0,0.3);
+            position: absolute; width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(255,100,0,0.6); box-shadow: 0 0 6px rgba(255,69,0,0.5);
             animation: brasaPulsa 1.5s ease-in-out infinite;
         }
-        /* Header em chamas */
         #tema-efeitos.tema-fogo .fogo-header {
             position: absolute; top: 0; left: 0; right: 0; height: 70px;
             background: linear-gradient(180deg,
-                rgba(255,69,0,0.12) 0%, rgba(255,140,0,0.08) 40%, transparent 100%);
-            border-bottom: 1px solid rgba(255,100,0,0.15);
-            box-shadow: 0 0 20px rgba(255,69,0,0.1);
+                rgba(255,69,0,0.08) 0%, rgba(255,140,0,0.05) 40%, transparent 100%);
+            border-bottom: 1px solid rgba(255,100,0,0.10);
         }
         @keyframes chamaSobe {
             0%, 100% { opacity: 0.6; transform: scaleY(1); }
@@ -1073,43 +1153,39 @@
         /* ===== GELO ===== */
         #tema-efeitos.tema-gelo {
             background:
-                radial-gradient(ellipse at 50% 30%, rgba(220,240,255,0.18), transparent 60%),
-                radial-gradient(ellipse at 20% 80%, rgba(200,220,240,0.12), transparent 50%),
-                radial-gradient(ellipse at 80% 20%, rgba(240,248,255,0.08), transparent 50%);
+                radial-gradient(ellipse at 50% 30%, rgba(220,240,255,0.12), transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(200,220,240,0.08), transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(240,248,255,0.05), transparent 50%);
         }
         #tema-efeitos.tema-gelo .floco {
-            position: absolute; width: 4px; height: 4px; border-radius: 50%;
-            background: rgba(255,255,255,0.90); box-shadow: 0 0 12px rgba(220,240,255,0.8);
+            position: absolute; width: 3px; height: 3px; border-radius: 50%;
+            background: rgba(255,255,255,0.7); box-shadow: 0 0 6px rgba(220,240,255,0.5);
             animation: neveCai 6s linear infinite;
         }
         #tema-efeitos.tema-gelo .floco-grande {
-            position: absolute; width: 6px; height: 6px; border-radius: 50%;
-            background: rgba(255,255,255,1); box-shadow: 0 0 16px rgba(255,255,255,0.7);
+            position: absolute; width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(255,255,255,0.9); box-shadow: 0 0 8px rgba(255,255,255,0.5);
             animation: neveCai 8s linear infinite;
         }
         #tema-efeitos.tema-gelo .nevoa-gelo {
-            position: absolute; top: 0; left: 0; right: 0; height: 120px;
-            background: linear-gradient(180deg, rgba(220,240,255,0.15), transparent);
-            opacity: 0.6;
+            position: absolute; top: 0; left: 0; right: 0; height: 100px;
+            background: linear-gradient(180deg, rgba(220,240,255,0.10), transparent);
+            opacity: 0.5;
             animation: nevoaFlutua 5s ease-in-out infinite;
-            will-change: opacity, transform;
         }
-        /* Menu congelado — cristais de gelo no header */
         #tema-efeitos.tema-gelo .gelo-header {
             position: absolute; top: 0; left: 0; right: 0; height: 70px;
             background: linear-gradient(180deg,
-                rgba(200,230,255,0.15) 0%, rgba(176,196,222,0.08) 50%, transparent 100%);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 0 30px rgba(200,230,255,0.1);
+                rgba(200,230,255,0.10) 0%, rgba(176,196,222,0.05) 50%, transparent 100%);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         #tema-efeitos.tema-gelo .cristal {
             position: absolute; top: 5px;
             width: 0; height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-bottom: 12px solid rgba(255,255,255,0.4);
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 10px solid rgba(255,255,255,0.3);
             animation: cristalBrilha 3s ease-in-out infinite;
-            will-change: opacity, transform;
         }
         @keyframes neveCai {
             0% { transform: translateY(-20px) translateX(0); opacity: 0; }
@@ -1121,116 +1197,101 @@
         /* ===== FERRO ===== */
         #tema-efeitos.tema-ferro {
             background:
-                radial-gradient(ellipse at 80% 80%, rgba(200,162,90,0.12), transparent 60%);
+                radial-gradient(ellipse at 80% 80%, rgba(200,162,90,0.08), transparent 60%);
         }
         #tema-efeitos.tema-ferro .faisca-metal {
             position: absolute; width: 2px; height: 2px; border-radius: 50%;
-            background: rgba(255,215,0,0.95); box-shadow: 0 0 10px rgba(255,215,0,0.8), 0 0 20px rgba(255,140,0,0.4);
+            background: rgba(255,215,0,0.8); box-shadow: 0 0 6px rgba(255,215,0,0.6);
             animation: faiscaMetal 3s ease-in-out infinite;
         }
         #tema-efeitos.tema-ferro .faisca-metal-grande {
-            position: absolute; width: 3px; height: 3px; border-radius: 50%;
-            background: rgba(255,200,100,1); box-shadow: 0 0 14px rgba(255,200,100,0.9), 0 0 30px rgba(255,140,0,0.5);
+            position: absolute; width: 2px; height: 2px; border-radius: 50%;
+            background: rgba(255,200,100,0.9); box-shadow: 0 0 8px rgba(255,200,100,0.7);
             animation: faiscaMetal 2s ease-in-out infinite;
         }
         #tema-efeitos.tema-ferro .glow-ferro {
-            position: absolute; top: 10%; right: 10%; width: 350px; height: 350px;
-            background: radial-gradient(circle, rgba(200,162,90,0.20), transparent 70%);
+            position: absolute; top: 10%; right: 10%; width: 250px; height: 250px;
+            background: radial-gradient(circle, rgba(200,162,90,0.12), transparent 70%);
             animation: ferroGlow 2s ease-in-out infinite;
         }
         #tema-efeitos.tema-ferro .ferrugem-menu {
             position: absolute; top: 0; left: 0; right: 0; height: 70px;
             background:
-                /* Camada 1: Manchas grandes de ferrugem intensa */
-                radial-gradient(ellipse 180px 90px at 3% 30%, rgba(180,90,20,0.95) 0%, transparent 60%),
-                radial-gradient(ellipse 200px 100px at 20% 60%, rgba(160,75,15,0.90) 0%, transparent 55%),
-                radial-gradient(ellipse 150px 80px at 40% 20%, rgba(200,100,25,0.92) 0%, transparent 65%),
-                radial-gradient(ellipse 220px 110px at 55% 55%, rgba(170,85,18,0.88) 0%, transparent 50%),
-                radial-gradient(ellipse 160px 85px at 72% 25%, rgba(190,95,22,0.91) 0%, transparent 60%),
-                radial-gradient(ellipse 190px 95px at 88% 65%, rgba(175,80,16,0.93) 0%, transparent 55%),
-                radial-gradient(ellipse 140px 70px at 95% 35%, rgba(185,88,20,0.90) 0%, transparent 65%),
-                /* Camada 2: Manchas médias de ferrugem escura */
-                radial-gradient(ellipse 100px 50px at 8% 70%, rgba(120,55,12,0.85) 0%, transparent 60%),
-                radial-gradient(ellipse 120px 60px at 28% 40%, rgba(100,45,10,0.88) 0%, transparent 55%),
-                radial-gradient(ellipse 90px 45px at 48% 75%, rgba(130,60,15,0.82) 0%, transparent 65%),
-                radial-gradient(ellipse 110px 55px at 65% 45%, rgba(110,50,12,0.86) 0%, transparent 60%),
-                radial-gradient(ellipse 80px 40px at 82% 80%, rgba(125,58,14,0.84) 0%, transparent 65%),
-                /* Camada 3: Manchas claras de ferrugem seca */
-                radial-gradient(ellipse 70px 35px at 15% 25%, rgba(220,140,50,0.75) 0%, transparent 55%),
-                radial-gradient(ellipse 85px 42px at 35% 80%, rgba(210,130,45,0.78) 0%, transparent 60%),
-                radial-gradient(ellipse 60px 30px at 58% 30%, rgba(230,150,55,0.72) 0%, transparent 65%),
-                radial-gradient(ellipse 75px 38px at 78% 50%, rgba(215,135,48,0.76) 0%, transparent 55%),
-                /* Camada 4: Corrosão profunda */
-                radial-gradient(ellipse 50px 25px at 5% 55%, rgba(50,22,6,0.90) 0%, transparent 60%),
-                radial-gradient(ellipse 65px 32px at 25% 15%, rgba(45,20,5,0.88) 0%, transparent 55%),
-                radial-gradient(ellipse 55px 28px at 50% 60%, rgba(55,25,8,0.85) 0%, transparent 60%),
-                radial-gradient(ellipse 70px 35px at 75% 35%, rgba(48,22,6,0.87) 0%, transparent 55%),
-                radial-gradient(ellipse 45px 22px at 92% 15%, rgba(52,24,7,0.89) 0%, transparent 65%),
-                /* Base */
+                radial-gradient(ellipse 120px 60px at 5% 30%, rgba(180,90,20,0.8) 0%, transparent 60%),
+                radial-gradient(ellipse 140px 70px at 25% 55%, rgba(160,75,15,0.75) 0%, transparent 55%),
+                radial-gradient(ellipse 100px 55px at 45% 25%, rgba(200,100,25,0.8) 0%, transparent 65%),
+                radial-gradient(ellipse 150px 80px at 60% 50%, rgba(170,85,18,0.7) 0%, transparent 50%),
+                radial-gradient(ellipse 110px 60px at 75% 30%, rgba(190,95,22,0.75) 0%, transparent 60%),
+                radial-gradient(ellipse 130px 70px at 90% 60%, rgba(175,80,16,0.8) 0%, transparent 55%),
+                radial-gradient(ellipse 80px 45px at 10% 70%, rgba(120,55,12,0.7) 0%, transparent 60%),
+                radial-gradient(ellipse 90px 50px at 35% 40%, rgba(100,45,10,0.72) 0%, transparent 55%),
+                radial-gradient(ellipse 70px 40px at 55% 75%, rgba(130,60,15,0.68) 0%, transparent 65%),
+                radial-gradient(ellipse 85px 48px at 72% 45%, rgba(110,50,12,0.7) 0%, transparent 60%),
+                radial-gradient(ellipse 60px 35px at 20% 25%, rgba(220,140,50,0.6) 0%, transparent 55%),
+                radial-gradient(ellipse 70px 40px at 40% 80%, rgba(210,130,45,0.65) 0%, transparent 60%),
+                radial-gradient(ellipse 50px 30px at 58% 35%, rgba(230,150,55,0.6) 0%, transparent 65%),
+                radial-gradient(ellipse 65px 38px at 78% 55%, rgba(215,135,48,0.62) 0%, transparent 55%),
+                radial-gradient(ellipse 40px 25px at 5% 55%, rgba(50,22,6,0.8) 0%, transparent 60%),
+                radial-gradient(ellipse 55px 32px at 28% 15%, rgba(45,20,5,0.78) 0%, transparent 55%),
+                radial-gradient(ellipse 45px 28px at 52% 60%, rgba(55,25,8,0.75) 0%, transparent 60%),
+                radial-gradient(ellipse 60px 35px at 75% 40%, rgba(48,22,6,0.77) 0%, transparent 55%),
                 linear-gradient(180deg,
-                    rgba(80,40,12,0.90) 0%,
-                    rgba(95,48,15,0.88) 10%,
-                    rgba(110,55,18,0.85) 25%,
-                    rgba(100,50,16,0.82) 40%,
-                    rgba(85,42,13,0.86) 55%,
-                    rgba(70,35,10,0.90) 70%,
-                    rgba(55,28,8,0.93) 85%,
-                    rgba(45,22,6,0.95) 100%);
-            border-bottom: 2px solid rgba(160,82,45,0.6);
+                    rgba(80,40,12,0.85) 0%,
+                    rgba(95,48,15,0.82) 10%,
+                    rgba(110,55,18,0.78) 25%,
+                    rgba(100,50,16,0.75) 40%,
+                    rgba(85,42,13,0.8) 55%,
+                    rgba(70,35,10,0.85) 70%,
+                    rgba(55,28,8,0.88) 85%,
+                    rgba(45,22,6,0.9) 100%);
+            border-bottom: 2px solid rgba(160,82,45,0.5);
             box-shadow:
-                0 4px 20px rgba(160,82,45,0.4),
-                0 8px 35px rgba(120,55,15,0.3),
-                inset 0 1px 3px rgba(220,140,60,0.15),
-                inset 0 -2px 5px rgba(40,18,5,0.5);
+                0 4px 15px rgba(160,82,45,0.3),
+                0 6px 25px rgba(120,55,15,0.2);
             animation: ferrugemPulsa 5s ease-in-out infinite;
-            will-change: opacity;
         }
-        /* Gotejamento de ferrugem — pingos escorrendo */
         #tema-efeitos.tema-ferro .ferrugem-gota {
             position: absolute;
             width: 3px;
             background: linear-gradient(180deg,
-                rgba(139,69,19,0.9) 0%,
-                rgba(160,82,45,0.8) 50%,
-                rgba(101,67,33,0.6) 100%);
+                rgba(139,69,19,0.8) 0%,
+                rgba(160,82,45,0.7) 50%,
+                rgba(101,67,33,0.5) 100%);
             border-radius: 0 0 50% 50%;
             animation: gotejaFerrugem 5s ease-in-out infinite;
         }
-        /* Manchas de ferrugem no header — maiores e mais intensas */
         #tema-efeitos.tema-ferro .ferrugem-mancha {
             position: absolute;
-            width: 50px; height: 35px;
-            background: radial-gradient(ellipse, rgba(139,69,19,0.7), rgba(101,50,20,0.5) 40%, transparent 70%);
+            width: 40px; height: 28px;
+            background: radial-gradient(ellipse, rgba(139,69,19,0.6), rgba(101,50,20,0.4) 40%, transparent 70%);
             border-radius: 50%;
             filter: blur(2px);
             animation: manchaFerrugem 6s ease-in-out infinite;
         }
         #tema-efeitos.tema-ferro .ferrugem-mancha-grande {
             position: absolute;
-            width: 80px; height: 50px;
-            background: radial-gradient(ellipse, rgba(160,82,45,0.65), rgba(120,60,25,0.45) 50%, transparent 75%);
+            width: 60px; height: 38px;
+            background: radial-gradient(ellipse, rgba(160,82,45,0.55), rgba(120,60,25,0.4) 50%, transparent 75%);
             border-radius: 50%;
             filter: blur(3px);
             animation: manchaFerrugem 8s ease-in-out infinite reverse;
         }
-        /* Corrosão nos cantos do menu */
         #tema-efeitos.tema-ferro .corrosao-canto {
             position: absolute;
-            width: 30px; height: 30px;
-            background: radial-gradient(circle, rgba(60,30,10,0.8), transparent 70%);
+            width: 25px; height: 25px;
+            background: radial-gradient(circle, rgba(60,30,10,0.7), transparent 70%);
             animation: corrosaoPulsa 3s ease-in-out infinite;
         }
-        /* Textura de metal enferrujado via overlay */
         #tema-efeitos.tema-ferro .metal-textura {
             position: absolute; top: 0; left: 0; right: 0; height: 70px;
             background:
                 repeating-linear-gradient(90deg,
                     transparent 0px, transparent 2px,
-                    rgba(30,15,5,0.15) 2px, rgba(30,15,5,0.15) 3px,
+                    rgba(30,15,5,0.12) 2px, rgba(30,15,5,0.12) 3px,
                     transparent 3px, transparent 8px,
-                    rgba(50,25,10,0.1) 8px, rgba(50,25,10,0.1) 9px,
+                    rgba(50,25,10,0.08) 8px, rgba(50,25,10,0.08) 9px,
                     transparent 9px, transparent 14px);
-            opacity: 0.6;
+            opacity: 0.5;
             pointer-events: none;
         }
         @keyframes faiscaMetal {
@@ -1301,62 +1362,162 @@
         /* ===== MONTANHA ===== */
         #tema-efeitos.tema-montanha {
             background:
-                radial-gradient(ellipse at 20% 90%, rgba(255, 100, 0, 0.08), transparent 40%),
-                radial-gradient(ellipse at 80% 85%, rgba(255, 69, 0, 0.06), transparent 35%);
+                /* Céu noturno nas montanhas */
+                radial-gradient(ellipse at 50% 10%, rgba(20, 40, 60, 0.15), transparent 50%),
+                /* Névoa dourada do amanhecer */
+                radial-gradient(ellipse at 30% 50%, rgba(139, 90, 43, 0.08), transparent 45%),
+                /* Brilho verde de musgo */
+                radial-gradient(ellipse at 70% 70%, rgba(34, 85, 34, 0.10), transparent 50%);
         }
-        /* Brasa subindo do fundo - como na imagem */
-        #tema-efeitos.tema-montanha .brasa-montanha {
-            position: absolute; bottom: 0; width: 100%; height: 250px;
-            background: 
-                radial-gradient(ellipse at 15% 100%, rgba(255, 69, 0, 0.12), transparent 50%),
-                radial-gradient(ellipse at 35% 100%, rgba(255, 100, 0, 0.08), transparent 45%),
-                radial-gradient(ellipse at 60% 100%, rgba(255, 140, 0, 0.06), transparent 40%),
-                radial-gradient(ellipse at 85% 100%, rgba(255, 69, 0, 0.10), transparent 50%);
-            animation: brasaSobeMontanha 4s ease-in-out infinite;
-            pointer-events: none;
-        }
-        /* Faíscas douradas subindo */
-        #tema-efeitos.tema-montanha .faisca-montanha {
-            position: absolute; width: 2px; height: 2px; border-radius: 50%;
-            background: rgba(255, 180, 60, 0.7); 
-            box-shadow: 0 0 6px rgba(255, 140, 0, 0.5), 0 0 12px rgba(255, 100, 0, 0.3);
-            animation: faiscaSobeMontanha 5s linear infinite;
-        }
-        /* Fumaça/neblina escura */
-        #tema-efeitos.tema-montanha .nevoa-escura {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 350px;
+        /* Névoa densa flutuando nas montanhas */
+        #tema-efeitos.tema-montanha .nevoa-montanha {
+            position: absolute; 
+            bottom: 0; left: 0; right: 0; 
+            height: 300px;
             background: linear-gradient(0deg,
-                rgba(5, 5, 5, 0.4) 0%, 
-                rgba(8, 8, 8, 0.2) 30%, 
+                rgba(8, 12, 6, 0.5) 0%,
+                rgba(12, 18, 8, 0.3) 20%,
+                rgba(15, 22, 10, 0.15) 40%,
                 transparent 70%);
-            filter: blur(25px);
-            animation: nevoaEscura 10s ease-in-out infinite;
+            filter: blur(30px);
+            animation: nevoaMontanhaFlutua 8s ease-in-out infinite;
             pointer-events: none;
         }
-        /* Partículas de cinza/poeira flutuando */
-        #tema-efeitos.tema-montanha .cinza {
-            position: absolute; width: 1px; height: 1px; border-radius: 50%;
-            background: rgba(150, 140, 120, 0.3); 
-            box-shadow: 0 0 3px rgba(120, 110, 90, 0.2);
-            animation: cinzaFlutua 8s ease-in-out infinite;
+        #tema-efeitos.tema-montanha .nevoa-montanha-2 {
+            position: absolute; 
+            top: 30%; left: -10%; right: -10%; 
+            height: 200px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(60, 90, 50, 0.06) 30%,
+                rgba(80, 120, 60, 0.08) 50%,
+                rgba(60, 90, 50, 0.06) 70%,
+                transparent 100%);
+            filter: blur(40px);
+            animation: nevoaMontanhaFlutua 12s ease-in-out infinite reverse;
+            pointer-events: none;
         }
-        @keyframes brasaSobeMontanha {
+        /* Rochas/pedras flutuantes */
+        #tema-efeitos.tema-montanha .rocha {
+            position: absolute;
+            width: 8px; height: 6px;
+            background: rgba(80, 70, 60, 0.5);
+            border-radius: 30% 40% 50% 30%;
+            box-shadow: 0 0 8px rgba(60, 50, 40, 0.3);
+            animation: rochaFlutua 10s ease-in-out infinite;
+        }
+        #tema-efeitos.tema-montanha .rocha-grande {
+            position: absolute;
+            width: 14px; height: 10px;
+            background: rgba(100, 90, 75, 0.4);
+            border-radius: 40% 30% 60% 40%;
+            box-shadow: 0 0 12px rgba(80, 70, 55, 0.25);
+            animation: rochaFlutua 15s ease-in-out infinite;
+        }
+        /* Cristais de esmeralda/obsidiana flutuando */
+        #tema-efeitos.tema-montanha .cristal-montanha {
+            position: absolute;
+            width: 0; height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-bottom: 10px solid rgba(80, 160, 80, 0.35);
+            animation: cristalMontanhaBrilha 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 6px rgba(80, 160, 80, 0.3));
+        }
+        #tema-efeitos.tema-montanha .cristal-montanha-obsidiana {
+            position: absolute;
+            width: 0; height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 8px solid rgba(60, 60, 70, 0.4);
+            animation: cristalMontanhaBrilha 5s ease-in-out infinite reverse;
+            filter: drop-shadow(0 0 4px rgba(60, 60, 70, 0.3));
+        }
+        /* Brasa/magma sutil subindo de fendas */
+        #tema-efeitos.tema-montanha .magma-fenda {
+            position: absolute; bottom: 0;
+            width: 100%; height: 180px;
+            background:
+                radial-gradient(ellipse at 20% 100%, rgba(255, 69, 0, 0.08), transparent 45%),
+                radial-gradient(ellipse at 50% 100%, rgba(255, 100, 0, 0.06), transparent 40%),
+                radial-gradient(ellipse at 80% 100%, rgba(255, 69, 0, 0.08), transparent 45%);
+            animation: magmaPulsa 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+        /* Faíscas de magma */
+        #tema-efeitos.tema-montanha .faisca-magma {
+            position: absolute;
+            width: 2px; height: 2px;
+            border-radius: 50%;
+            background: rgba(255, 120, 40, 0.6);
+            box-shadow: 0 0 6px rgba(255, 80, 20, 0.4), 0 0 12px rgba(255, 60, 0, 0.2);
+            animation: faiscaMagmaSobe 4s linear infinite;
+        }
+        /* Partículas de poeira/terra dourada */
+        #tema-efeitos.tema-montanha .poeira-dourada {
+            position: absolute;
+            width: 1px; height: 1px;
+            border-radius: 50%;
+            background: rgba(180, 160, 100, 0.4);
+            box-shadow: 0 0 4px rgba(160, 140, 80, 0.3);
+            animation: poeiraDouradaFlutua 7s ease-in-out infinite;
+        }
+        /* Musgo/luminescência verde flutuante */
+        #tema-efeitos.tema-montanha .musgo-luz {
+            position: absolute;
+            width: 3px; height: 3px;
+            border-radius: 50%;
+            background: rgba(80, 160, 60, 0.5);
+            box-shadow: 0 0 8px rgba(60, 140, 40, 0.4), 0 0 16px rgba(40, 120, 30, 0.2);
+            animation: musgoPulsa 3s ease-in-out infinite;
+        }
+        /* Silhueta de montanhas no fundo inferior */
+        #tema-efeitos.tema-montanha .silhueta-montanhas {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: linear-gradient(0deg, rgba(5, 8, 4, 0.7) 0%, transparent 100%);
+            clip-path: polygon(
+                0% 100%, 0% 50%, 5% 30%, 8% 45%, 12% 20%, 15% 40%, 18% 15%, 22% 35%, 25% 10%, 28% 30%,
+                32% 15%, 35% 40%, 38% 25%, 42% 50%, 45% 20%, 48% 35%, 52% 15%, 55% 40%, 58% 25%, 62% 45%,
+                65% 20%, 68% 35%, 72% 15%, 75% 40%, 78% 25%, 82% 50%, 85% 20%, 88% 35%, 92% 15%, 95% 40%,
+                98% 25%, 100% 50%, 100% 100%
+            );
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        @keyframes nevoaMontanhaFlutua {
+            0%, 100% { opacity: 0.5; transform: translateX(0) scaleX(1); }
+            50% { opacity: 0.8; transform: translateX(20px) scaleX(1.05); }
+        }
+        @keyframes rochaFlutua {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+            25% { transform: translateY(-30px) rotate(5deg); opacity: 0.6; }
+            50% { transform: translateY(-60px) rotate(-3deg); opacity: 0.4; }
+            75% { transform: translateY(-40px) rotate(8deg); opacity: 0.5; }
+        }
+        @keyframes cristalMontanhaBrilha {
+            0%, 100% { opacity: 0.3; transform: scale(1) translateY(0); }
+            50% { opacity: 0.7; transform: scale(1.2) translateY(-5px); }
+        }
+        @keyframes magmaPulsa {
             0%, 100% { opacity: 0.4; transform: scaleY(1); }
-            50% { opacity: 0.8; transform: scaleY(1.15); }
+            50% { opacity: 0.7; transform: scaleY(1.1); }
         }
-        @keyframes faiscaSobeMontanha {
+        @keyframes faiscaMagmaSobe {
             0% { transform: translateY(0) scale(1); opacity: 0.8; }
-            100% { transform: translateY(-500px) scale(0.2); opacity: 0; }
+            100% { transform: translateY(-300px) scale(0.2); opacity: 0; }
         }
-        @keyframes nevoaEscura {
-            0%, 100% { opacity: 0.5; transform: translateX(0); }
-            50% { opacity: 0.9; transform: translateX(30px); }
-        }
-        @keyframes cinzaFlutua {
+        @keyframes poeiraDouradaFlutua {
             0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
-            25% { transform: translateY(-100px) translateX(20px); opacity: 0.5; }
-            50% { transform: translateY(-200px) translateX(-10px); opacity: 0.3; }
-            75% { transform: translateY(-150px) translateX(15px); opacity: 0.4; }
+            33% { transform: translateY(-80px) translateX(15px); opacity: 0.5; }
+            66% { transform: translateY(-40px) translateX(-10px); opacity: 0.3; }
+        }
+        @keyframes musgoPulsa {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.3); }
         }
         @keyframes terraSobe {
             0%, 100% { opacity: 0.5; transform: scaleY(1); }
@@ -1722,57 +1883,145 @@
         }
         body.tema-montanha header {
             background: 
+                /* Textura de pedra */
                 linear-gradient(180deg, 
-                    rgba(5, 10, 4, 0.85) 0%, 
-                    rgba(8, 16, 6, 0.70) 60%,
-                    rgba(5, 10, 4, 0.90) 100%) !important;
+                    rgba(8, 14, 6, 0.92) 0%, 
+                    rgba(12, 20, 8, 0.85) 30%,
+                    rgba(10, 16, 6, 0.88) 60%,
+                    rgba(8, 12, 5, 0.95) 100%),
+                /* Veios de musgo */
+                repeating-linear-gradient(90deg,
+                    transparent 0px, transparent 15px,
+                    rgba(40, 70, 30, 0.08) 15px, rgba(40, 70, 30, 0.08) 16px,
+                    transparent 16px, transparent 35px,
+                    rgba(30, 55, 25, 0.06) 35px, rgba(30, 55, 25, 0.06) 37px,
+                    transparent 37px, transparent 60px),
+                /* Veios de pedra horizontal */
+                repeating-linear-gradient(0deg,
+                    transparent 0px, transparent 20px,
+                    rgba(60, 50, 40, 0.05) 20px, rgba(60, 50, 40, 0.05) 21px,
+                    transparent 21px, transparent 45px) !important;
             -webkit-backdrop-filter: blur(8px) !important;
             backdrop-filter: blur(8px) !important;
-            border-bottom: 1px solid rgba(34, 85, 34, 0.25) !important;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4) !important;
-            /* position: fixed mantido */
+            border-bottom: 2px solid rgba(60, 100, 50, 0.4) !important;
+            box-shadow: 
+                0 4px 30px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(60, 100, 50, 0.1),
+                inset 0 1px 0 rgba(100, 160, 80, 0.08) !important;
             overflow: hidden !important;
         }
-        /* Silhuetas de montanhas no menu */
+        /* Silhuetas de montanhas na borda inferior do header */
         body.tema-montanha header::before {
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 35px;
-            background: linear-gradient(0deg, rgba(10, 20, 8, 0.6) 0%, transparent 100%);
+            height: 40px;
+            background: linear-gradient(0deg, rgba(8, 14, 6, 0.7) 0%, transparent 100%);
             clip-path: polygon(
-                0% 100%, 0% 60%, 3% 45%, 5% 55%, 8% 35%, 11% 50%, 14% 30%, 17% 45%, 20% 25%,
-                23% 40%, 26% 20%, 29% 35%, 32% 15%, 35% 30%, 38% 40%, 41% 20%, 44% 35%, 47% 25%,
-                50% 45%, 53% 30%, 56% 50%, 59% 35%, 62% 20%, 65% 40%, 68% 25%, 71% 45%, 74% 30%,
-                77% 50%, 80% 35%, 83% 20%, 86% 40%, 89% 30%, 92% 50%, 95% 35%, 98% 45%, 100% 60%,
-                100% 100%
+                0% 100%, 0% 50%, 2% 35%, 4% 50%, 6% 30%, 8% 45%, 10% 25%, 12% 40%, 14% 20%, 16% 35%,
+                18% 25%, 20% 45%, 22% 30%, 24% 50%, 26% 20%, 28% 40%, 30% 30%, 32% 45%, 34% 25%, 36% 40%,
+                38% 20%, 40% 35%, 42% 25%, 44% 45%, 46% 30%, 48% 50%, 50% 20%, 52% 40%, 54% 30%, 56% 45%,
+                58% 25%, 60% 40%, 62% 20%, 64% 35%, 66% 25%, 68% 45%, 70% 30%, 72% 50%, 74% 20%, 76% 40%,
+                78% 30%, 80% 45%, 82% 25%, 84% 40%, 86% 20%, 88% 35%, 90% 25%, 92% 45%, 94% 30%, 96% 50%,
+                98% 35%, 100% 50%, 100% 100%
             );
-            opacity: 0.5;
+            opacity: 0.6;
             pointer-events: none;
             z-index: 0;
+        }
+        /* Cristais de esmeralda no header */
+        body.tema-montanha header::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 10%;
+            right: 10%;
+            height: 6px;
+            background:
+                radial-gradient(circle at 5% 3px, rgba(80, 160, 80, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 15% 3px, rgba(60, 140, 60, 0.4) 0%, transparent 35%),
+                radial-gradient(circle at 25% 3px, rgba(80, 160, 80, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 35% 3px, rgba(60, 140, 60, 0.4) 0%, transparent 35%),
+                radial-gradient(circle at 45% 3px, rgba(80, 160, 80, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 55% 3px, rgba(60, 140, 60, 0.4) 0%, transparent 35%),
+                radial-gradient(circle at 65% 3px, rgba(80, 160, 80, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 75% 3px, rgba(60, 140, 60, 0.4) 0%, transparent 35%),
+                radial-gradient(circle at 85% 3px, rgba(80, 160, 80, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 95% 3px, rgba(60, 140, 60, 0.4) 0%, transparent 35%);
+            opacity: 0.6;
+            pointer-events: none;
+            animation: cristalHeaderBrilha 4s ease-in-out infinite;
         }
         body.tema-montanha header nav {
             position: relative;
             z-index: 1;
         }
         body.tema-montanha header nav button {
-            background: rgba(0, 0, 0, 0.35) !important;
-            border: 1px solid rgba(60, 100, 50, 0.25) !important;
-            box-shadow: inset 0 1px 0 rgba(100, 160, 80, 0.04) !important;
-            color: #B8C4B0 !important;
+            background: 
+                linear-gradient(145deg, rgba(20, 35, 15, 0.7), rgba(10, 20, 8, 0.8)) !important;
+            border: 1px solid rgba(60, 100, 50, 0.35) !important;
+            box-shadow: 
+                inset 0 1px 0 rgba(80, 140, 60, 0.08),
+                0 2px 4px rgba(0,0,0,0.3) !important;
+            color: #A8C4A0 !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        /* Runa de pedra nos botões */
+        body.tema-montanha header nav button::before {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border: 1px solid rgba(60, 100, 50, 0.12);
+            border-radius: inherit;
+            pointer-events: none;
+        }
+        body.tema-montanha header nav button#nav-home {
+            background: linear-gradient(135deg, rgba(34,85,34,0.45), rgba(60,100,50,0.35)) !important;
+            border: 1px solid rgba(80, 140, 60, 0.5) !important;
+            box-shadow: 
+                0 0 15px rgba(60, 100, 50, 0.2),
+                0 0 30px rgba(40, 80, 30, 0.1),
+                inset 0 1px 0 rgba(100, 160, 80, 0.15) !important;
+            color: #D0E8C8 !important;
+            text-shadow: 0 0 10px rgba(80, 140, 60, 0.5) !important;
+            animation: homeMontanhaBrilha 2s ease-in-out infinite !important;
+        }
+        body.tema-montanha header nav button#nav-home::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 20%;
+            right: 20%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(80, 140, 60, 0.5), rgba(120, 180, 80, 0.7), rgba(80, 140, 60, 0.5), transparent);
+            filter: blur(2px);
+            border-radius: 50%;
         }
         body.tema-montanha header nav button.tab-active {
-            background: linear-gradient(135deg, rgba(34,85,34,0.35), rgba(60,100,50,0.25)) !important;
-            border-color: rgba(100, 160, 80, 0.4) !important;
-            box-shadow: 0 0 15px rgba(60, 100, 50, 0.15), inset 0 1px 0 rgba(100, 160, 80, 0.08) !important;
+            background: linear-gradient(145deg, rgba(40, 70, 30, 0.5), rgba(30, 55, 25, 0.55)) !important;
+            border-color: rgba(80, 140, 60, 0.5) !important;
+            box-shadow: 
+                inset 0 1px 0 rgba(100, 160, 80, 0.12),
+                0 0 12px rgba(60, 100, 50, 0.2) !important;
             color: #D0E0C8 !important;
+            text-shadow: 0 0 8px rgba(80, 140, 60, 0.4) !important;
         }
         body.tema-montanha header nav button:hover {
-            border-color: rgba(80, 130, 65, 0.35) !important;
-            box-shadow: 0 0 10px rgba(60, 100, 50, 0.1) !important;
-            color: #C8D8C0 !important;
+            border-color: rgba(80, 140, 60, 0.5) !important;
+            box-shadow: inset 0 1px 0 rgba(100, 160, 80, 0.1), 0 2px 6px rgba(0,0,0,0.4) !important;
+            color: #C8E0C0 !important;
+        }
+        @keyframes cristalHeaderBrilha {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+        @keyframes homeMontanhaBrilha {
+            0%, 100% { box-shadow: 0 0 12px rgba(60, 100, 50, 0.15), 0 0 25px rgba(40, 80, 30, 0.08), inset 0 1px 0 rgba(100, 160, 80, 0.12); }
+            50% { box-shadow: 0 0 20px rgba(60, 100, 50, 0.3), 0 0 40px rgba(40, 80, 30, 0.15), inset 0 1px 0 rgba(100, 160, 80, 0.2); }
         }
 
         </style>
@@ -2117,7 +2366,7 @@
                         <p id="album-comissao-origem" class="text-gray-400 text-sm mb-4"></p>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-yellow-900/20">
-                                <span class="text-yellow-400">⚔️ Glória</span>
+                                <span class="text-yellow-400">⚔️ Glórias Válidas</span>
                                 <span id="album-comissao-rec-count" class="font-bold text-yellow-400">0</span>
                             </div>
                             <div class="flex justify-between px-3 py-2 rounded-lg bg-amber-900/15">
@@ -3631,11 +3880,45 @@
             return FUNCAO_VALHALLA[funcaoKey] || funcaoKey;
         }
 
-        // ===== THROTTLE UTILS (iOS memory fix) =====
+        // ===== CACHE DE STATS (performance) =====
+        let _statsCache = {};
+        let _statsCacheTimestamp = 0;
+        function invalidateStatsCache() {
+            _statsCache = {};
+            _statsCacheTimestamp = Date.now();
+        }
+        function getCachedPlayerStats(playerId) {
+            const key = 'p_' + playerId;
+            if (_statsCache[key]) return _statsCache[key];
+            const stats = getPlayerStats(playerId);
+            _statsCache[key] = stats;
+            return stats;
+        }
+        function getCachedComissaoStats(comissaoId) {
+            const key = 'c_' + comissaoId;
+            if (_statsCache[key]) return _statsCache[key];
+            const stats = getComissaoStats(comissaoId);
+            _statsCache[key] = stats;
+            return stats;
+        }
+        // Invalidar cache quando events/players/comissao mudam
+        // (chamado nos onSnapshot após atualizar os arrays)
         let _renderThrottle = null;
         function throttleRender(fn) {
             if (_renderThrottle) clearTimeout(_renderThrottle);
-            _renderThrottle = setTimeout(fn, 100);
+            _renderThrottle = setTimeout(fn, 300);
+        }
+        // Debounce para inputs e eventos rápidos
+        let _debounceTimer = null;
+        function debounce(fn, ms) {
+            if (_debounceTimer) clearTimeout(_debounceTimer);
+            _debounceTimer = setTimeout(fn, ms);
+        }
+        // RAF wrapper para renders pesados (evita bloquear o main thread)
+        function rafRender(fn) {
+            requestAnimationFrame(function() {
+                requestAnimationFrame(fn);
+            });
         }
 
         // ===== MANUAL REFRESH =====
@@ -6696,8 +6979,8 @@ function renderTorcidasGuerraAdmin() {
                     f.style.animationDuration = (1.5 + Math.random()) + 's';
                     container.appendChild(f);
                 }
-                // Brasas (reduzido: 8 em vez de 25)
-                for (let i = 0; i < 8; i++) {
+                // Brasas (reduzido: 4 em vez de 8)
+                for (let i = 0; i < 4; i++) {
                     const b = document.createElement('div');
                     b.className = 'brasa';
                     b.style.left = Math.random() * 100 + '%';
@@ -6710,8 +6993,8 @@ function renderTorcidasGuerraAdmin() {
                 const geloHeader = document.createElement('div');
                 geloHeader.className = 'gelo-header';
                 container.appendChild(geloHeader);
-                // Cristais (reduzido: 8 em vez de 12)
-                for (let i = 0; i < 8; i++) {
+                // Cristais (reduzido: 4 em vez de 8)
+                for (let i = 0; i < 4; i++) {
                     const c = document.createElement('div');
                     c.className = 'cristal';
                     c.style.left = (5 + Math.random() * 90) + '%';
@@ -6721,8 +7004,8 @@ function renderTorcidasGuerraAdmin() {
                 const nevoa = document.createElement('div');
                 nevoa.className = 'nevoa-gelo';
                 container.appendChild(nevoa);
-                // Flocos (reduzido: 25 em vez de 55)
-                for (let i = 0; i < 25; i++) {
+                // Flocos (reduzido: 12 em vez de 25)
+                for (let i = 0; i < 12; i++) {
                     const f = document.createElement('div');
                     f.className = 'floco';
                     f.style.left = Math.random() * 100 + '%';
@@ -6731,8 +7014,8 @@ function renderTorcidasGuerraAdmin() {
                     f.style.animationDuration = (4 + Math.random() * 4) + 's';
                     container.appendChild(f);
                 }
-                // Flocos grandes (reduzido: 10 em vez de 25)
-                for (let i = 0; i < 10; i++) {
+                // Flocos grandes (reduzido: 5 em vez de 10)
+                for (let i = 0; i < 5; i++) {
                     const f = document.createElement('div');
                     f.className = 'floco-grande';
                     f.style.left = Math.random() * 100 + '%';
@@ -6749,12 +7032,10 @@ function renderTorcidasGuerraAdmin() {
                 const textura = document.createElement('div');
                 textura.className = 'metal-textura';
                 container.appendChild(textura);
-                // Corrosão nos cantos (reduzido: 4 em vez de 6)
+                // Corrosão nos cantos (reduzido: 2 em vez de 4)
                 const cantos = [
                     { left: '0', top: '0' },
-                    { right: '0', top: '0' },
-                    { left: '0', top: '40px' },
-                    { right: '0', top: '40px' }
+                    { right: '0', top: '0' }
                 ];
                 cantos.forEach(pos => {
                     const c = document.createElement('div');
@@ -6763,8 +7044,8 @@ function renderTorcidasGuerraAdmin() {
                     c.style.animationDelay = Math.random() * 3 + 's';
                     container.appendChild(c);
                 });
-                // Gotejamento (reduzido: 6 em vez de 12)
-                for (let i = 0; i < 6; i++) {
+                // Gotejamento (reduzido: 3 em vez de 6)
+                for (let i = 0; i < 3; i++) {
                     const g = document.createElement('div');
                     g.className = 'ferrugem-gota';
                     g.style.left = (5 + Math.random() * 90) + '%';
@@ -6773,8 +7054,8 @@ function renderTorcidasGuerraAdmin() {
                     g.style.animationDuration = (4 + Math.random() * 3) + 's';
                     container.appendChild(g);
                 }
-                // Manchas pequenas (reduzido: 8 em vez de 15)
-                for (let i = 0; i < 8; i++) {
+                // Manchas pequenas (reduzido: 4 em vez de 8)
+                for (let i = 0; i < 4; i++) {
                     const m = document.createElement('div');
                     m.className = 'ferrugem-mancha';
                     m.style.left = (5 + Math.random() * 90) + '%';
@@ -6782,8 +7063,8 @@ function renderTorcidasGuerraAdmin() {
                     m.style.animationDelay = Math.random() * 6 + 's';
                     container.appendChild(m);
                 }
-                // Manchas grandes (reduzido: 5 em vez de 10)
-                for (let i = 0; i < 5; i++) {
+                // Manchas grandes (reduzido: 3 em vez de 5)
+                for (let i = 0; i < 3; i++) {
                     const m = document.createElement('div');
                     m.className = 'ferrugem-mancha-grande';
                     m.style.left = (8 + Math.random() * 84) + '%';
@@ -6794,8 +7075,8 @@ function renderTorcidasGuerraAdmin() {
                 const glow = document.createElement('div');
                 glow.className = 'glow-ferro';
                 container.appendChild(glow);
-                // Faíscas (reduzido: 20 em vez de 35)
-                for (let i = 0; i < 20; i++) {
+                // Faíscas (reduzido: 8 em vez de 20)
+                for (let i = 0; i < 8; i++) {
                     const f = document.createElement('div');
                     f.className = 'faisca-metal';
                     f.style.left = Math.random() * 100 + '%';
@@ -6803,8 +7084,8 @@ function renderTorcidasGuerraAdmin() {
                     f.style.animationDelay = Math.random() * 3 + 's';
                     container.appendChild(f);
                 }
-                // Faíscas grandes (reduzido: 8 em vez de 15)
-                for (let i = 0; i < 8; i++) {
+                // Faíscas grandes (reduzido: 4 em vez de 8)
+                for (let i = 0; i < 4; i++) {
                     const f = document.createElement('div');
                     f.className = 'faisca-metal-grande';
                     f.style.left = Math.random() * 100 + '%';
@@ -6823,8 +7104,8 @@ function renderTorcidasGuerraAdmin() {
                 const aurora2 = document.createElement('div');
                 aurora2.className = 'aurora-2';
                 container.appendChild(aurora2);
-                // Estrelas (reduzido: 35 em vez de 60)
-                for (let i = 0; i < 35; i++) {
+                // Estrelas (reduzido: 15 em vez de 35)
+                for (let i = 0; i < 15; i++) {
                     const s = document.createElement('div');
                     s.className = 'estrela';
                     s.style.left = Math.random() * 100 + '%';
@@ -6833,8 +7114,8 @@ function renderTorcidasGuerraAdmin() {
                     s.style.animationDuration = (2 + Math.random() * 3) + 's';
                     container.appendChild(s);
                 }
-                // Estrelas grandes (reduzido: 8 em vez de 15)
-                for (let i = 0; i < 8; i++) {
+                // Estrelas grandes (reduzido: 4 em vez de 8)
+                for (let i = 0; i < 4; i++) {
                     const s = document.createElement('div');
                     s.className = 'estrela-grande';
                     s.style.left = Math.random() * 100 + '%';
@@ -6845,31 +7126,80 @@ function renderTorcidasGuerraAdmin() {
                 }
             }
             else if (tema === 'tema-montanha') {
-                const brasa = document.createElement('div');
-                brasa.className = 'brasa-montanha';
-                container.appendChild(brasa);
+                // Névoa densa nas montanhas
                 const nevoa = document.createElement('div');
-                nevoa.className = 'nevoa-escura';
+                nevoa.className = 'nevoa-montanha';
                 container.appendChild(nevoa);
-                // Faíscas (reduzido: 15 em vez de 30)
-                for (let i = 0; i < 15; i++) {
+                const nevoa2 = document.createElement('div');
+                nevoa2.className = 'nevoa-montanha-2';
+                container.appendChild(nevoa2);
+                // Silhueta de montanhas no fundo
+                const silhueta = document.createElement('div');
+                silhueta.className = 'silhueta-montanhas';
+                container.appendChild(silhueta);
+                // Magma sutil subindo de fendas
+                const magma = document.createElement('div');
+                magma.className = 'magma-fenda';
+                container.appendChild(magma);
+                // Rochas flutuantes (reduzido: 4 em vez de 8)
+                for (let i = 0; i < 4; i++) {
+                    const r = document.createElement('div');
+                    r.className = Math.random() > 0.5 ? 'rocha' : 'rocha-grande';
+                    r.style.left = Math.random() * 100 + '%';
+                    r.style.bottom = (10 + Math.random() * 60) + '%';
+                    r.style.animationDelay = Math.random() * 10 + 's';
+                    r.style.animationDuration = (8 + Math.random() * 10) + 's';
+                    container.appendChild(r);
+                }
+                // Cristais de esmeralda (reduzido: 5 em vez de 10)
+                for (let i = 0; i < 5; i++) {
+                    const c = document.createElement('div');
+                    c.className = 'cristal-montanha';
+                    c.style.left = Math.random() * 100 + '%';
+                    c.style.top = (20 + Math.random() * 60) + '%';
+                    c.style.animationDelay = Math.random() * 4 + 's';
+                    c.style.animationDuration = (3 + Math.random() * 3) + 's';
+                    container.appendChild(c);
+                }
+                // Cristais de obsidiana (reduzido: 3 em vez de 6)
+                for (let i = 0; i < 3; i++) {
+                    const c = document.createElement('div');
+                    c.className = 'cristal-montanha-obsidiana';
+                    c.style.left = Math.random() * 100 + '%';
+                    c.style.top = (30 + Math.random() * 50) + '%';
+                    c.style.animationDelay = Math.random() * 5 + 's';
+                    c.style.animationDuration = (4 + Math.random() * 3) + 's';
+                    container.appendChild(c);
+                }
+                // Faíscas de magma (reduzido: 5 em vez de 10)
+                for (let i = 0; i < 5; i++) {
                     const f = document.createElement('div');
-                    f.className = 'faisca-montanha';
+                    f.className = 'faisca-magma';
                     f.style.left = Math.random() * 100 + '%';
-                    f.style.bottom = Math.random() * 20 + '%';
-                    f.style.animationDelay = Math.random() * 5 + 's';
-                    f.style.animationDuration = (3 + Math.random() * 4) + 's';
+                    f.style.bottom = Math.random() * 15 + '%';
+                    f.style.animationDelay = Math.random() * 4 + 's';
+                    f.style.animationDuration = (2 + Math.random() * 3) + 's';
                     container.appendChild(f);
                 }
-                // Cinzas (reduzido: 20 em vez de 40)
-                for (let i = 0; i < 20; i++) {
-                    const c = document.createElement('div');
-                    c.className = 'cinza';
-                    c.style.left = Math.random() * 100 + '%';
-                    c.style.top = (60 + Math.random() * 40) + '%';
-                    c.style.animationDelay = Math.random() * 8 + 's';
-                    c.style.animationDuration = (6 + Math.random() * 6) + 's';
-                    container.appendChild(c);
+                // Poeira dourada (reduzido: 8 em vez de 15)
+                for (let i = 0; i < 8; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'poeira-dourada';
+                    p.style.left = Math.random() * 100 + '%';
+                    p.style.top = (40 + Math.random() * 50) + '%';
+                    p.style.animationDelay = Math.random() * 7 + 's';
+                    p.style.animationDuration = (5 + Math.random() * 5) + 's';
+                    container.appendChild(p);
+                }
+                // Musgo luminescente (reduzido: 6 em vez de 12)
+                for (let i = 0; i < 6; i++) {
+                    const m = document.createElement('div');
+                    m.className = 'musgo-luz';
+                    m.style.left = Math.random() * 100 + '%';
+                    m.style.top = (10 + Math.random() * 70) + '%';
+                    m.style.animationDelay = Math.random() * 3 + 's';
+                    m.style.animationDuration = (2 + Math.random() * 3) + 's';
+                    container.appendChild(m);
                 }
             }
         }
@@ -7207,7 +7537,13 @@ function closeLightbox() {
            lightboxCurrentIndex = 0;
         }
        
-        // ===== FIREBASE LOADERS =====
+        // ===== FIREBASE LOADERS (otimizados para performance) =====
+        // Flag para evitar re-renders quando a aba não está visível
+        let _tabVisible = true;
+        document.addEventListener('visibilitychange', function() {
+            _tabVisible = !document.hidden;
+        });
+
         async function loadPlayers() {
             try {
                 const q = window.query(window.collection(window.db, 'jogadores'), window.orderBy('nome'));
@@ -7216,6 +7552,9 @@ function closeLightbox() {
                     snapshot.forEach(doc => {
                         players.push({ id: doc.id, ...doc.data() });
                     });
+                    invalidateStatsCache();
+                    // Só renderiza se a aba estiver visível
+                    if (!_tabVisible) return;
                     throttleRender(function() {
                         renderPlayers();
                         renderRanking();
@@ -7256,6 +7595,9 @@ function deduplicarTorcidas(eventos) {
                     });
                     // Deduplicar torcidas duplicadas no Firebase (mantém apenas a primeira)
                     events = deduplicarTorcidas(events);
+                    invalidateStatsCache();
+                    // Só renderiza se a aba estiver visível
+                    if (!_tabVisible) return;
                     throttleRender(function() {
                         renderPlayers();
                         renderRanking();
@@ -7602,14 +7944,14 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
         // ===== PERÍODO PARA CONSELHO DOS SÁBIOS =====
         function getComissaoStatsPorPeriodo(comissaoId, periodo) {
-            const stats = getComissaoStats(comissaoId);
+            const stats = getCachedComissaoStats(comissaoId);
             if (periodo === 'total') return stats;
 
             const [ano, mes] = periodo.split('-').map(Number);
             const inicioMes = new Date(ano, mes - 1, 1, 0, 0, 0);
             const fimMes = new Date(ano, mes, 0, 23, 59, 59);
 
-            let baseMonth = 0, stickersMonth = 0, punicoesMonth = 0, honrariasMonth = 0, batalhasMonth = 0, conquistasMonth = 0;
+            let baseMonth = 0, stickersMonth = 0, punicoesMonth = 0, honrariasMonth = 0, batalhasMonth = 0, verdesMonth = 0, conquistasMonth = 0;
 
             const playerEvents = events.filter(e => e.jogadorId === comissaoId);
             for (const ev of playerEvents) {
@@ -7618,12 +7960,14 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                     const val = Number(ev.valor) || 0;
                     if (ev.tipo === 'gol') {
                         if (ev.subtipo === 'honraria-pura' || ev.subtipo === 'elogio-recebido') honrariasMonth += val;
-                        else if (ev.subtipo === 'guerra-cla' || ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra' || ev.subtipo === 'duelo-vitoria') batalhasMonth += val;
+                        else if (ev.subtipo === 'guerra-cla' || ev.subtipo === 'torcida-sabio' || ev.subtipo === 'torcida-sabio-guerra' || ev.subtipo === 'torcida-participante-guerra' || ev.subtipo === 'duelo-vitoria') batalhasMonth += val;
+                        else if (ev.subtipo === 'benção-dos-deuses') verdesMonth += val;
                         else baseMonth += val;
                     } else if (ev.tipo === 'figurinha') {
                         stickersMonth += val;
                     } else if (ev.tipo === 'punicao') {
                         if (ev.subtipo === 'guerra-cla-derrota' || ev.subtipo === 'duelo-derrota') batalhasMonth -= Math.abs(val);
+                        else if (ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses' || ev.subtipo === 'cartao-verde') verdesMonth += Math.abs(val);
                         else punicoesMonth += Math.abs(val);
                     }
                 }
@@ -7639,14 +7983,15 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             });
 
             const totalMonth = baseMonth + stickersMonth;
-            const totalReal = totalMonth - punicoesMonth + honrariasMonth + batalhasMonth;
+            // GLÓRIA VÁLIDA DO SÁBIO = Insígnias + Batalhas + Bênçãos − Julgamentos (sem glória base de vendas)
+            const totalReal = verdesMonth + honrariasMonth + batalhasMonth - punicoesMonth;
 
             conquistasMonth = conquistasHistorico.filter(ch => {
                 const d = getBRDate(ch.dataConquista);
                 return ch.jogadorId === comissaoId && d >= inicioMes && d <= fimMes;
             }).length;
 
-            return { totalMonth, baseMonth, stickersMonth, punicoesMonth, honrariasMonth, batalhasMonth, conquistasMonth, totalReal };
+            return { totalMonth, baseMonth, stickersMonth, punicoesMonth, honrariasMonth, batalhasMonth, verdesMonth, conquistasMonth, totalReal };
         }
 
         function preencherSelectPeriodoComissao(comissaoId) {
@@ -7706,14 +8051,15 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
         function renderComissaoStats(comissaoId) {
             const stats = getComissaoStatsPorPeriodo(comissaoId, albumPeriodoSelecionado);
+            // Glórias Válidas = Insígnias + Batalhas + Bênçãos − Julgamentos (fallbacks para período 'total')
             const recCountEl = document.getElementById('album-comissao-rec-count');
-            if (recCountEl) recCountEl.textContent = stats.totalMonth;
+            if (recCountEl) recCountEl.textContent = stats.totalReal !== undefined ? stats.totalReal : 0;
             const insCountEl = document.getElementById('album-comissao-insignias-count');
-            if (insCountEl) insCountEl.textContent = stats.honrariasMonth;
+            if (insCountEl) insCountEl.textContent = stats.honrariasMonth !== undefined ? stats.honrariasMonth : ((stats.elogiosRecebidos || 0) + (stats.elogiosDados || 0));
             const batCountEl = document.getElementById('album-comissao-batalhas-count');
-            if (batCountEl) batCountEl.textContent = stats.batalhasMonth;
+            if (batCountEl) batCountEl.textContent = stats.batalhasMonth !== undefined ? stats.batalhasMonth : (stats.batalhasTotal || 0);
             const conqEl = document.getElementById('album-comissao-conquistas');
-            if (conqEl) conqEl.textContent = stats.conquistasMonth;
+            if (conqEl) conqEl.textContent = stats.conquistasMonth !== undefined ? stats.conquistasMonth : conquistasHistorico.filter(ch => ch.jogadorId === comissaoId).length;
 
             // Insígnias filtradas por período (comissão)
             const comissaoInsigniasContainer = document.getElementById('album-comissao-insignias-badges');
@@ -7756,14 +8102,24 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             let stickersTotal = 0, stickersDay = 0, stickersWeek = 0, stickersMonth = 0;
             let punishTotal = 0, punishDay = 0, punishWeek = 0, punishMonth = 0;
             let verdesTotal = 0, verdesDay = 0, verdesWeek = 0, verdesMonth = 0;
+            let batalhasTotal = 0, batalhasDay = 0, batalhasWeek = 0, batalhasMonth = 0;
+
+            // Subtipos que contam como BATALHA (glória válida do sábio)
+            const subtiposBatalha = ['guerra-cla', 'duelo-vitoria', 'torcida-sabio', 'torcida-sabio-guerra', 'torcida-participante-guerra'];
+            const subtiposBatalhaNeg = ['guerra-cla-derrota', 'duelo-derrota'];
 
             comissaoEvents.forEach(ev => {
                 const evDate = getBRDate(ev.data);
                 const val = Number(ev.valor) || 0;
 
                 if (ev.tipo === 'gol') {
-                    if (ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado') {
+                    if (ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado' || ev.subtipo === 'honraria-pura') {
                         // Honrarias já contam na coleção 'elogios', não duplicar aqui
+                    } else if (subtiposBatalha.includes(ev.subtipo)) {
+                        batalhasTotal += val;
+                        if (isSameDay(evDate, today)) batalhasDay += val;
+                        if (isSameWeek(evDate, today)) batalhasWeek += val;
+                        if (isSameMonth(evDate, today)) batalhasMonth += val;
                     } else if (ev.subtipo === 'benção-dos-deuses') {
                         verdesTotal += val;
                         if (isSameDay(evDate, today)) verdesDay += val;
@@ -7781,7 +8137,12 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                     if (isSameWeek(evDate, today)) stickersWeek += val;
                     if (isSameMonth(evDate, today)) stickersMonth += val;
                 } else if (ev.tipo === 'punicao') {
-                    if (ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses' || ev.subtipo === 'cartao-verde') {
+                    if (subtiposBatalhaNeg.includes(ev.subtipo)) {
+                        batalhasTotal -= Math.abs(val);
+                        if (isSameDay(evDate, today)) batalhasDay -= Math.abs(val);
+                        if (isSameWeek(evDate, today)) batalhasWeek -= Math.abs(val);
+                        if (isSameMonth(evDate, today)) batalhasMonth -= Math.abs(val);
+                    } else if (ev.subtipo === 'benção-dos-deuses' || ev.subtipo === 'benção dos deuses' || ev.subtipo === 'cartao-verde') {
                         verdesTotal += Math.abs(val);
                         if (isSameDay(evDate, today)) verdesDay += Math.abs(val);
                         if (isSameWeek(evDate, today)) verdesWeek += Math.abs(val);
@@ -7830,11 +8191,13 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                 stickersTotal, stickersDay, stickersWeek, stickersMonth,
                 verdesTotal, verdesDay, verdesWeek, verdesMonth,
                 punishTotal, punishDay, punishWeek, punishMonth,
+                batalhasTotal, batalhasDay, batalhasWeek, batalhasMonth,
                 elogiosRecebidos, elogiosDados,
-                totalReal: baseTotal + stickersTotal + verdesTotal + totalElogios - punishTotal,
-                totalDay: baseDay + stickersDay + verdesDay + totalElogiosDay - punishDay,
-                totalWeek: baseWeek + stickersWeek + verdesWeek + totalElogiosWeek - punishWeek,
-                totalMonth: baseMonth + stickersMonth + verdesMonth + totalElogiosMonth - punishMonth
+                // GLÓRIA VÁLIDA DO SÁBIO = Insígnias + Batalhas + Bênçãos − Julgamentos (sem glória base de vendas)
+                totalReal: verdesTotal + totalElogios + batalhasTotal - punishTotal,
+                totalDay: verdesDay + totalElogiosDay + batalhasDay - punishDay,
+                totalWeek: verdesWeek + totalElogiosWeek + batalhasWeek - punishWeek,
+                totalMonth: verdesMonth + totalElogiosMonth + batalhasMonth - punishMonth
             };
         };
 
@@ -7916,10 +8279,11 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
         }
 
         function getPeriodTotal(stats) {
-            if (rankingPeriod === 'day') return stats.totalDay;
-            if (rankingPeriod === 'week') return stats.totalWeek;
-            if (rankingPeriod === 'month') return stats.totalMonth;
-            return stats.totalReal;
+            if (!stats) return 0;
+            if (rankingPeriod === 'day') return stats.totalDay || 0;
+            if (rankingPeriod === 'week') return stats.totalWeek || 0;
+            if (rankingPeriod === 'month') return stats.totalMonth || 0;
+            return stats.totalReal || 0;
         }
 
         // ===== RENDER PLAYERS (HOME) =====
@@ -8121,12 +8485,12 @@ async function renderPlayers() {
                             <p class="text-gray-500 text-xs mb-2">${c.origem || ''}</p>
                             <div class="flex items-center justify-center gap-1 text-lg font-black text-yellow-400">
                                 <span>⚔️</span>
-                                <span>${getComissaoStats(c.id).totalMonth}</span>
+                                <span>${getCachedComissaoStats(c.id).totalMonth}</span>
                             </div>
                             <div class="flex justify-center gap-2 mt-2">
-                                <span class="period-badge period-day" title="Hoje">D ${getComissaoStats(c.id).totalDay}</span>
-                                <span class="period-badge period-week" title="Semana">S ${getComissaoStats(c.id).totalWeek}</span>
-                                <span class="period-badge period-month" title="Mês">M ${getComissaoStats(c.id).totalMonth}</span>
+                                <span class="period-badge period-day" title="Hoje">D ${getCachedComissaoStats(c.id).totalDay}</span>
+                                <span class="period-badge period-week" title="Semana">S ${getCachedComissaoStats(c.id).totalWeek}</span>
+                                <span class="period-badge period-month" title="Mês">M ${getCachedComissaoStats(c.id).totalMonth}</span>
                             </div>
                         </div>
                     `;
@@ -8175,6 +8539,49 @@ async function renderPlayers() {
 
             const periodLabel = rankingPeriod === 'day' ? 'do Dia' : rankingPeriod === 'week' ? 'da Semana' : rankingPeriod === 'month' ? 'do Mês' : 'Geral';
 
+            // ===== GERAL (SEMPRE) — Guerreiros + Conselho dos Sábios, Top 5 =====
+            const todos = [
+                ...players.map(p => ({ ...p, tipo: 'guerreiro', stats: getCachedPlayerStats(p.id) })),
+                ...comissao.map(c => ({ ...c, tipo: 'comissao', stats: getCachedComissaoStats(c.id) }))
+            ];
+            const sorted = todos.sort((a, b) => {
+                const totalA = getPeriodTotal(a.stats) || 0;
+                const totalB = getPeriodTotal(b.stats) || 0;
+                if (totalB !== totalA) return totalB - totalA;
+                return (a.nome || '').toLowerCase().localeCompare((b.nome || '').toLowerCase());
+            }).slice(0, 5);
+
+            geral.innerHTML = sorted.map((p, idx) => {
+                const stats = p.stats || {};
+                const total = getPeriodTotal(stats);
+                const rank = idx + 1;
+                let medal = '';
+                if (rank === 1) medal = '🥇';
+                else if (rank === 2) medal = '🥈';
+                else if (rank === 3) medal = '🥉';
+                else medal = `<span class="text-gray-500 font-bold">${rank}</span>`;
+
+                const photoUrl = p.tipo === 'comissao'
+                    ? (p.foto ? getImageUrl(p.foto) : '')
+                    : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
+                const subLabel = p.tipo === 'comissao' ? (p.funcaoLabel || '') : (p.time || '');
+
+                return `
+                    <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:border-[#C8A25A] transition-all" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
+                        <div class="text-2xl w-10 text-center">${medal}</div>
+                        <img src="${photoUrl}" class="w-12 h-12 rounded-full object-cover border-2 border-[#C8A25A]" onerror="this.style.display='none'">
+                        <div class="flex-1">
+                            <h4 class="font-bold">${p.nome} ${p.sobrenome || ''}</h4>
+                            <p class="text-[#C8A25A] text-sm">${subLabel}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-black">${total}</p>
+                            <p class="text-xs text-gray-400">glória ${periodLabel.toLowerCase()}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
             if (rankingType === 'campeonato') {
                 // RANKING POR EQUIPE (CAMPEONATO) — inclui guerreiros + conselho dos sábios
                 const equipesStats = {};
@@ -8195,7 +8602,7 @@ async function renderPlayers() {
                     if (!equipesStats[c.equipeId]) {
                         equipesStats[c.equipeId] = { total: 0, jogadores: 0, sábios: 0, ids: [] };
                     }
-                    const stats = getComissaoStats(c.id);
+                    const stats = getCachedComissaoStats(c.id);
                     const total = getPeriodTotal(stats);
                     equipesStats[c.equipeId].total += total;
                     equipesStats[c.equipeId].sábios++;
@@ -8209,7 +8616,7 @@ async function renderPlayers() {
                     })
                     .sort((a, b) => b.total - a.total);
 
-                geral.innerHTML = sortedEquipes.map((eq, idx) => {
+                porTime.innerHTML = `<h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-8 bg-gradient-to-b from-[#C8A25A] to-[#8C6239] rounded-full"></span>Grande Batalha — ${periodLabel}</h3>` + sortedEquipes.map((eq, idx) => {
                     const rank = idx + 1;
                     let medal = '';
                     if (rank === 1) medal = '🥇';
@@ -8232,8 +8639,6 @@ async function renderPlayers() {
                         </div>
                     `;
                 }).join('');
-
-                porTime.innerHTML = '';
                 return;
             }
 
@@ -8241,7 +8646,7 @@ async function renderPlayers() {
                 // RANKING COMISSÃO TÉCNICA - Top 5, em empate ordem alfabética
                 // Total glória = honrarias (elogios) + feitos de cartão verde
                 const comissaoWithTotals = comissao.map(c => {
-                    const stats = getComissaoStats(c.id);
+                    const stats = getCachedComissaoStats(c.id);
                     return { ...c, totalGols: getPeriodTotal(stats) };
                 });
                 const sortedComissao = comissaoWithTotals.sort((a, b) => {
@@ -8249,7 +8654,7 @@ async function renderPlayers() {
                     return (a.nome || '').toLowerCase().localeCompare((b.nome || '').toLowerCase()); // Empate: alfabética
                 }).slice(0, 5); // Apenas top 5
 
-                geral.innerHTML = sortedComissao.map((c, idx) => {
+                porTime.innerHTML = `<h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-8 bg-gradient-to-b from-[#C8A25A] to-[#8C6239] rounded-full"></span>Conselho dos Sábios — ${periodLabel}</h3>` + sortedComissao.map((c, idx) => {
                     const rank = idx + 1;
                     let medal = '';
                     if (rank === 1) medal = '🥇';
@@ -8277,53 +8682,8 @@ async function renderPlayers() {
                         </div>
                     `;
                 }).join('');
-
-                porTime.innerHTML = `<h3 class="text-xl font-bold mb-4 flex items-center gap-2"><span class="w-2 h-8 bg-gradient-to-b from-[#C8A25A] to-[#8C6239] rounded-full"></span>Conselho dos Sábios — ${periodLabel}</h3>` +
-                    `<div class="text-gray-400 text-center py-4">Destaques por glória recebidos no Salão das Honras</div>`;
                 return;
             }
-
-            // RANKING GERAL — Guerreiros + Conselho dos Sábios, Top 5
-            const todos = [
-                ...players.map(p => ({ ...p, tipo: 'guerreiro', stats: getPlayerStats(p.id) })),
-                ...comissao.map(c => ({ ...c, tipo: 'comissao', stats: getComissaoStats(c.id) }))
-            ];
-            const sorted = todos.sort((a, b) => {
-                const totalA = getPeriodTotal(a.stats);
-                const totalB = getPeriodTotal(b.stats);
-                if (totalB !== totalA) return totalB - totalA; // Mais glória primeiro
-                return (a.nome || '').toLowerCase().localeCompare((b.nome || '').toLowerCase()); // Empate: alfabética
-            }).slice(0, 5); // Apenas top 5
-
-            geral.innerHTML = sorted.map((p, idx) => {
-                const stats = getPlayerStats(p.id);
-                const total = getPeriodTotal(stats);
-                const rank = idx + 1;
-                let medal = '';
-                if (rank === 1) medal = '🥇';
-                else if (rank === 2) medal = '🥈';
-                else if (rank === 3) medal = '🥉';
-                else medal = `<span class="text-gray-500 font-bold">${rank}</span>`;
-
-                const photoUrl = p.tipo === 'comissao' 
-                    ? (p.foto ? getImageUrl(p.foto) : '') 
-                    : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
-
-                return `
-                    <div class="team-ranking-card flex items-center gap-4 cursor-pointer hover:border-[#C8A25A] transition-all" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
-                        <div class="text-2xl w-10 text-center">${medal}</div>
-                        <img src="${photoUrl}" class="w-12 h-12 rounded-full object-cover border-2 border-[#C8A25A]" onerror="this.style.display='none'">
-                        <div class="flex-1">
-                            <h4 class="font-bold">${p.nome} ${p.sobrenome || ''}</h4>
-                            <p class="text-[#C8A25A] text-sm">${p.time || ''}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-2xl font-black">${total}</p>
-                            <p class="text-xs text-gray-400">glória</p>
-                        </div>
-                    </div>
-                `;
-            }).join('');
 
             // Por Time / Função — Top 5 por função, em empate ordem alfabética
             const teams = {};
@@ -8811,7 +9171,7 @@ function calcConquistas(pid) {
 
                 // Se for comissão, usar getComissaoStats para monthTotal (garante consistência com perfil)
                 if (isComissao) {
-                    const comStats = getComissaoStats(pid);
+                    const comStats = getCachedComissaoStats(pid);
                     monthTotal = comStats.totalMonth;
                 }
 
@@ -8864,7 +9224,7 @@ function calcConquistas(pid) {
                 const isComissao = forceComissao || comissao.some(c => c.id === pid);
                 const conq = calcConquistas(pid);
                 // Para comissão, usar getComissaoStats para monthTotal (inclui honrarias)
-                const monthTotal = isComissao ? getComissaoStats(pid).totalMonth : conq.monthTotal;
+                const monthTotal = isComissao ? getCachedComissaoStats(pid).totalMonth : conq.monthTotal;
                 const player = players.find(p => p.id === pid) || comissao.find(c => c.id === pid);
                 if (!player) return;
                 const alvoNome = player.nome + ' ' + (player.sobrenome || '');
@@ -9928,7 +10288,7 @@ function getTorcidasConsecutivas(comissaoId) {
 
             const elogiosComissao = honrarias.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
             // Total de glória = honrarias (elogios) + feitos de cartão verde
-            const stats = getComissaoStats(comissaoId);
+            const stats = getCachedComissaoStats(comissaoId);
             preencherSelectPeriodoComissao(comissaoId);
             // Usar calcConquistas para garantir consistência com guerreiros (mês atual)
             const conq = calcConquistas(comissaoId);
@@ -10029,7 +10389,7 @@ function getTorcidasConsecutivas(comissaoId) {
                     : CONQUISTAS_DEFAULT.filter(c => c.tipoAlvo === 'comissao' || c.tipoAlvo === 'ambos');
 
                 // Usar getComissaoStats diretamente para glórias do sábio (inclui honrarias da coleção 'elogios')
-                const comStats = getComissaoStats(comissaoId);
+                const comStats = getCachedComissaoStats(comissaoId);
                 const monthTotal = comStats.totalMonth;
                 // Para dias/semanas, usar calcConquistas como fallback
                 const conqProgress = calcConquistas(comissaoId);
@@ -10419,13 +10779,13 @@ function showEquipeAlbum(equipeId) {
             });
 
             const comissaoEquipe = comissao.filter(c => c.equipeId === equipeId).sort((a, b) => {
-                const sa = getComissaoStats(a.id);
-                const sb = getComissaoStats(b.id);
+                const sa = getCachedComissaoStats(a.id);
+                const sb = getCachedComissaoStats(b.id);
                 return getPeriodTotal(sb) - getPeriodTotal(sa);
             });
 
             const jogadoresTotal = jogadoresEquipe.reduce((s, p) => s + getPeriodTotal(getPlayerStats(p.id)), 0);
-            const comissaoTotal = comissaoEquipe.reduce((s, c) => s + getPeriodTotal(getComissaoStats(c.id)), 0);
+            const comissaoTotal = comissaoEquipe.reduce((s, c) => s + getPeriodTotal(getCachedComissaoStats(c.id)), 0);
             const equipeTotal = jogadoresTotal + comissaoTotal;
 
             geral.innerHTML = `
@@ -10481,7 +10841,7 @@ function showEquipeAlbum(equipeId) {
                     </h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         ${comissaoEquipe.map((c, idx) => {
-                            const stats = getComissaoStats(c.id);
+                            const stats = getCachedComissaoStats(c.id);
                             const total = getPeriodTotal(stats);
                             const photoUrl = c.foto ? getImageUrl(c.foto) : '';
                             const borderColor = c.funcao === 'preparador-campo' || c.funcao === 'nutricionista' ? '#C8A25A' : 
@@ -10727,7 +11087,7 @@ async function carregarCorrecaoUnificada() {
             let stats, guerreiroEvents;
 
             if (tipo === 'comissao') {
-                stats = getComissaoStats(id);
+                stats = getCachedComissaoStats(id);
             } else {
                 stats = getPlayerStats(id);
             }
@@ -11044,8 +11404,10 @@ async function loadElogios() {
                         honrarias.push({ id: doc.id, ...doc.data() });
                     });
                     populateAdminElogioFiltro();
-                    // Re-render home (sábios dependem de honrarias para glória)
+                    // Honrarias afetam diretamente os stats dos sábios — invalidar cache e re-renderizar rankings
+                    invalidateStatsCache();
                     renderPlayers();
+                    renderRanking();
                     // Update honraria selects
                     updateElogioSelects();
                     // Always re-render mural when elogios update (even if hidden, to keep fresh)
