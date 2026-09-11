@@ -2488,13 +2488,13 @@
                 <h3 class="text-xl font-bold mb-4">Conceder Insígnia</h3>
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-400 mb-2">De</label>
-                    <select id="elogio-de" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                    <select id="elogio-de" onchange="validarInsignia()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
                         <option value="">Quem está enviando</option>
                     </select>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-semibold text-gray-400 mb-2">Para</label>
-                    <select id="elogio-para" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
+                    <select id="elogio-para" onchange="validarInsignia()" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none">
                         <option value="">Selecione quem recebe</option>
                     </select>
                 </div>
@@ -2524,6 +2524,7 @@
                     <label class="block text-sm font-semibold text-gray-400 mb-2">Observação (opcional)</label>
                     <input type="text" id="elogio-mensagem" class="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:border-[#C8A25A] focus:outline-none" placeholder="Ex: Cobriu meu plantão sem eu pedir">
                 </div>
+                <div id="insignia-status" style="margin-bottom:12px;text-align:center;font-weight:700;font-size:14px;color:#9ca3af;">ℹ️ Selecione quem envia e quem recebe para verificar as regras</div>
                 <button onclick="enviarInsignia()" class="w-full py-3 rounded-xl btn-primary text-[#ECE8E1] font-bold text-lg">
                     <i class="fas fa-medal mr-2"></i>Conceder Insígnia
                 </button>
@@ -11989,6 +11990,84 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.insignia-card').forEach(c => c.classList.remove('selected'));
             document.querySelector(`[data-insignia="${tipo}"]`).classList.add('selected');
             document.getElementById('insignia-selecionada').value = tipo;
+            validarInsignia();
+        }
+
+        // ===== VALIDAÇÃO EM TEMPO REAL DAS REGRAS DE INSÍGNIA =====
+        // Mostra abaixo do formulário se o envio está LIBERADO ou BLOQUEADO (antes de clicar no botão)
+        function validarInsignia() {
+            const statusEl = document.getElementById('insignia-status');
+            const btn = document.querySelector('#section-mural button[onclick="enviarInsignia()"]');
+            if (!statusEl) return;
+
+            const setStatus = (html, cor, bloqueado) => {
+                statusEl.innerHTML = html;
+                statusEl.style.cssText = 'margin-bottom:12px;text-align:center;font-weight:700;font-size:14px;color:' + cor + ';';
+                if (btn) {
+                    btn.disabled = !!bloqueado;
+                    btn.style.opacity = bloqueado ? '0.45' : '1';
+                    btn.style.cursor = bloqueado ? 'not-allowed' : 'pointer';
+                }
+            };
+
+            const deValue = document.getElementById('elogio-de').value;
+            const paraValue = document.getElementById('elogio-para').value;
+
+            if (!deValue || !paraValue) {
+                setStatus('ℹ️ Selecione quem envia e quem recebe para verificar as regras', '#9ca3af', false);
+                return;
+            }
+
+            const [deTipo, deId] = deValue.split('|');
+            const [paraTipo, paraId] = paraValue.split('|');
+
+            if (deId === paraId && deTipo === paraTipo) {
+                setStatus('❌ Não é possível enviar insígnia para si mesmo', '#f87171', true);
+                return;
+            }
+
+            const hojeBrasilia = getHojeBrasilia();
+            const seteDiasAtras = new Date();
+            seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+            const seteDiasStr = seteDiasAtras.toISOString().split('T')[0];
+
+            const insigniasHoje = honrarias.filter(e => e.data === hojeBrasilia && e.tipo === 'insignia');
+
+            // Regra 1: 1 envio por dia
+            const enviosHoje = insigniasHoje.filter(e => e.deId === deId && e.deTipo === deTipo);
+            if (enviosHoje.length > 0) {
+                setStatus('❌ Você já enviou uma insígnia hoje — só é permitido 1 envio por dia.', '#f87171', true);
+                return;
+            }
+
+            // Regra 2: 1 recebida por pessoa por dia
+            const recebidosHoje = insigniasHoje.filter(e => e.paraId === paraId && e.paraTipo === paraTipo);
+            if (recebidosHoje.length > 0) {
+                setStatus('❌ Esta pessoa já recebeu uma insígnia hoje (máx. 1 por pessoa/dia).', '#f87171', true);
+                return;
+            }
+
+            // Regra 3: cooldown de 7 dias para a mesma pessoa
+            const cooldown = honrarias.filter(e => e.tipo === 'insignia' && e.deId === deId && e.deTipo === deTipo && e.paraId === paraId && e.paraTipo === paraTipo && e.data >= seteDiasStr);
+            if (cooldown.length > 0) {
+                setStatus('❌ Você já enviou insígnia para esta pessoa nos últimos 7 dias.', '#f87171', true);
+                return;
+            }
+
+            // Regra 4: não pode devolver nos últimos 7 dias
+            const devolucao = honrarias.filter(e => e.tipo === 'insignia' && e.deId === paraId && e.deTipo === paraTipo && e.paraId === deId && e.paraTipo === deTipo && e.data >= seteDiasStr);
+            if (devolucao.length > 0) {
+                setStatus('❌ Esta pessoa já te enviou insígnia nos últimos 7 dias — não é permitido devolver.', '#f87171', true);
+                return;
+            }
+
+            // Regras OK — falta só escolher a insígnia?
+            if (!document.getElementById('insignia-selecionada').value) {
+                setStatus('⚠️ Regras OK! Agora selecione uma insígnia para concluir.', '#fbbf24', false);
+                return;
+            }
+
+            setStatus('✅ Liberado! Você pode conceder esta insígnia.', '#4ade80', false);
         }
 
         async function enviarInsignia() {
@@ -12093,6 +12172,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('insignia-selecionada').value = '';
                 document.getElementById('elogio-mensagem').value = '';
                 document.querySelectorAll('.insignia-card').forEach(c => c.classList.remove('selected'));
+                validarInsignia();
 
                 if (!document.getElementById('section-home').classList.contains('hidden')) renderPlayers();
                 if (!document.getElementById('section-mural').classList.contains('hidden')) renderMural();
