@@ -2204,7 +2204,7 @@
                     <i class="fas fa-shield-halved mr-1"></i> GRANDE BATALHA
                 </button>
             </div>
-            <div class="mb-8">
+            <div class="mb-8" id="ranking-geral-section">
                 <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
                     <span class="w-2 h-8 bg-gradient-to-b from-[#C8A25A] to-[#8C6239] rounded-full"></span>
                     Geral
@@ -7432,7 +7432,7 @@ function renderTorcidasGuerraAdmin() {
 
         function setRankingType(type) {
             rankingType = type;
-            document.querySelectorAll('#ranking-type-guerreiros, #ranking-type-comissao').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#ranking-type-guerreiros, #ranking-type-comissao, #ranking-type-campeonato').forEach(btn => btn.classList.remove('active'));
             var _el1 = document.getElementById('ranking-type-' + type); if (_el1) _el1.classList.add('active');
             renderRanking();
         };
@@ -8560,7 +8560,12 @@ async function renderPlayers() {
 
             const periodLabel = rankingPeriod === 'day' ? 'do Dia' : rankingPeriod === 'week' ? 'da Semana' : rankingPeriod === 'month' ? 'do Mês' : 'Geral';
 
-            // ===== GERAL (SEMPRE) — Guerreiros + Conselho dos Sábios, Top 5 =====
+            // ===== GERAL — visível APENAS na aba "Guerreiros" (misto: Guerreiros + Sábios, Top 5) =====
+            const geralSection = document.getElementById('ranking-geral-section');
+            if (geralSection) {
+                if (rankingType === 'jogadores') geralSection.classList.remove('hidden');
+                else geralSection.classList.add('hidden');
+            }
             const todos = [
                 ...players.map(p => ({ ...p, tipo: 'guerreiro', stats: getCachedPlayerStats(p.id) })),
                 ...comissao.map(c => ({ ...c, tipo: 'comissao', stats: getCachedComissaoStats(c.id) }))
