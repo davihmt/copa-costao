@@ -3683,7 +3683,7 @@
 
                     <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-blue-500/30">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-trophy mr-2 text-blue-400"></i>Reconstruir Bônus de Duelos</h4>
-                            <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todos os duelos finalizados: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / +0 erro). Execute apenas 1 vez.</p>
+                            <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todos os duelos finalizados: +4 glórias para vencedores, -2 para perdedores, e torcidas (+1 acerto / -1 erro). Execute apenas 1 vez.</p>
                             
                             <div id="reconstruir-duelos-msg" class="mt-3 hidden"></div>
                         </div>
@@ -4870,8 +4870,16 @@ function getDueloAtivo(jogadorId) {
                 torcidasResolvidas: true
             });
 
-            await atualizarDueloHistorico(d.desafianteId, vencedorId === d.desafianteId, vencedorId === null, d.id);
-            await atualizarDueloHistorico(d.desafiadoId, vencedorId === d.desafiadoId, vencedorId === null, d.id);
+            // Membros de cada lado da dupla (1v1 = 1 membro por lado)
+            const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
+            const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+            const ladoVencedor = vencedorId ? (ladoA.includes(vencedorId) ? ladoA : ladoB) : null;
+            const ladoPerdedor = ladoVencedor ? (ladoVencedor === ladoA ? ladoB : ladoA) : null;
+
+            // Histórico de duelistas para TODOS os membros das duplas
+            for (const membroId of [...ladoA, ...ladoB]) {
+                await atualizarDueloHistorico(membroId, ladoVencedor ? ladoVencedor.includes(membroId) : false, vencedorId === null, d.id);
+            }
             await resolverTorcidas(d.id, vencedorId);
 
             // 🔒 Verificar NOVAMENTE no Firebase se bônus já foram aplicados (proteção contra race condition)
@@ -4883,46 +4891,46 @@ function getDueloAtivo(jogadorId) {
             }
 
             if (vencedorId) {
-                const perdedorId = vencedorId === d.desafianteId ? d.desafiadoId : d.desafianteId;
                 const dataEvento = d.dataInicio ? d.dataInicio.split('T')[0] : getHojeBrasilia();
 
                 // 🔒 Segurança: só criar eventos para participantes reais do duelo
-                const participantes = [d.desafianteId, d.desafiadoId];
-                if (!participantes.includes(vencedorId) || !participantes.includes(perdedorId)) {
+                if (!ladoVencedor || !ladoPerdedor) {
                     console.error('IDs inválidos no duelo ' + d.id);
                     return { vencedorId, vencedorNome, gloriaA, gloriaB };
                 }
 
-                // 🔒 Verificar duplicata no Firebase (não só na memória)
-                const existeVitoria = eventoDueloExiste(vencedorId, 'duelo-vitoria', d.id);
-                if (!existeVitoria) {
-                    await window.addDoc(window.collection(window.db, 'eventos'), {
-                        jogadorId: vencedorId, tipo: 'gol', subtipo: 'duelo-vitoria',
-                        subtipoLabel: '⚔️ Vitória em Duelo', valor: 3, data: dataEvento,
-                        observacao: 'Vitória no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
-                        dueloId: d.id, createdAt: new Date().toISOString()
-                    });
+                // 🔒 +4 para TODOS os membros da dupla vencedora
+                for (const membroId of ladoVencedor) {
+                    if (!eventoDueloExiste(membroId, 'duelo-vitoria', d.id)) {
+                        await window.addDoc(window.collection(window.db, 'eventos'), {
+                            jogadorId: membroId, tipo: 'gol', subtipo: 'duelo-vitoria',
+                            subtipoLabel: '⚔️ Vitória em Duelo', valor: 4, data: dataEvento,
+                            observacao: 'Vitória no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
+                            dueloId: d.id, createdAt: new Date().toISOString()
+                        });
+                    }
                 }
 
-                const existeDerrota = eventoDueloExiste(perdedorId, 'duelo-derrota', d.id);
-                if (!existeDerrota) {
-                    await window.addDoc(window.collection(window.db, 'eventos'), {
-                        jogadorId: perdedorId, tipo: 'punicao', subtipo: 'duelo-derrota',
-                        subtipoLabel: '⚔️ Derrota em Duelo', valor: -1, data: dataEvento,
-                        observacao: 'Derrota no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
-                        dueloId: d.id, createdAt: new Date().toISOString()
-                    });
+                // 🔒 -2 para TODOS os membros da dupla perdedora
+                for (const membroId of ladoPerdedor) {
+                    if (!eventoDueloExiste(membroId, 'duelo-derrota', d.id)) {
+                        await window.addDoc(window.collection(window.db, 'eventos'), {
+                            jogadorId: membroId, tipo: 'punicao', subtipo: 'duelo-derrota',
+                            subtipoLabel: '⚔️ Derrota em Duelo', valor: -2, data: dataEvento,
+                            observacao: 'Derrota no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
+                            dueloId: d.id, createdAt: new Date().toISOString()
+                        });
+                    }
                 }
                 await window.updateDoc(dueloRef, { bonusAplicados: true });
             } else {
-                // EMPATE: criar evento neutro para ambos os jogadores
+                // EMPATE: criar evento neutro para TODOS os membros das duplas
                 const dataEvento = d.dataInicio ? d.dataInicio.split('T')[0] : getHojeBrasilia();
 
-                for (const jogadorId of [d.desafianteId, d.desafiadoId]) {
-                    const existeEmpate = eventoDueloExiste(jogadorId, 'duelo-empate', d.id);
-                    if (!existeEmpate) {
+                for (const membroId of [...ladoA, ...ladoB]) {
+                    if (!eventoDueloExiste(membroId, 'duelo-empate', d.id)) {
                         await window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId: jogadorId, tipo: 'gol', subtipo: 'duelo-empate',
+                            jogadorId: membroId, tipo: 'gol', subtipo: 'duelo-empate',
                             subtipoLabel: '⚖️ Empate em Duelo', valor: 0, data: dataEvento,
                             observacao: 'Empate no duelo: ' + d.desafianteNome + ' vs ' + d.desafiadoNome,
                             dueloId: d.id, createdAt: new Date().toISOString()
@@ -4940,7 +4948,7 @@ function getDueloAtivo(jogadorId) {
             if (!duelo) return;
             try {
                 const resultado = await executarFinalizacaoDuelo(duelo, false);
-                showToast('Duelo finalizado! Vencedor: ' + (resultado.vencedorNome || 'Empate!') + (resultado.vencedorId ? ' (+3 glórias)' : ''), 'success');
+                showToast('Duelo finalizado! Vencedor: ' + (resultado.vencedorNome || 'Empate!') + (resultado.vencedorId ? ' (+4 glórias)' : ''), 'success');
                 if (inAdmin && currentAdminTab === 'arena-admin') renderAdminArena();
             } catch (e) {
                 showToast('Erro ao finalizar duelo', 'error');
