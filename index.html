@@ -3682,7 +3682,7 @@
 
                     <div class="glass rounded-2xl p-6 max-w-3xl mb-6 border-2 border-purple-500/30">
                             <h4 class="text-xl font-bold mb-4"><i class="fas fa-shield-halved mr-2 text-purple-400"></i>Reconstruir Bônus de Guerras</h4>
-                            <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todas as guerras finalizadas: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / +0 erro). Use se os bônus não foram distribuídos.</p>
+                            <p class="text-gray-400 text-sm mb-4">Recupera automaticamente os bônus de todas as guerras finalizadas: +3 glórias para vencedores, -1 para perdedores, e torcidas (+1 acerto / -1 erro). Use se os bônus não foram distribuídos.</p>
                             
                             <div id="reconstruir-guerras-msg" class="mt-3 hidden"></div>
                         </div>
@@ -5340,7 +5340,7 @@ async function excluirDuelo(dueloId) {
                 const participanteId = aposta.participanteId || aposta.comissaoId;
                 if (!participanteId) continue;
                 const acertou = aposta.apostadoId === vencedorId;
-                const valor = acertou ? 1 : 0;
+                const valor = acertou ? 1 : -1; // ACERTOU +1, ERROU -1
 
                 // Verificar duplicata: jogador + guerra
                 const jaExiste = events.some(e =>
@@ -5417,6 +5417,7 @@ async function excluirDuelo(dueloId) {
             const agora = new Date();
             const fim = new Date(dataFim);
             const diff = fim - agora;
+            if (isNaN(diff)) return '⏰ Último dia';
             if (diff <= 0) return '⏰ Encerrado';
             const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
             const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -6206,7 +6207,7 @@ function renderTorcidasGuerraAdmin() {
                             </button>` : `<span class="px-2 py-1 rounded bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Encerrado</span>`;
                             })()}
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">${d.apostas ? d.apostas.length : 0} sábio(s) já torceram</p>
+                        <p class="text-xs text-gray-500 mt-1">${d.apostas ? d.apostas.length : 0} sábio(s) já torceram · <span class="text-[#C8A25A] font-bold">+1 por acerto · −1 por erro</span></p>
                         ${d.apostas && d.apostas.length > 0 ? `<div class="mt-1 flex flex-wrap gap-1">${d.apostas.map(a => `<span class="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">✓ ${a.participanteNome || a.comissaoNome}</span>`).join('')}</div>` : ''}
                     </div>
                     
@@ -6796,13 +6797,13 @@ function renderTorcidasGuerraAdmin() {
                             <div class="flex justify-between items-center text-xs text-gray-400 mt-1 mb-3 px-1">
                                 <span><i class="fas fa-calendar mr-1 text-[#C8A25A]"></i>Início: ${inicioDisplay.toLocaleDateString('pt-BR')}</span>
                                 <span class="font-bold text-[#C8A25A]">Dia ${info.diaAtual} de ${info.totalDias}</span>
-                                <span>${formatarTempoRestante(info.dataFim)}</span>
+                                <span>${formatarTempoRestante(g.dataFim)}</span>
                             </div>
                             ${renderTorcidometroGuerra(g)}
                             <div class="mt-4 p-3 rounded-xl bg-gray-800/50 border border-[#C8A25A]/20">
                                 <div class="flex items-center justify-between mb-2">
                                     <h4 class="text-sm font-bold text-[#C8A25A]"><i class="fas fa-eye mr-1"></i>Torcida</h4>
-                                    <span class="text-xs text-gray-400">1 glória por acerto</span>
+                                    <span class="text-xs text-gray-400">+1 por acerto · −1 por erro</span>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <div class="flex flex-wrap gap-2">
