@@ -6044,7 +6044,14 @@ function renderTorcidasGuerraAdmin() {
 
 
         function getDueloVitoriaBadge(playerId) {
-            const vitorias = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
+            // Conta vitórias para TODOS os membros da dupla vencedora
+            const vitorias = duelos.filter(d => {
+                if (d.status !== 'finalizado' || !d.vencedorId) return false;
+                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                const ladoVenc = ladoA.includes(d.vencedorId) ? ladoA : ladoB;
+                return ladoVenc.includes(playerId);
+            }).length;
             if (vitorias === 0) return '';
             return `<div class="vitoria-duelo-badge">${vitorias} Vitória${vitorias > 1 ? 's' : ''}</div>`;
         }function getDueloBadge(playerId) {
@@ -6087,7 +6094,12 @@ function renderTorcidasGuerraAdmin() {
         // ===== HOME BADGE: Série Invicta =====
         function getStreakBadge(playerId) {
             // Badge inferior esquerdo: contabiliza VITÓRIAS TOTAIS em duelo (não streak)
-            const vitorias = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
+            const vitorias = duelos.filter(d => {
+                if (d.status !== 'finalizado' || !d.vencedorId) return false;
+                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                return (ladoA.includes(d.vencedorId) ? ladoA : ladoB).includes(playerId);
+            }).length;
             if (vitorias === 0) return '';
             return `<div class="absolute z-30 text-[#FFD700] px-2 py-1 rounded text-xs font-bold border border-[#FFD700]" style="bottom:6px;left:6px;background:transparent;box-shadow:0 0 10px rgba(255,215,0,0.3);">👑 ${vitorias}</div>`;
         }
@@ -6873,41 +6885,38 @@ function renderTorcidasGuerraAdmin() {
             const statsMap = {};
 
             duelosFinalizados.forEach(d => {
-                // Desafiante
-                if (!statsMap[d.desafianteId]) {
-                    statsMap[d.desafianteId] = { jogadorId: d.desafianteId, vitorias: 0, derrotas: 0, empates: 0, pontos: 0, streakAtual: 0, streakMax: 0 };
-                }
-                // Desafiado
-                if (!statsMap[d.desafiadoId]) {
-                    statsMap[d.desafiadoId] = { jogadorId: d.desafiadoId, vitorias: 0, derrotas: 0, empates: 0, pontos: 0, streakAtual: 0, streakMax: 0 };
-                }
+                // TODOS os membros das duplas (1v1 = 1 membro por lado)
+                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                [...ladoA, ...ladoB].forEach(jid => {
+                    if (!statsMap[jid]) {
+                        statsMap[jid] = { jogadorId: jid, vitorias: 0, derrotas: 0, empates: 0, pontos: 0, streakAtual: 0, streakMax: 0 };
+                    }
+                });
 
                 if (!d.vencedorId) {
-                    // Empate
-                    statsMap[d.desafianteId].empates++;
-                    statsMap[d.desafianteId].pontos += 1;
-                    statsMap[d.desafiadoId].empates++;
-                    statsMap[d.desafiadoId].pontos += 1;
-                    statsMap[d.desafianteId].streakAtual = 0;
-                    statsMap[d.desafiadoId].streakAtual = 0;
-                } else if (d.vencedorId === d.desafianteId) {
-                    statsMap[d.desafianteId].vitorias++;
-                    statsMap[d.desafianteId].pontos += 3;
-                    statsMap[d.desafiadoId].derrotas++;
-                    statsMap[d.desafianteId].streakAtual++;
-                    statsMap[d.desafiadoId].streakAtual = 0;
-                    if (statsMap[d.desafianteId].streakAtual > statsMap[d.desafianteId].streakMax) {
-                        statsMap[d.desafianteId].streakMax = statsMap[d.desafianteId].streakAtual;
-                    }
+                    // Empate: todos os membros das duplas
+                    [...ladoA, ...ladoB].forEach(jid => {
+                        statsMap[jid].empates++;
+                        statsMap[jid].pontos += 1;
+                        statsMap[jid].streakAtual = 0;
+                    });
                 } else {
-                    statsMap[d.desafiadoId].vitorias++;
-                    statsMap[d.desafiadoId].pontos += 3;
-                    statsMap[d.desafianteId].derrotas++;
-                    statsMap[d.desafiadoId].streakAtual++;
-                    statsMap[d.desafianteId].streakAtual = 0;
-                    if (statsMap[d.desafiadoId].streakAtual > statsMap[d.desafiadoId].streakMax) {
-                        statsMap[d.desafiadoId].streakMax = statsMap[d.desafiadoId].streakAtual;
-                    }
+                    const venceuA = ladoA.includes(d.vencedorId);
+                    const ladoVenc = venceuA ? ladoA : ladoB;
+                    const ladoPerd = venceuA ? ladoB : ladoA;
+                    ladoVenc.forEach(jid => {
+                        statsMap[jid].vitorias++;
+                        statsMap[jid].pontos += 3;
+                        statsMap[jid].streakAtual++;
+                        if (statsMap[jid].streakAtual > statsMap[jid].streakMax) {
+                            statsMap[jid].streakMax = statsMap[jid].streakAtual;
+                        }
+                    });
+                    ladoPerd.forEach(jid => {
+                        statsMap[jid].derrotas++;
+                        statsMap[jid].streakAtual = 0;
+                    });
                 }
             });
 
@@ -6924,9 +6933,9 @@ function renderTorcidasGuerraAdmin() {
             }
 
             const sorted = [...historicoValido].sort((a, b) => {
-                const scoreA = (a.pontos || 0);
-                const scoreB = (b.pontos || 0);
-                return scoreB - scoreA;
+                if ((b.pontos || 0) !== (a.pontos || 0)) return (b.pontos || 0) - (a.pontos || 0);
+                if ((b.vitorias || 0) !== (a.vitorias || 0)) return (b.vitorias || 0) - (a.vitorias || 0);
+                return (b.streakMax || 0) - (a.streakMax || 0);
             });
 
             rankingList.innerHTML = sorted.map((d, idx) => {
@@ -8394,16 +8403,21 @@ async function renderPlayers() {
                         const eq = equipes.find(e => e.id === p.equipeId);
                         // Calcular streakMax diretamente dos duelos finalizados (ignora duelosHistorico corrompido)
                         const duelosJogador = duelos
-                            .filter(d => d.status === 'finalizado' && (d.desafianteId === p.id || d.desafiadoId === p.id))
+                            .filter(d => d.status === 'finalizado' && [d.desafianteId, d.desafiante2Id, d.desafiadoId, d.desafiado2Id].filter(Boolean).includes(p.id))
                             .sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
                         let streakAtual = 0;
                         for (const d of duelosJogador) {
                             if (!d.vencedorId) {
                                 streakAtual = 0; // empate reseta
-                            } else if (d.vencedorId === p.id) {
-                                streakAtual++; // vitória aumenta
                             } else {
-                                streakAtual = 0; // derrota reseta
+                                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
+                                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                                const ladoVenc = ladoA.includes(d.vencedorId) ? ladoA : ladoB;
+                                if (ladoVenc.includes(p.id)) {
+                                    streakAtual++; // vitória aumenta
+                                } else {
+                                    streakAtual = 0; // derrota reseta
+                                }
                             }
                         }
                         const isLegendary = streakAtual >= 2;
@@ -9587,7 +9601,8 @@ function renderConquistasHistorico(pid, containerId) {
                     return '<div class="flex items-start justify-between p-3 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-start gap-3 flex-1 min-w-0"><span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-bold text-red-400">Cancelamento - ' + nomeRuna + '</p><p class="text-xs text-gray-500 mt-1 text-left">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2 text-lg">' + valStr + '</span></div>';
                 }
                 // Layout padrão para outros eventos
-                return '<div class="flex items-center justify-between p-2 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-center gap-2 flex-1 min-w-0"><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-semibold truncate ' + estilo.titulo + '">' + limparEmojiDuplicado((e.subtipoLabel || e.subtipo || 'Evento'), estilo.icone) + '</p><p class="text-xs text-gray-500 text-left">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2">' + valStr + '</span></div>';
+                const obsInfo = (e.observacao && /^(torcida|duelo|guerra)/i.test(e.subtipo || '')) ? '<p class="text-xs text-gray-300 mt-1 leading-relaxed text-left">' + e.observacao + '</p>' : '';
+                return '<div class="flex items-center justify-between p-2 rounded-lg ' + estilo.bg + ' ' + estilo.border + ' border hover:bg-opacity-20 transition-all event-row"><div class="flex items-center gap-2 flex-1 min-w-0"><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + iconDisplay + '</span><div class="min-w-0"><p class="text-sm font-semibold truncate ' + estilo.titulo + '">' + limparEmojiDuplicado((e.subtipoLabel || e.subtipo || 'Evento'), estilo.icone) + '</p>' + obsInfo + '<p class="text-xs text-gray-500 text-left">' + dataStr + '</p></div></div><span class="font-bold ' + estilo.cor + ' ml-2">' + valStr + '</span></div>';
             }).join('');
         }
 
@@ -9620,19 +9635,30 @@ function renderConquistasHistorico(pid, containerId) {
             document.getElementById('album-player-name').textContent = `${player.nome} ${player.sobrenome || ''}`;
 
             // Badge de vitórias em duelos no perfil
-            const vitoriasDuelo = duelos.filter(d => d.status === 'finalizado' && d.vencedorId === playerId).length;
+            const vitoriasDuelo = duelos.filter(d => {
+                if (d.status !== 'finalizado' || !d.vencedorId) return false;
+                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                return (ladoA.includes(d.vencedorId) ? ladoA : ladoB).includes(playerId);
+            }).length;
             // Calcular streakMax diretamente dos duelos finalizados (ignora duelosHistorico corrompido)
+            // Inclui TODOS os membros das duplas
             const duelosJogador = duelos
-                .filter(d => d.status === 'finalizado' && (d.desafianteId === playerId || d.desafiadoId === playerId))
+                .filter(d => d.status === 'finalizado' && [d.desafianteId, d.desafiante2Id, d.desafiadoId, d.desafiado2Id].filter(Boolean).includes(playerId))
                 .sort((a, b) => new Date(a.dataInicio || a.createdAt) - new Date(b.dataInicio || b.createdAt));
             let streakAtual = 0;
             for (const d of duelosJogador) {
                 if (!d.vencedorId) {
                     streakAtual = 0; // empate reseta
-                } else if (d.vencedorId === playerId) {
-                    streakAtual++; // vitória aumenta
                 } else {
-                    streakAtual = 0; // derrota reseta
+                    const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
+                    const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                    const ladoVenc = ladoA.includes(d.vencedorId) ? ladoA : ladoB;
+                    if (ladoVenc.includes(playerId)) {
+                        streakAtual++; // vitória aumenta
+                    } else {
+                        streakAtual = 0; // derrota reseta
+                    }
                 }
             }
             const isLegendary = streakAtual >= 2;
