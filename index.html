@@ -4374,9 +4374,9 @@ function getTodayStr() {
                                     tipo: 'gol',
                                     subtipo: 'guerra-cla',
                                     subtipoLabel: '🛡️ Vitória na Guerra de Clã',
-                                    valor: 3,
+                                    valor: 4,
                                     data: dataEvento,
-                                    observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+3 glórias)',
+                                    observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+4 glórias)',
                                     guerraId: guerra.id,
                                     createdAt: agoraBR.toISOString()
                                 });
@@ -4390,9 +4390,9 @@ function getTodayStr() {
                                     tipo: 'punicao',
                                     subtipo: 'guerra-cla-derrota',
                                     subtipoLabel: '🛡️ Derrota na Guerra de Clã',
-                                    valor: -1,
+                                    valor: -2,
                                     data: dataEvento,
-                                    observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-1 glória)',
+                                    observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-2 glórias)',
                                     guerraId: guerra.id,
                                     createdAt: agoraBR.toISOString()
                                 });
@@ -5278,11 +5278,8 @@ async function excluirDuelo(dueloId) {
                         await window.deleteDoc(window.doc(window.db, 'conquistasHistorico', c.id));
                     }
 
-                    // 4. Excluir eventos de glória gerados pelo duelo (guerra-cla, duelo-vitoria)
-                    const eventosGloria = events.filter(e => 
-                        e.subtipo === 'duelo-vitoria' || 
-                        (e.observacao && e.observacao.includes('Duelo Vencido'))
-                    );
+                    // 4. Excluir APENAS os eventos de bônus DESTE duelo (vitoria, derrota, empate, torcida)
+                    const eventosGloria = events.filter(e => e.dueloId === duelo.id);
                     for (const ev of eventosGloria) {
                         await window.deleteDoc(window.doc(window.db, 'eventos', ev.id));
                     }
@@ -5311,11 +5308,8 @@ async function excluirDuelo(dueloId) {
                         await window.deleteDoc(window.doc(window.db, 'eventos', ev.id));
                     }
 
-                    // 2. Excluir eventos de 'guerra-cla' (glória de clã invicto)
-                    const eventosCla = events.filter(e => 
-                        e.subtipo === 'guerra-cla' || 
-                        (e.observacao && e.observacao.includes('Guerra de Clã'))
-                    );
+                    // 2. Excluir APENAS os eventos DESTA guerra (vitoria, derrota, torcidas)
+                    const eventosCla = events.filter(e => e.guerraId === guerra.id);
                     for (const ev of eventosCla) {
                         await window.deleteDoc(window.doc(window.db, 'eventos', ev.id));
                     }
@@ -6637,9 +6631,9 @@ function renderTorcidasGuerraAdmin() {
                                 tipo: 'gol',
                                 subtipo: 'guerra-cla',
                                 subtipoLabel: '🛡️ Vitória na Guerra de Clã',
-                                valor: 3,
+                                valor: 4,
                                 data: dataEvento,
-                                observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+3 glórias)',
+                                observacao: 'Vitória na Guerra de Clã: ' + vencedorNome + ' (+4 glórias)',
                                 createdAt: new Date().toISOString()
                             });
                         }
@@ -6654,9 +6648,9 @@ function renderTorcidasGuerraAdmin() {
                                 tipo: 'punicao',
                                 subtipo: 'guerra-cla-derrota',
                                 subtipoLabel: '🛡️ Derrota na Guerra de Clã',
-                                valor: -1,
+                                valor: -2,
                                 data: dataEvento,
-                                observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-1 glória)',
+                                observacao: 'Derrota na Guerra de Clã: ' + vencedorNome + ' (-2 glórias)',
                                 createdAt: new Date().toISOString()
                             });
                         }
