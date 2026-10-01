@@ -2220,6 +2220,9 @@
                     <button onclick="setRankingPeriod('total')" id="filter-total" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
                         <i class="fas fa-infinity mr-1"></i> Total
                     </button>
+                    <select id="ranking-mes-total" onchange="setRankingMesTotal(this.value)" class="hidden px-3 py-2 rounded-lg text-sm bg-gray-800 border border-gray-700 text-[#ECE8E1] focus:outline-none focus:border-[#C8A25A]">
+                        <option value="">Acumulado geral</option>
+                    </select>
                 </div>
             </div>
             <div class="mb-6 flex gap-2 flex-wrap">
@@ -3965,6 +3968,7 @@
             const key = 'p_' + playerId;
             if (_statsCache[key]) return _statsCache[key];
             const stats = getPlayerStats(playerId);
+            stats.__campId = playerId;
             _statsCache[key] = stats;
             return stats;
         }
@@ -3972,6 +3976,7 @@
             const key = 'c_' + comissaoId;
             if (_statsCache[key]) return _statsCache[key];
             const stats = getComissaoStats(comissaoId);
+            stats.__campId = comissaoId;
             _statsCache[key] = stats;
             return stats;
         }
@@ -7551,6 +7556,11 @@ function renderTorcidasGuerraAdmin() {
 
 function setRankingPeriod(period) {
             rankingPeriod = period;
+            var selMes = document.getElementById('ranking-mes-total');
+            if (selMes) {
+                if (period === 'total') { selMes.classList.remove('hidden'); popularMesesRankingTotal(); }
+                else { selMes.classList.add('hidden'); if (rankingMesTotal) { rankingMesTotal = null; rankingMesCache = {}; } }
+            }
             document.querySelectorAll('#filter-day, #filter-week, #filter-month, #filter-total').forEach(btn => btn.classList.remove('active'));
             var _el2 = document.getElementById('filter-' + period); if (_el2) _el2.classList.add('active');
             renderRanking();
@@ -7807,7 +7817,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
         // ===== FIM PADRÃO =====
 
         function getPlayerStats(playerId) {
-            const playerEvents = events.filter(e => e.jogadorId === playerId);
+            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador');
             playerEventsCache = playerEvents;
 
             // Popular select de meses
@@ -7923,7 +7933,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
         // ===== STATS POR PERÍODO (para filtro do perfil) =====
         function getPlayerStatsPorPeriodo(playerId, periodo) {
-            const playerEvents = events.filter(e => e.jogadorId === playerId);
+            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador');
             const hoje = new Date();
             hoje.setHours(12, 0, 0, 0);
 
@@ -8006,7 +8016,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             }
 
             // Coletar meses únicos dos eventos do jogador
-            const playerEvents = events.filter(e => e.jogadorId === playerId);
+            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador');
             const mesesUnicos = [...new Set(playerEvents.map(e => {
                 const d = e.data || e.createdAt;
                 return d ? d.substring(0, 7) : null;
@@ -8086,7 +8096,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
             let baseMonth = 0, stickersMonth = 0, punicoesMonth = 0, honrariasMonth = 0, batalhasMonth = 0, verdesMonth = 0, conquistasMonth = 0;
 
-            const playerEvents = events.filter(e => e.jogadorId === comissaoId);
+            const playerEvents = events.filter(e => e.jogadorId === comissaoId && (e.pessoaTipo || 'comissao') === 'comissao');
             for (const ev of playerEvents) {
                 const d = getBRDate(ev.data || ev.createdAt);
                 if (d >= inicioMes && d <= fimMes) {
@@ -8134,7 +8144,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             const mesesDisponiveis = new Set();
             mesesDisponiveis.add('total');
 
-            const playerEvents = events.filter(e => e.jogadorId === comissaoId);
+            const playerEvents = events.filter(e => e.jogadorId === comissaoId && (e.pessoaTipo || 'comissao') === 'comissao');
             for (const ev of playerEvents) {
                 const d = getBRDate(ev.data || ev.createdAt);
                 const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -8204,7 +8214,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                     const inicioMes = new Date(ano, mes - 1, 1, 0, 0, 0);
                     const fimMes = new Date(ano, mes, 0, 23, 59, 59);
                     const insigniasFiltradas = honrarias.filter(e => {
-                        if (e.paraId !== comissaoId || e.tipo !== 'insignia') return false;
+                        if (e.paraId !== comissaoId || e.tipo !== 'insignia' || (e.paraTipo || 'comissao') !== 'comissao') return false;
                         const d = getBRDate(e.data || e.createdAt);
                         return d >= inicioMes && d <= fimMes;
                     });
@@ -8411,8 +8421,59 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             return { id: vencedorId, nome: eq ? eq.nome : vencedorId, cor: eq ? eq.cor : '#C8A25A', brasao: eq ? eq.brasao : null };
         }
 
+// ===== RANKING TOTAL: filtro por mês específico =====
+        var rankingMesTotal = null;
+        var rankingMesCache = {};
+        var rankingMesCacheMes = null;
+
+        function setRankingMesTotal(v) {
+            rankingMesTotal = v || null;
+            rankingMesCache = {};
+            renderRanking();
+        }
+        window.setRankingMesTotal = setRankingMesTotal;
+
+        function popularMesesRankingTotal() {
+            var sel = document.getElementById('ranking-mes-total');
+            if (!sel) return;
+            var meses = {};
+            (events || []).forEach(function (e) {
+                var d = String(e.data || '');
+                if (/^\d{4}-\d{2}/.test(d)) meses[d.slice(0, 7)] = true;
+            });
+            var htmlSel = '<option value="">Acumulado geral</option>';
+            Object.keys(meses).sort().reverse().forEach(function (m) {
+                var parts = m.split('-');
+                var lbl = parts[1] + '/' + parts[0];
+                htmlSel += '<option value="' + m + '"' + (m === rankingMesTotal ? ' selected' : '') + '>' + lbl + '</option>';
+            });
+            sel.innerHTML = htmlSel;
+        }
+
+        function calcularValorMes(pessoaId, mes) {
+            var total = 0;
+            (events || []).forEach(function (ev) {
+                if (ev.jogadorId !== pessoaId) return;
+                var d = String(ev.data || '');
+                if (d.slice(0, 7) !== mes) return;
+                var val = Number(ev.valor) || 0;
+                if (ev.tipo === 'punicao') total -= Math.abs(val);
+                else total += val;
+            });
+            return total;
+        }
+
         function getPeriodTotal(stats) {
             if (!stats) return 0;
+            // TOTAL com mês específico selecionado
+            if (rankingPeriod === 'total' && rankingMesTotal) {
+                var pid = stats.__campId;
+                if (pid) {
+                    if (rankingMesCacheMes !== rankingMesTotal) { rankingMesCache = {}; rankingMesCacheMes = rankingMesTotal; }
+                    if (rankingMesCache[pid] === undefined) rankingMesCache[pid] = calcularValorMes(pid, rankingMesTotal);
+                    return rankingMesCache[pid];
+                }
+            }
             if (rankingPeriod === 'day') return stats.totalDay || 0;
             if (rankingPeriod === 'week') return stats.totalWeek || 0;
             if (rankingPeriod === 'month') return stats.totalMonth || 0;
@@ -8440,10 +8501,11 @@ function getElogiosRecebidosHoje(playerId, tipo) {
             );
         };
 
-        function getInsigniasRecebidasHoje(playerId) {
+        function getInsigniasRecebidasHoje(playerId, tipo) {
             const hoje = getHojeBrasilia();
             return honrarias.filter(e =>
                 e.paraId === playerId &&
+                (e.paraTipo || tipo) === tipo &&
                 e.tipo === 'insignia' &&
                 getDiaBrasilia(e.data) === hoje
             );
@@ -8520,7 +8582,7 @@ async function renderPlayers() {
                     : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
                         const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
                         const elogiosHoje = getElogiosRecebidosHoje(p.id, 'jogador');
-                        const insigniasHoje = getInsigniasRecebidasHoje(p.id);
+                        const insigniasHoje = getInsigniasRecebidasHoje(p.id, 'jogador');
                         const temElogio = elogiosHoje.length > 0;
                         const elogioBadge = temElogio 
                             ? '<div class="elogio-badge"><i class="fas fa-fire"></i> ' + elogiosHoje.length + '</div>' 
@@ -8592,7 +8654,7 @@ async function renderPlayers() {
                     const eqComBrasao = eqCom && eqCom.brasao ? getBrasaoUrl(eqCom.brasao) : null;
 
                     const comElogiosHoje = getElogiosRecebidosHoje(c.id, 'comissao');
-                const comInsigniasHoje = getInsigniasRecebidasHoje(c.id);
+                const comInsigniasHoje = getInsigniasRecebidasHoje(c.id, 'comissao');
                     const comTemElogio = comElogiosHoje.length > 0;
                     const comElogioBadge = comTemElogio 
                         ? '<div class="elogio-badge"><i class="fas fa-fire"></i> ' + comElogiosHoje.length + '</div>' 
@@ -8672,6 +8734,7 @@ async function renderPlayers() {
 
         // ===== RENDER RANKING =====
         function renderRanking() {
+            try { if (rankingPeriod === 'total') popularMesesRankingTotal(); } catch (e) {}
             const geral = document.getElementById('ranking-geral');
             const porTime = document.getElementById('ranking-por-time');
             if (!geral || !porTime) return;
@@ -8919,13 +8982,17 @@ async function renderPlayers() {
                 html += `<div class="mb-4"><p class="text-xs text-gray-500 mb-2 font-bold">${formatDate(data)}</p>`;
                 html += lista.map(el => {
                     const config = INSIGNIAS_CONFIG[el.insignia] || { icone: '🏅', nome: 'Insígnia' };
-                    const para = players.find(p => p.id === el.paraId) || comissao.find(c => c.id === el.paraId);
+                    const paraIsSabio = el.paraTipo === 'comissao';
+                        const para = paraIsSabio ? comissao.find(c => c.id === el.paraId) : players.find(p => p.id === el.paraId);
+                        const nomePara = para ? para.nome + (para.sobrenome ? ' ' + para.sobrenome : '') : '?';
+                        const homonimo = para && (paraIsSabio ? players : comissao).some(x => (x.nome || '').trim().toLowerCase() === (para.nome || '').trim().toLowerCase());
+                        const sufixoPara = homonimo ? (paraIsSabio ? ' (Sábia)' : ' (Guerreira)') : '';
                     return `
                         <div class="mural-insignia-card flex items-center gap-3 mb-2">
                             <span class="mural-insignia-icone">${config.icone}</span>
                             <div class="flex-1">
                                 <p class="font-bold text-sm text-[#C8A25A]">${config.nome}</p>
-                                <p class="text-xs text-gray-400">Para: ${para ? para.nome + (para.sobrenome ? ' ' + para.sobrenome : '') : '?'}</p>
+                                <p class="text-xs text-gray-400">Para: ${nomePara}${sufixoPara}</p>
                                 ${el.mensagem ? `<p class="text-xs text-gray-500 mt-1">"${el.mensagem}"</p>` : ''}
                             </div>
                             
@@ -8952,10 +9019,7 @@ async function renderPlayers() {
             const container = document.getElementById('album-insignias-badges');
             if (!container) return;
 
-            const insigniasRecebidas = honrarias.filter(e => 
-                e.paraId === playerId && 
-                e.tipo === 'insignia'
-            );
+            const insigniasRecebidas = honrarias.filter(e => e.paraId === playerId && (e.paraTipo || 'jogador') === 'jogador' && e.tipo === 'insignia');
             const contagem = {};
             Object.keys(INSIGNIAS_CONFIG).forEach(k => contagem[k] = 0);
             insigniasRecebidas.forEach(el => { if (contagem[el.insignia] !== undefined) contagem[el.insignia]++; });
@@ -8983,10 +9047,7 @@ async function renderPlayers() {
 
             let insigniasRecebidas;
             if (periodo === 'total') {
-                insigniasRecebidas = honrarias.filter(e => 
-                    e.paraId === playerId && 
-                    e.tipo === 'insignia'
-                );
+                insigniasRecebidas = honrarias.filter(e => e.paraId === playerId && (e.paraTipo || 'jogador') === 'jogador' && e.tipo === 'insignia');
             } else {
                 const [ano, mes] = periodo.split('-').map(Number);
                 const inicioMes = new Date(ano, mes - 1, 1, 0, 0, 0);
@@ -9092,7 +9153,7 @@ async function renderPlayers() {
             const container = document.getElementById('album-comissao-insignias-badges');
             if (!container) return;
 
-            const insigniasRecebidas = honrarias.filter(e => e.paraId === comissaoId && e.tipo === 'insignia');
+            const insigniasRecebidas = honrarias.filter(e => e.paraId === comissaoId && (e.paraTipo || 'comissao') === 'comissao' && e.tipo === 'insignia');
             const contagem = {};
             Object.keys(INSIGNIAS_CONFIG).forEach(k => contagem[k] = 0);
             insigniasRecebidas.forEach(el => { if (contagem[el.insignia] !== undefined) contagem[el.insignia]++; });
@@ -10442,7 +10503,7 @@ function getTorcidasConsecutivas(comissaoId) {
                 if (el) el.classList.add('hidden');
             });
 
-            const elogiosComissao = honrarias.filter(e => e.paraId === comissaoId).sort((a, b) => new Date(b.data) - new Date(a.data));
+            const elogiosComissao = honrarias.filter(e => e.paraId === comissaoId && (e.paraTipo || 'comissao') === 'comissao').sort((a, b) => new Date(b.data) - new Date(a.data));
             // Total de glória = honrarias (elogios) + feitos de cartão verde
             const stats = getCachedComissaoStats(comissaoId);
             preencherSelectPeriodoComissao(comissaoId);
@@ -11058,7 +11119,10 @@ Isso também excluirá todos os seus eventos!`)) return;
             if (!nome) { showToast('Nome é obrigatório', 'error'); return; }
 
             try {
-                const id = nome.toLowerCase().replace(/\s+/g, '-');
+                let id = nome.toLowerCase().replace(/\s+/g, '-');
+                // Anti-colisão: se um SÁBIO já usa esse id, diferenciar
+                const colisaoJ = await window.getDoc(window.doc(window.db, 'comissao', id));
+                if (colisaoJ.exists()) id = id + '-guerreiro';
                 await window.setDoc(window.doc(window.db, 'jogadores', id), {
                     nome, sobrenome, função, equipeId, fotoPerfil, fotoComemoracao,
                     createdAt: new Date().toISOString()
@@ -11614,7 +11678,10 @@ async function cadastrarComissao() {
             };
 
             try {
-                const id = nome.toLowerCase().replace(/\s+/g, '-');
+                let id = nome.toLowerCase().replace(/\s+/g, '-');
+                // Anti-colisão: se um GUERREIRO já usa esse id, diferenciar
+                const colisaoC = await window.getDoc(window.doc(window.db, 'jogadores', id));
+                if (colisaoC.exists()) id = id + '-sabio';
                 await window.setDoc(window.doc(window.db, 'comissao', id), {
                     nome, funcao, funcaoLabel: funcaoMap[funcao].label, origem: funcaoMap[funcao].origem,
                     foto, honrarias: 0, createdAt: new Date().toISOString()
@@ -14374,6 +14441,22 @@ function renderJulgamentoVenda() {
     </div>
 
 <script>
+// ===== WRAPPER: grava pessoaTipo em TODO evento novo (separa guerreiro de sábio) =====
+(function () {
+    var _addDocOrig = window.addDoc;
+    window.addDoc = function (ref, data) {
+        try {
+            if (data && typeof data === 'object' && data.jogadorId && !data.pessoaTipo &&
+                ref && ref.type === 'collection' && ref.id === 'eventos') {
+                var ehComissao = false;
+                try { ehComissao = (window.comissao || []).some(function (c) { return c.id === data.jogadorId; }); } catch (e1) {}
+                data.pessoaTipo = ehComissao ? 'comissao' : 'jogador';
+            }
+        } catch (e) {}
+        return _addDocOrig(ref, data);
+    };
+})();
+
 // ============================================================
 // CAMPEONATO VALHALLA — EDIÇÃO OUTUBRO/2026
 // 16 duplas (15 duplas + 1 trio) · 4 grupos · Upper/Lower
