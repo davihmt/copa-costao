@@ -2771,46 +2771,7 @@
                     <p class="text-gray-400 text-sm">Fase de grupos 01–09/10 (3 dias) · Quartas 10–13 · Semifinais 14–17 · Finais 18–21 · Lower Final 22–26 (5 dias) · <b class="text-[#C8A25A]">Grande Final 27–31/10</b></p>
                 </div>
 
-                <!-- CARD: COMO FUNCIONA O CAMPEONATO -->
-                <div class="glass rounded-2xl p-6 mb-8" style="border: 1px solid rgba(200, 162, 90, 0.25);">
-                    <h4 class="font-bold text-lg mb-4 text-[#C8A25A]" style="font-family:Cinzel,serif"><i class="fas fa-scroll mr-2"></i>As Leis do Campeonato</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm text-gray-300">
-                        <div>
-                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-shield-halved text-[#C8A25A] mr-1"></i>1 · Fase de Grupos (01–09/10)</h5>
-                            <p>16 duplas divididas em 4 grupos (A–D). Todas jogam contra todas — <b class="text-[#C8A25A]">3 duelos por dupla</b>, um por rodada (3 dias cada). Classificam-se o <b class="text-yellow-400">1º</b> e o <b class="text-gray-300">2º</b> de cada grupo. Vitória vale 3 pts, empate 1 pt.</p>
-                        </div>
-                        <div>
-                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-sitemap text-[#C8A25A] mr-1"></i>2 · Fase Final — Upper &amp; Lower (10–31/10)</h5>
-                            <p><b>Quartas:</b> 1ºA×2ºD, 1ºB×2ºC, 1ºC×2ºB, 1ºD×2ºA. Perdeu nas quartas? Eliminado.<br>
-                            <b>Upper:</b> vencedores seguem até a Final Upper.<br>
-                            <b>Lower:</b> perdedores das <i>semifinais</i> descem e ganham uma 2ª chance — vencem o Lower Semi, depois enfrentam o <b>perdedor da Final Upper</b> na Lower Final.<br>
-                            <b class="text-[#C8A25A]">Grande Final (27–31/10):</b> Campeão Upper × Campeão Lower, jogo único. 👑</p>
-                        </div>
-                        <div>
-                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-khanda text-[#C8A25A] mr-1"></i>3 · O que conta no placar do duelo</h5>
-                            <p><b class="text-green-400">Conta:</b> glória (vendas), runas e <b>honrarias</b> — insígnias recebidas <i>e enviadas</i>.<br>
-                            <b class="text-red-400">Não conta:</b> julgamentos (não descontam), bênçãos (não somam) e bônus de batalhas/torcidas (não entram no placar).</p>
-                        </div>
-                        <div>
-                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-bolt text-[#C8A25A] mr-1"></i>4 · Torcida e Bônus</h5>
-                            <p>Torcida <b>apenas no 1º dia</b> de cada duelo: <b class="text-green-400">+1</b> por acerto, <b class="text-red-400">−1</b> por erro. Quem vence o duelo recebe <b class="text-green-400">+4 glórias</b> e quem perde <b class="text-red-400">−2</b> na glória geral (esses bônus não alteram o placar do duelo).</p>
-                        </div>
-                        <div>
-                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-users text-[#C8A25A] mr-1"></i>5 · Trio e Desempates</h5>
-                            <p>A dupla <b>Nicolle &amp; Carla &amp; Claudia</b> luta em trio: a glória dos 3 soma no placar.<br>
-                            <b>Empate no grupo:</b> confronto direto → saldo de glória → glória total feita.</p>
-                        </div>
-                        <div>
-                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-crown text-yellow-400 mr-1"></i>6 · Premiação</h5>
-                            <p>👑 <b class="text-yellow-400">Campeão</b> — badge dourado permanente no card e no perfil, com anel dourado na foto.<br>
-                            🥈 Vice (prata) · 🥉 3º lugar (bronze). Os 3 entram para o <b>Hall dos Campeões</b> da Arena.</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-3 border-t border-[#C8A25A]/15 text-xs text-gray-500">
-                        <i class="fas fa-calendar-alt mr-1 text-[#C8A25A]"></i>
-                        <b class="text-gray-400">Calendário:</b> R1 01–03/10 · R2 04–06 · R3 07–09 · Quartas 10–13 · Semis 14–17 · Final Upper + Lower Semi 18–21 · <b class="text-[#C8A25A]">Lower Final 22–26 (5 dias)</b> · <b class="text-yellow-400">Grande Final 27–31/10 (5 dias)</b>
-                    </div>
-                </div>
+
                 <div id="camp-admin-bar" class="hidden mb-6 glass rounded-2xl p-4">
                     <h4 class="font-bold text-sm mb-3 text-[#C8A25A]"><i class="fas fa-hammer mr-2"></i>Painel do Campeonato (Admin)</h4>
                     <div id="camp-admin-buttons" class="flex gap-2 flex-wrap"></div>
@@ -4860,19 +4821,19 @@ function getDueloAtivo(jogadorId) {
 
             for (const pid of todosDesafiantes) {
                 const ativo = duelos.find(d => d.status === 'ativo' && 
-                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid));
+                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiante3Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid || d.desafiado3Id === pid));
                 if (ativo) return { ok: false, msg: 'Um guerreiro da sua dupla já está em um duelo ativo' };
                 const pendente = duelos.find(d => d.status === 'pendente' && 
-                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid));
+                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiante3Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid || d.desafiado3Id === pid));
                 if (pendente) return { ok: false, msg: 'Um guerreiro da sua dupla já tem um duelo pendente' };
             }
 
             for (const pid of todosDesafiados) {
                 const ativo2 = duelos.find(d => d.status === 'ativo' && 
-                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid));
+                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiante3Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid || d.desafiado3Id === pid));
                 if (ativo2) return { ok: false, msg: 'Um guerreiro da dupla adversária já está em um duelo ativo' };
                 const pendente2 = duelos.find(d => d.status === 'pendente' && 
-                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid));
+                    (d.desafianteId === pid || d.desafiante2Id === pid || d.desafiante3Id === pid || d.desafiadoId === pid || d.desafiado2Id === pid || d.desafiado3Id === pid));
                 if (pendente2) return { ok: false, msg: 'Um guerreiro da dupla adversária já tem um duelo pendente' };
             }
 
@@ -5956,7 +5917,7 @@ function renderTorcidasGuerraAdmin() {
                     pendentesEl.innerHTML = pendentes.map(d => `
                         <div class="glass rounded-xl p-4 flex items-center justify-between">
                             <div class="flex items-center gap-2 flex-wrap">
-                                ${[d.desafianteId, d.desafiante2Id].filter(Boolean).map(pid => {
+                                ${[d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
@@ -5965,7 +5926,7 @@ function renderTorcidasGuerraAdmin() {
                                 <span class="font-bold text-sm">${d.desafianteNome}</span>
                                 <span class="text-gray-500">vs</span>
                                 <span class="font-bold text-sm">${d.desafiadoNome}</span>
-                                ${[d.desafiadoId, d.desafiado2Id].filter(Boolean).map(pid => {
+                                ${[d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
@@ -6174,8 +6135,8 @@ function renderTorcidasGuerraAdmin() {
             // Conta vitórias para TODOS os membros da dupla vencedora
             const vitorias = duelos.filter(d => {
                 if (d.status !== 'finalizado' || !d.vencedorId) return false;
-                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                const ladoA = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
                 const ladoVenc = ladoA.includes(d.vencedorId) ? ladoA : ladoB;
                 return ladoVenc.includes(playerId);
             }).length;
@@ -6184,12 +6145,12 @@ function renderTorcidasGuerraAdmin() {
         }function getDueloBadge(playerId) {
             // Verifica TODOS os jogadores da dupla (desafiante1, desafiante2, desafiado1, desafiado2)
             const dueloAtivo = duelos.find(d => d.status === 'ativo' && (
-                d.desafianteId === playerId || d.desafiante2Id === playerId ||
-                d.desafiadoId === playerId || d.desafiado2Id === playerId
+                d.desafianteId === playerId || d.desafiante2Id === playerId || d.desafiante3Id === playerId ||
+                d.desafiadoId === playerId || d.desafiado2Id === playerId || d.desafiado3Id === playerId
             ));
             if (dueloAtivo) {
-                const todosDesafiantes = [dueloAtivo.desafianteId, dueloAtivo.desafiante2Id].filter(Boolean);
-                const todosDesafiados = [dueloAtivo.desafiadoId, dueloAtivo.desafiado2Id].filter(Boolean);
+                const todosDesafiantes = [dueloAtivo.desafianteId, dueloAtivo.desafiante2Id, dueloAtivo.desafiante3Id].filter(Boolean);
+                const todosDesafiados = [dueloAtivo.desafiadoId, dueloAtivo.desafiado2Id, dueloAtivo.desafiado3Id].filter(Boolean);
                 const isDesafiante = todosDesafiantes.includes(playerId);
                 const duplaAdversaria = isDesafiante ? todosDesafiados : todosDesafiantes;
                 // Pegar nomes dos adversários
@@ -6206,11 +6167,11 @@ function renderTorcidasGuerraAdmin() {
             }
             // Show pending duels
             const dueloPendente = duelos.find(d => d.status === 'pendente' && (
-                d.desafianteId === playerId || d.desafiante2Id === playerId ||
-                d.desafiadoId === playerId || d.desafiado2Id === playerId
+                d.desafianteId === playerId || d.desafiante2Id === playerId || d.desafiante3Id === playerId ||
+                d.desafiadoId === playerId || d.desafiado2Id === playerId || d.desafiado3Id === playerId
             ));
             if (dueloPendente) {
-                const isDesafiante = dueloPendente.desafianteId === playerId || dueloPendente.desafiante2Id === playerId;
+                const isDesafiante = dueloPendente.desafianteId === playerId || dueloPendente.desafiante2Id === playerId || dueloPendente.desafiante3Id === playerId;
                 const label = isDesafiante ? '⏳' : '❓';
                 const texto = isDesafiante ? 'Aguardando' : 'Desafiado';
                 return `<div class="duelo-ativo-badge" onclick="event.stopPropagation(); showSection('arena'); setArenaTab('individuais');" style="cursor:pointer;" title="${texto}"><div class="duelo-icone">${label}</div><div class="duelo-nome">${texto}</div></div>`;
@@ -6223,8 +6184,8 @@ function renderTorcidasGuerraAdmin() {
             // Badge inferior esquerdo: contabiliza VITÓRIAS TOTAIS em duelo (não streak)
             const vitorias = duelos.filter(d => {
                 if (d.status !== 'finalizado' || !d.vencedorId) return false;
-                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                const ladoA = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
                 return (ladoA.includes(d.vencedorId) ? ladoA : ladoB).includes(playerId);
             }).length;
             if (vitorias === 0) return '';
@@ -6296,7 +6257,7 @@ function renderTorcidasGuerraAdmin() {
                     <div class="flex items-center justify-between gap-2 sm:gap-4 mb-4">
                         <div class="text-center flex-1 cursor-pointer">
                             <div class="flex items-center justify-center gap-0 mb-2">
-                                ${[d.desafianteId, d.desafiante2Id].filter(Boolean).map(pid => {
+                                ${[d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
@@ -6312,7 +6273,7 @@ function renderTorcidasGuerraAdmin() {
                         </div>
                         <div class="text-center flex-1 cursor-pointer">
                             <div class="flex items-center justify-center gap-0 mb-2">
-                                ${[d.desafiadoId, d.desafiado2Id].filter(Boolean).map(pid => {
+                                ${[d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
@@ -6371,8 +6332,8 @@ function renderTorcidasGuerraAdmin() {
                         diasInfo = `<span class="text-xs text-[#C8A25A] font-bold"><i class="fas fa-calendar mr-1"></i>Dia ${diaAtual} de ${totalDias}</span><span class="text-xs text-gray-500 ml-2">${formatarTempoRestante(d.dataFim)}</span>`;
                     }
 
-                    const desafiantes = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-                    const desafiados = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                    const desafiantes = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+                    const desafiados = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
                     const gloriaA = getGlaciaDuelo(d.desafianteId, d);
                     const gloriaB = getGlaciaDuelo(d.desafiadoId, d);
 
@@ -6472,7 +6433,7 @@ function renderTorcidasGuerraAdmin() {
                     return `
                         <div class="glass rounded-xl p-4 flex items-center justify-between">
                             <div class="flex items-center gap-2 flex-wrap">
-                                ${[d.desafianteId, d.desafiante2Id].filter(Boolean).map(pid => {
+                                ${[d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
@@ -6481,7 +6442,7 @@ function renderTorcidasGuerraAdmin() {
                                 <span class="font-bold text-sm">${d.desafianteNome}</span>
                                 <span class="text-gray-500 text-sm">${gA} ⚔️ ${gB}</span>
                                 <span class="font-bold text-sm">${d.desafiadoNome}</span>
-                                ${[d.desafiadoId, d.desafiado2Id].filter(Boolean).map(pid => {
+                                ${[d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean).map(pid => {
                                     const p = players.find(x => x.id === pid);
                                     const url = p && p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '';
                                     const ini = p ? ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '') : '?';
@@ -7013,8 +6974,8 @@ function renderTorcidasGuerraAdmin() {
 
             duelosFinalizados.forEach(d => {
                 // TODOS os membros das duplas (1v1 = 1 membro por lado)
-                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                const ladoA = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
                 [...ladoA, ...ladoB].forEach(jid => {
                     if (!statsMap[jid]) {
                         statsMap[jid] = { jogadorId: jid, vitorias: 0, derrotas: 0, empates: 0, pontos: 0, streakAtual: 0, streakMax: 0 };
@@ -8537,8 +8498,8 @@ async function renderPlayers() {
                             if (!d.vencedorId) {
                                 streakAtual = 0; // empate reseta
                             } else {
-                                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-                                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                                const ladoA = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+                                const ladoB = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
                                 const ladoVenc = ladoA.includes(d.vencedorId) ? ladoA : ladoB;
                                 if (ladoVenc.includes(p.id)) {
                                     streakAtual++; // vitória aumenta
@@ -9766,8 +9727,8 @@ function renderConquistasHistorico(pid, containerId) {
             // Badge de vitórias em duelos no perfil
             const vitoriasDuelo = duelos.filter(d => {
                 if (d.status !== 'finalizado' || !d.vencedorId) return false;
-                const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-                const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                const ladoA = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+                const ladoB = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
                 return (ladoA.includes(d.vencedorId) ? ladoA : ladoB).includes(playerId);
             }).length;
             // Calcular streakMax diretamente dos duelos finalizados (ignora duelosHistorico corrompido)
@@ -9780,8 +9741,8 @@ function renderConquistasHistorico(pid, containerId) {
                 if (!d.vencedorId) {
                     streakAtual = 0; // empate reseta
                 } else {
-                    const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-                    const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+                    const ladoA = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+                    const ladoB = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
                     const ladoVenc = ladoA.includes(d.vencedorId) ? ladoA : ladoB;
                     if (ladoVenc.includes(playerId)) {
                         streakAtual++; // vitória aumenta
@@ -14641,8 +14602,32 @@ async function campGerarRodada(n) {
 }
 window.campGerarRodada = campGerarRodada;
 
+// ===== REPARO DO TRIO: garante 3º membro nos duelos do campeonato =====
+async function campRepararTrios(silencioso) {
+    if (!campeonato) return;
+    try {
+        var mexeu = false;
+        for (var i = 0; i < duelos.length; i++) {
+            var d = duelos[i];
+            if (!d.campeonato || d.status !== 'ativo') continue;
+            var idsA = campIdsDoTime(d.desafianteNome) || [];
+            var idsB = campIdsDoTime(d.desafiadoNome) || [];
+            var upd = {};
+            if (idsA.length === 3 && !d.desafiante3Id) upd.desafiante3Id = idsA[2];
+            if (idsB.length === 3 && !d.desafiado3Id) upd.desafiado3Id = idsB[2];
+            if (Object.keys(upd).length) {
+                await window.updateDoc(window.doc(window.db, 'duelos', d.id), upd);
+                mexeu = true;
+            }
+        }
+        if (mexeu && !silencioso) showToast('Trio corrigido nos duelos em andamento!', 'success');
+    } catch (e) {}
+}
+window.campRepararTrios = campRepararTrios;
+
 async function campSincronizar() {
     if (!campeonato) return;
+    try { await campRepararTrios(true); } catch (e) {}
     var mudou = false;
     for (var i = 0; i < campeonato.jogos.length; i++) {
         var j = campeonato.jogos[i];
@@ -14973,6 +14958,14 @@ function campInit() {
     });
 }
 campInit();
+
+// Reparo automático do trio: verifica algumas vezes após carregar (duelos podem demorar)
+(function campReparoAgendado(n) {
+    setTimeout(function () {
+        try { if (typeof campRepararTrios === 'function' && duelos && duelos.length) campRepararTrios(true); } catch (e) {}
+        if (n > 0) campReparoAgendado(n - 1);
+    }, 4000);
+})(3);
 </script>
 
 </body>
