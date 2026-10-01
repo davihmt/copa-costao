@@ -2045,7 +2045,36 @@
             50% { box-shadow: 0 0 20px rgba(60, 100, 50, 0.3), 0 0 40px rgba(40, 80, 30, 0.15), inset 0 1px 0 rgba(100, 160, 80, 0.2); }
         }
 
-        </style>
+        
+        /* ===== CAMPEONATO VALHALLA ===== */
+        .player-card.campeao { border: 2px solid #FFD700 !important; box-shadow: 0 0 25px rgba(255,215,0,0.4), 0 0 50px rgba(255,215,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1) !important; animation: campeaoGlow 2.5s ease-in-out infinite; }
+        @keyframes campeaoGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,215,0,0.35), 0 0 40px rgba(255,215,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 0 40px rgba(255,215,0,0.65), 0 0 80px rgba(255,215,0,0.25), inset 0 1px 0 rgba(255,255,255,0.15); }
+        }
+        .player-card.vice-camp { border: 2px solid #C0C0C0 !important; box-shadow: 0 0 15px rgba(192,192,192,0.3), inset 0 1px 0 rgba(255,255,255,0.08) !important; }
+        .player-card.terceiro-camp { border: 2px solid #CD7F32 !important; box-shadow: 0 0 12px rgba(205,127,50,0.3), inset 0 1px 0 rgba(255,255,255,0.06) !important; }
+        .camp-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); padding: 4px 16px; border-radius: 999px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; z-index: 50; white-space: nowrap; }
+        .camp-badge.campeao { background: linear-gradient(135deg, #FFD700, #B8860B); color: #1a1a2e; border: 2px solid #FFD700; box-shadow: 0 4px 15px rgba(255,215,0,0.6), 0 0 25px rgba(255,215,0,0.3); }
+        .camp-badge.vice { background: linear-gradient(135deg, #E8E8E8, #909090); color: #1a1a2e; border: 2px solid #C0C0C0; box-shadow: 0 3px 12px rgba(192,192,192,0.5); }
+        .camp-badge.terceiro { background: linear-gradient(135deg, #E8A05C, #8B5A2B); color: #1a1a2e; border: 2px solid #CD7F32; box-shadow: 0 3px 12px rgba(205,127,50,0.5); }
+        .photo-area.campeao-foto { border-color: #FFD700 !important; box-shadow: 0 0 20px rgba(255,215,0,0.5), 0 0 40px rgba(255,215,0,0.2), inset 0 0 20px rgba(255,215,0,0.1) !important; }
+        .faixa-campeao { background: linear-gradient(135deg, #FFD700, #B8860B); color: #1a1a2e; font-family: 'Cinzel', serif; font-weight: 900; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; padding: 6px 10px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 3px 12px rgba(255,215,0,0.4); }
+        .camp-grupo-card { background: linear-gradient(145deg, #1B1A17, #0F0E0C); border: 1px solid rgba(200,162,90,0.2); border-radius: 14px; padding: 14px; }
+        .camp-grupo-card table { width: 100%; font-size: 12px; border-collapse: collapse; }
+        .camp-grupo-card th { color: #C8A25A; font-family: 'Cinzel', serif; font-size: 10px; text-align: left; padding: 4px 6px; border-bottom: 1px solid rgba(200,162,90,0.2); }
+        .camp-grupo-card td { padding: 5px 6px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .camp-linha-1 { color: #FFD700; font-weight: 800; }
+        .camp-linha-2 { color: #C0C0C0; font-weight: 700; }
+        .camp-duelo-box { padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(200,162,90,0.15); margin-bottom: 8px; font-size: 12px; }
+        .camp-duelo-placar { font-weight: 900; color: #C8A25A; }
+        .camp-duelo-fim { border-color: rgba(255,215,0,0.4); }
+        .camp-podio { text-align: center; border-radius: 14px; padding: 16px; }
+        .camp-podio-ouro { background: linear-gradient(145deg, #1B1A17, #0F0E0C); border: 2px solid #FFD700; box-shadow: 0 0 25px rgba(255,215,0,0.25); }
+        .camp-podio-prata { background: linear-gradient(145deg, #1B1A17, #0F0E0C); border: 1px solid #C0C0C0; }
+        .camp-podio-bronze { background: linear-gradient(145deg, #1B1A17, #0F0E0C); border: 1px solid #CD7F32; }
+        .camp-btn { padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; font-family: 'Cinzel', serif; }
+</style>
 </head>
 <body class="min-h-screen">
     <!-- Container de Efeitos Temáticos -->
@@ -2244,6 +2273,7 @@
                                 </div>
                             </div>
                             <div id="album-brasao-container" style="display:none;margin-bottom:8px;"></div>
+                            <div id="album-camp-faixa" class="faixa-campeao" style="display:none"></div>
                             <div class="flex items-center justify-center gap-2 mb-2">
                                 <h3 id="album-player-name2" class="text-xl font-bold mb-0"></h3>
                             </div>
@@ -2556,8 +2586,8 @@
                 <button onclick="setArenaTab('clas')" id="arena-tab-clas" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
                     <i class="fas fa-shield-halved mr-1"></i> Guerras de Clã
                 </button>
-                <button onclick="setArenaTab('ranking')" id="arena-tab-ranking" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
-                    <i class="fas fa-crown mr-1"></i> Ranking de Duelistas
+                <button onclick="setArenaTab('campeonato')" id="arena-tab-campeonato" class="filter-btn px-4 py-2 rounded-lg font-semibold text-sm">
+                    <i class="fas fa-trophy mr-1"></i> Campeonato
                 </button>
             </div>
 
@@ -2571,8 +2601,8 @@
                     </div>
                 </div>
 
-                <!-- Lançar Desafio em Dupla -->
-                <div class="glass rounded-2xl p-6 max-w-3xl mx-auto mb-8" style="border: 1px solid rgba(200, 162, 90, 0.2);">
+                <!-- Lançar Desafio em Dupla (desativado: apenas duelos do Campeonato) -->
+                <div class="glass rounded-2xl p-6 max-w-3xl mx-auto mb-8 hidden" style="border: 1px solid rgba(200, 162, 90, 0.2);">
                     <h3 class="text-xl font-bold mb-6 text-center"><i class="fas fa-scroll mr-2 text-[#C8A25A]"></i>Lançar Desafio em Dupla</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Dupla Desafiante -->
@@ -2731,6 +2761,62 @@
                     <div id="arena-hall-lendarios-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <p class="text-gray-500 text-center py-4 col-span-full">Nenhum guerreiro lendário ainda.</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- CAMPEONATO -->
+            <div id="arena-panel-campeonato" class="arena-panel hidden">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold mb-1"><i class="fas fa-trophy text-[#C8A25A] mr-2"></i>Campeonato de Outubro</h3>
+                    <p class="text-gray-400 text-sm">Fase de grupos 01–09/10 (3 dias) · Quartas 10–13 · Semifinais 14–17 · Finais 18–21 · Lower Final 22–26 (5 dias) · <b class="text-[#C8A25A]">Grande Final 27–31/10</b></p>
+                </div>
+
+                <!-- CARD: COMO FUNCIONA O CAMPEONATO -->
+                <div class="glass rounded-2xl p-6 mb-8" style="border: 1px solid rgba(200, 162, 90, 0.25);">
+                    <h4 class="font-bold text-lg mb-4 text-[#C8A25A]" style="font-family:Cinzel,serif"><i class="fas fa-scroll mr-2"></i>As Leis do Campeonato</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm text-gray-300">
+                        <div>
+                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-shield-halved text-[#C8A25A] mr-1"></i>1 · Fase de Grupos (01–09/10)</h5>
+                            <p>16 duplas divididas em 4 grupos (A–D). Todas jogam contra todas — <b class="text-[#C8A25A]">3 duelos por dupla</b>, um por rodada (3 dias cada). Classificam-se o <b class="text-yellow-400">1º</b> e o <b class="text-gray-300">2º</b> de cada grupo. Vitória vale 3 pts, empate 1 pt.</p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-sitemap text-[#C8A25A] mr-1"></i>2 · Fase Final — Upper &amp; Lower (10–31/10)</h5>
+                            <p><b>Quartas:</b> 1ºA×2ºD, 1ºB×2ºC, 1ºC×2ºB, 1ºD×2ºA. Perdeu nas quartas? Eliminado.<br>
+                            <b>Upper:</b> vencedores seguem até a Final Upper.<br>
+                            <b>Lower:</b> perdedores das <i>semifinais</i> descem e ganham uma 2ª chance — vencem o Lower Semi, depois enfrentam o <b>perdedor da Final Upper</b> na Lower Final.<br>
+                            <b class="text-[#C8A25A]">Grande Final (27–31/10):</b> Campeão Upper × Campeão Lower, jogo único. 👑</p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-khanda text-[#C8A25A] mr-1"></i>3 · O que conta no placar do duelo</h5>
+                            <p><b class="text-green-400">Conta:</b> glória (vendas), runas e <b>honrarias</b> — insígnias recebidas <i>e enviadas</i>.<br>
+                            <b class="text-red-400">Não conta:</b> julgamentos (não descontam), bênçãos (não somam) e bônus de batalhas/torcidas (não entram no placar).</p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-bolt text-[#C8A25A] mr-1"></i>4 · Torcida e Bônus</h5>
+                            <p>Torcida <b>apenas no 1º dia</b> de cada duelo: <b class="text-green-400">+1</b> por acerto, <b class="text-red-400">−1</b> por erro. Quem vence o duelo recebe <b class="text-green-400">+4 glórias</b> e quem perde <b class="text-red-400">−2</b> na glória geral (esses bônus não alteram o placar do duelo).</p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-users text-[#C8A25A] mr-1"></i>5 · Trio e Desempates</h5>
+                            <p>A dupla <b>Nicolle &amp; Carla &amp; Claudia</b> luta em trio: a glória dos 3 soma no placar.<br>
+                            <b>Empate no grupo:</b> confronto direto → saldo de glória → glória total feita.</p>
+                        </div>
+                        <div>
+                            <h5 class="font-bold text-[#ECE8E1] mb-1"><i class="fas fa-crown text-yellow-400 mr-1"></i>6 · Premiação</h5>
+                            <p>👑 <b class="text-yellow-400">Campeão</b> — badge dourado permanente no card e no perfil, com anel dourado na foto.<br>
+                            🥈 Vice (prata) · 🥉 3º lugar (bronze). Os 3 entram para o <b>Hall dos Campeões</b> da Arena.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-[#C8A25A]/15 text-xs text-gray-500">
+                        <i class="fas fa-calendar-alt mr-1 text-[#C8A25A]"></i>
+                        <b class="text-gray-400">Calendário:</b> R1 01–03/10 · R2 04–06 · R3 07–09 · Quartas 10–13 · Semis 14–17 · Final Upper + Lower Semi 18–21 · <b class="text-[#C8A25A]">Lower Final 22–26 (5 dias)</b> · <b class="text-yellow-400">Grande Final 27–31/10 (5 dias)</b>
+                    </div>
+                </div>
+                <div id="camp-admin-bar" class="hidden mb-6 glass rounded-2xl p-4">
+                    <h4 class="font-bold text-sm mb-3 text-[#C8A25A]"><i class="fas fa-hammer mr-2"></i>Painel do Campeonato (Admin)</h4>
+                    <div id="camp-admin-buttons" class="flex gap-2 flex-wrap"></div>
+                </div>
+                <div id="camp-content">
+                    <p class="text-gray-500 text-center py-8">Carregando campeonato...</p>
                 </div>
             </div>
         </section>
@@ -4127,6 +4213,7 @@ function getTodayStr() {
             if (tab === 'individuais') renderArenaIndividuais();
             if (tab === 'clas') renderArenaClas();
             if (tab === 'ranking') renderArenaRanking();
+            if (tab === 'campeonato' && typeof renderCampeonato === 'function') renderCampeonato();
         }
 
         async function loadDuelos() {
@@ -4499,10 +4586,33 @@ function getTodayStr() {
             return events.some(e => e.jogadorId === jogadorId && e.subtipo === subtipo && e.dueloId === dueloId);
         }
 
+        // ===== DURAÇÃO REAL DO DUELO (via dataInicio/dataFim; fallback 5 dias) =====
+        function getDuracaoDuelo(duelo) {
+            const ini = duelo && (duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt);
+            const fim = duelo && duelo.dataFim;
+            if (ini && fim) {
+                const ms = new Date(fim) - new Date(ini);
+                if (!isNaN(ms) && ms > 0) return Math.max(1, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+            }
+            return 5;
+        }
+
+        // ===== DUELO EM ANDAMENTO: status ativo E dentro da janela (dataInicio–dataFim) =====
+        // Duelos futuros (gerados antes do início) NÃO aparecem até o 1º dia da rodada
+        function dueloEmAndamento(duelo) {
+            if (!duelo || duelo.status !== 'ativo') return false;
+            const ini = duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt;
+            const fim = duelo.dataFim;
+            const agora = new Date();
+            if (ini && new Date(ini) > agora) return false; // ainda não começou
+            if (fim && new Date(fim) < agora) return false; // já encerrado (auto-finalização pendente)
+            return true;
+        }
+
 function getDiaAtualDuelo(duelo) {
             const inicio = new Date(duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt);
             const agora = new Date();
-            const totalDias = 5;
+            const totalDias = getDuracaoDuelo(duelo);
             const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
             const diasPassados = Math.floor(horasPassadas / 24);
             const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
@@ -4510,7 +4620,10 @@ function getDiaAtualDuelo(duelo) {
         }
 
 function getDueloAtivo(jogadorId) {
-            return duelos.find(d => d.status === 'ativo' && (d.desafianteId === jogadorId || d.desafiadoId === jogadorId));
+            // Só retorna duelo EM ANDAMENTO (dentro da janela) — duelos futuros não aparecem
+            return duelos.find(d => dueloEmAndamento(d) && (
+                d.desafianteId === jogadorId || d.desafiante2Id === jogadorId || d.desafiante3Id === jogadorId ||
+                d.desafiadoId === jogadorId || d.desafiado2Id === jogadorId || d.desafiado3Id === jogadorId));
         }
 
         function getGlaciaDuelo(jogadorId, duelo) {
@@ -4544,17 +4657,19 @@ function getDueloAtivo(jogadorId) {
 
             // Para duelos em dupla, calcular o total da DUPLA (soma dos 2 jogadores)
             // Identificar qual lado o jogadorId pertence
-            const isDesafiante = duelo.desafianteId === jogadorId || duelo.desafiante2Id === jogadorId;
-            const isDesafiado = duelo.desafiadoId === jogadorId || duelo.desafiado2Id === jogadorId;
+            const isDesafiante = duelo.desafianteId === jogadorId || duelo.desafiante2Id === jogadorId || duelo.desafiante3Id === jogadorId;
+            const isDesafiado = duelo.desafiadoId === jogadorId || duelo.desafiado2Id === jogadorId || duelo.desafiado3Id === jogadorId;
 
             // Se for duelo em dupla, somar glórias de AMBOS os jogadores do lado
             let jogadoresDoLado = [jogadorId];
             if (isDesafiante) {
                 jogadoresDoLado = [duelo.desafianteId];
                 if (duelo.desafiante2Id) jogadoresDoLado.push(duelo.desafiante2Id);
+                if (duelo.desafiante3Id) jogadoresDoLado.push(duelo.desafiante3Id);
             } else if (isDesafiado) {
                 jogadoresDoLado = [duelo.desafiadoId];
                 if (duelo.desafiado2Id) jogadoresDoLado.push(duelo.desafiado2Id);
+                if (duelo.desafiado3Id) jogadoresDoLado.push(duelo.desafiado3Id);
             }
 
             let total = 0;
@@ -4596,6 +4711,15 @@ function getDueloAtivo(jogadorId) {
                             continue;
                         }
                         const val = Number(ev.valor) || 0;
+                        // DUELOS DE CAMPEONATO: glória + runas + honrarias (sem julgamentos, bênçãos ou bônus de batalhas)
+                        if (duelo.campeonato) {
+                            if (ev.subtipo === 'cartao-verde') continue; // bênção não conta
+                            if (ev.tipo === 'gol' || ev.tipo === 'figurinha') total += val;
+                            else if (ev.subtipo === 'elogio-recebido' || ev.subtipo === 'elogio-dado' ||
+                                     ev.subtipo === 'insignia-recebida' || ev.subtipo === 'insignia-enviada' ||
+                                     ev.subtipo === 'honraria-pura') total += val;
+                            continue;
+                        }
                         if (ev.tipo === 'gol') {
                             total += val;
                         } else if (ev.tipo === 'figurinha') {
@@ -4877,8 +5001,8 @@ function getDueloAtivo(jogadorId) {
             });
 
             // Membros de cada lado da dupla (1v1 = 1 membro por lado)
-            const ladoA = [d.desafianteId, d.desafiante2Id].filter(Boolean);
-            const ladoB = [d.desafiadoId, d.desafiado2Id].filter(Boolean);
+            const ladoA = [d.desafianteId, d.desafiante2Id, d.desafiante3Id].filter(Boolean);
+            const ladoB = [d.desafiadoId, d.desafiado2Id, d.desafiado3Id].filter(Boolean);
             const ladoVencedor = vencedorId ? (ladoA.includes(vencedorId) ? ladoA : ladoB) : null;
             const ladoPerdedor = ladoVencedor ? (ladoVencedor === ladoA ? ladoB : ladoA) : null;
 
@@ -5017,9 +5141,15 @@ function getDueloAtivo(jogadorId) {
                 participanteNome = p.nome + ' ' + (p.sobrenome || '');
             }
 
-            if (participanteId === duelo.desafianteId || participanteId === duelo.desafiadoId) {
+            const membrosDoDuelo = [duelo.desafianteId, duelo.desafiante2Id, duelo.desafiante3Id, duelo.desafiadoId, duelo.desafiado2Id, duelo.desafiado3Id].filter(Boolean);
+            if (membrosDoDuelo.includes(participanteId)) {
                 showToast('Não é possível torcer no seu próprio duelo!', 'error'); return;
             }
+
+            // Torcida apenas no 1º dia de andamento do duelo
+            const iniT = new Date(duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt);
+            const diasT = Math.floor((new Date() - iniT) / (1000 * 60 * 60 * 24));
+            if (diasT >= 1) { showToast('Torcida encerrada — só é permitida no 1º dia do duelo', 'error'); return; }
 
             const jaApostou = duelo.apostas && duelo.apostas.some(a => a.participanteId === participanteId);
             if (jaApostou) { showToast('Você já torceu neste duelo', 'error'); return; }
@@ -5063,6 +5193,9 @@ function getDueloAtivo(jogadorId) {
             if (tipo === 'duelo') {
                 const duelo = duelos.find(d => d.id === id);
                 if (!duelo || duelo.status !== 'ativo') { showToast('Duelo não está ativo', 'error'); return; }
+                const iniAb = new Date(duelo.dataInicio || duelo.aprovadoAt || duelo.createdAt);
+                const diasAb = Math.floor((new Date() - iniAb) / (1000 * 60 * 60 * 24));
+                if (diasAb >= 1) { showToast('Torcida encerrada — só é permitida no 1º dia do duelo', 'error'); return; }
                 titulo.textContent = duelo.desafianteNome + ' ⚔️ ' + duelo.desafiadoNome;
                 escolhaSel.innerHTML = '<option value="">Selecione</option>' +
                     `<option value="${duelo.desafianteId}">${duelo.desafianteNome}</option>` +
@@ -5251,13 +5384,13 @@ async function excluirDuelo(dueloId) {
             try {
                 const duelo = duelos.find(d => d.id === dueloId);
                 if (duelo) {
-                    // 1. Excluir histórico dos jogadores do ranking
-                    const refA = window.doc(window.db, 'duelosHistorico', duelo.desafianteId);
-                    const refB = window.doc(window.db, 'duelosHistorico', duelo.desafiadoId);
-                    const snapA = await window.getDoc(refA);
-                    const snapB = await window.getDoc(refB);
-                    if (snapA.exists()) await window.deleteDoc(refA);
-                    if (snapB.exists()) await window.deleteDoc(refB);
+                    // 1. Excluir histórico dos jogadores do ranking (todos os membros das duplas/trios)
+                    const membrosDuelo = [duelo.desafianteId, duelo.desafiante2Id, duelo.desafiante3Id, duelo.desafiadoId, duelo.desafiado2Id, duelo.desafiado3Id].filter(Boolean);
+                    for (const mid of membrosDuelo) {
+                        const refM = window.doc(window.db, 'duelosHistorico', mid);
+                        const snapM = await window.getDoc(refM);
+                        if (snapM.exists()) await window.deleteDoc(refM);
+                    }
 
                     // 2. Excluir eventos de torcida relacionados a este duelo
                     const eventosAposta = events.filter(e => 
@@ -5435,7 +5568,7 @@ async function excluirDuelo(dueloId) {
             if (dueloInicio) {
                 const inicio = new Date(dueloInicio);
                 const agora = new Date();
-                const totalDias = 5; // Duelos sempre 5 dias corridos
+                const totalDias = getDuracaoDuelo(duelo);
                 const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
                 const diasPassados = Math.floor(horasPassadas / 24);
                 const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
@@ -5629,7 +5762,7 @@ function renderTorcidasGuerraAdmin() {
             let html = '';
 
             // === DUelos Ativos ===
-            const duelosAtivos = duelos.filter(d => d.status === 'ativo');
+            const duelosAtivos = duelos.filter(d => dueloEmAndamento(d));
             if (duelosAtivos.length > 0) {
                 html += '<div class="mb-4"><h5 class="text-sm font-bold text-[#C8A25A] mb-2"><i class="fas fa-khanda mr-1"></i>Duelos em Andamento</h5>';
                 html += duelosAtivos.map(d => {
@@ -6129,7 +6262,7 @@ function renderTorcidasGuerraAdmin() {
             const pendentesEl = document.getElementById('arena-duelos-pendentes');
             const finalizadosList = document.getElementById('arena-duelos-finalizados-list');
 
-            const ativos = duelos.filter(d => d.status === 'ativo');
+            const ativos = duelos.filter(d => dueloEmAndamento(d));
             const pendentes = duelos.filter(d => d.status === 'pendente');
             const finalizados = duelos.filter(d => d.status === 'finalizado').slice(0, 10);
 
@@ -6151,7 +6284,7 @@ function renderTorcidasGuerraAdmin() {
                 if (dueloInicio) {
                     const inicio = new Date(dueloInicio);
                     const agora = new Date();
-                    const totalDias = 5; // Duelos sempre 5 dias corridos
+                    const totalDias = getDuracaoDuelo(d);
                     const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
                     const diasPassados = Math.floor(horasPassadas / 24);
                     const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
@@ -6206,14 +6339,14 @@ function renderTorcidasGuerraAdmin() {
                                     const inicio = new Date(d.dataInicio);
                                     const agora = new Date();
                                     const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
-                                    return diasPassados < 2;
+                                    return diasPassados < 1; // torcida apenas no 1º dia de andamento do duelo
                                 })();
                                 return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-3 py-1.5 rounded bg-\[\#C8A25A\]/15 text-[#C8A25A] text-xs font-bold hover:bg-\[\#C8A25A\]/30 border border-[#C8A25A]/20 transition-all">
                                 <i class="fas fa-scroll mr-1"></i>Torcer
                             </button>` : `<span class="px-2 py-1 rounded bg-gray-700/50 text-gray-500 text-xs font-bold border border-gray-600/20"><i class="fas fa-lock mr-1"></i>Encerrado</span>`;
                             })()}
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">${d.apostas ? d.apostas.length : 0} sábio(s) já torceram · <span class="text-[#C8A25A] font-bold">+1 por acerto · −1 por erro</span></p>
+                        <p class="text-xs text-gray-500 mt-1">${d.apostas ? d.apostas.length : 0} sábio(s) já torceram · <span class="text-[#C8A25A] font-bold">+1 por acerto · −1 por erro · só no 1º dia</span></p>
                         ${d.apostas && d.apostas.length > 0 ? `<div class="mt-1 flex flex-wrap gap-1">${d.apostas.map(a => `<span class="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-400">✓ ${a.participanteNome || a.comissaoNome}</span>`).join('')}</div>` : ''}
                     </div>
                     
@@ -6231,7 +6364,7 @@ function renderTorcidasGuerraAdmin() {
                     if (dueloInicio) {
                         const inicio = new Date(dueloInicio);
                         const agora = new Date();
-                        const totalDias = 5;
+                        const totalDias = getDuracaoDuelo(d);
                         const horasPassadas = Math.max(0, (agora - inicio) / (1000 * 60 * 60));
                         const diasPassados = Math.floor(horasPassadas / 24);
                         const diaAtual = Math.max(1, Math.min(totalDias, diasPassados + 1));
@@ -6295,7 +6428,7 @@ function renderTorcidasGuerraAdmin() {
                                         const inicio = new Date(d.dataInicio);
                                         const agora = new Date();
                                         const diasPassados = Math.floor((agora.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24));
-                                        return diasPassados < 2;
+                                        return diasPassados < 1; // torcida apenas no 1º dia de andamento do duelo
                                     })();
                                     return podeTorcer ? `<button onclick="abrirModalTorcida('duelo', '${d.id}')" class="px-2 py-1 rounded bg-[#C8A25A]/15 text-[#C8A25A] text-xs font-bold hover:bg-[#C8A25A]/30 border border-[#C8A25A]/20 transition-all">
                                         <i class="fas fa-scroll mr-1"></i>Torcer
@@ -6809,7 +6942,7 @@ function renderTorcidasGuerraAdmin() {
                             <div class="mt-4 p-3 rounded-xl bg-gray-800/50 border border-[#C8A25A]/20">
                                 <div class="flex items-center justify-between mb-2">
                                     <h4 class="text-sm font-bold text-[#C8A25A]"><i class="fas fa-eye mr-1"></i>Torcida</h4>
-                                    <span class="text-xs text-gray-400">+1 por acerto · −1 por erro</span>
+                                    <span class="text-xs text-gray-400">+1 por acerto · −1 por erro · só no 1º dia</span>
                                 </div>
                                 <div class="flex items-center justify-between">
                                     <div class="flex flex-wrap gap-2">
@@ -8440,10 +8573,12 @@ async function renderPlayers() {
                             : '';
                         const dueloBadge = getDueloBadge(p.id);
                         const streakBadge = getStreakBadge(p.id);
+                        const campBadge = (typeof getCampBadge === 'function') ? getCampBadge(p.id) : { cls: '', html: '' };
 
                         return `
-                            <div class="player-card card-hover relative ${isLegendary ? 'legendary' : ''}" style="border-color: ${isLegendary ? '#FFD700' : borderColor};" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
+                            <div class="player-card card-hover relative ${isLegendary ? 'legendary' : ''}${campBadge.cls}" style="border-color: ${campBadge.cls ? '' : (isLegendary ? '#FFD700' : borderColor)};" onclick="${p.tipo === 'comissao' ? `window.showAlbumComissao('${p.id}')` : `window.showAlbum('${p.id}')`}">
                             ${isLegendary ? '<div class="legendary-badge">🔥 Lendário</div>' : ''}
+                            ${campBadge.html}
                             ${getGuerraVencedoraBadge(p.id)}
                             ${insigniaBadge}
                             ${elogioBadge}
@@ -14276,5 +14411,569 @@ function renderJulgamentoVenda() {
             </div>
         </div>
     </div>
+
+<script>
+// ============================================================
+// CAMPEONATO VALHALLA — EDIÇÃO OUTUBRO/2026
+// 16 duplas (15 duplas + 1 trio) · 4 grupos · Upper/Lower
+// Grupos 3d · Eliminatória 4d · Lower Final 5d · Grande Final 5d
+// Pontuação dos duelos: glória + runas + honrarias
+// ============================================================
+var campeonato = null;
+
+var CAMP_DUPLAS_GRUPOS = {
+    A: [['Medina','Maria Luíza'],['Michele','Léo'],['Vargas','Caroline'],['Nicolle','Carla','Claudia']],
+    B: [['Glaucia','Marta'],['Exequiel','Solange'],['Sharonn','César'],['Débora','Isabela']],
+    C: [['Diana','Margot'],['Renato','Cinthia'],['Jeff','Kauã'],['Otavio','Everton']],
+    D: [['Juan','Pablo'],['Gabriel','Laura'],['Flávio','Quevedo'],['Leandro','Dayane']]
+};
+
+// Janelas FIXAS do calendário oficial (01–31/10)
+var CAMP_JANELAS = {
+    g1:  { ini: '2026-10-01T00:01:00', fim: '2026-10-03T23:59:59' },
+    g2:  { ini: '2026-10-04T00:01:00', fim: '2026-10-06T23:59:59' },
+    g3:  { ini: '2026-10-07T00:01:00', fim: '2026-10-09T23:59:59' },
+    qf:  { ini: '2026-10-10T00:01:00', fim: '2026-10-13T23:59:59' },
+    sf:  { ini: '2026-10-14T00:01:00', fim: '2026-10-17T23:59:59' },
+    fin: { ini: '2026-10-18T00:01:00', fim: '2026-10-21T23:59:59' },
+    lbf: { ini: '2026-10-22T00:01:00', fim: '2026-10-26T23:59:59' },
+    gf:  { ini: '2026-10-27T00:01:00', fim: '2026-10-31T23:59:59' }
+};
+
+// ===== Helpers =====
+function campNormTxt(s) {
+    return (s || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+function campIdPorNome(nome) {
+    var alvo = campNormTxt(nome);
+    for (var i = 0; i < players.length; i++) {
+        var p = players[i];
+        var full = campNormTxt((p.nome || '') + ' ' + (p.sobrenome || ''));
+        if (full === alvo || campNormTxt(p.nome) === alvo) return p.id;
+    }
+    return null;
+}
+function campIdsDoTime(nomeTime) {
+    for (var g in campeonato.grupos) {
+        for (var i = 0; i < campeonato.grupos[g].length; i++) {
+            if (campeonato.grupos[g][i].nome === nomeTime) return campeonato.grupos[g][i].ids;
+        }
+    }
+    return [];
+}
+function campDueloPorId(id) {
+    for (var i = 0; i < duelos.length; i++) if (duelos[i].id === id) return duelos[i];
+    return null;
+}
+function campNomePerdedor(d) {
+    if (!d || d.status !== 'finalizado') return null;
+    return d.vencedorNome === d.desafianteNome ? d.desafiadoNome : d.desafianteNome;
+}
+function campSalvar() {
+    return window.setDoc(window.doc(window.db, 'campeonatos', 'out2026'), campeonato);
+}
+function campPlacarDuelo(d) {
+    // placar ao vivo (regra do campeonato) ou final
+    if (!d) return null;
+    if (d.status === 'finalizado' && d.gloriaDesafiante !== undefined) {
+        return { a: d.gloriaDesafiante, b: d.gloriaDesafiado, fim: true };
+    }
+    if (d.status === 'ativo') {
+        try {
+            return { a: getGlaciaDuelo(d.desafianteId, d), b: getGlaciaDuelo(d.desafiadoId, d), fim: false };
+        } catch (e) { return { a: 0, b: 0, fim: false }; }
+    }
+    return { a: 0, b: 0, fim: d.status === 'finalizado' };
+}
+
+// ===== Classificação (desempate: confronto direto → saldo → glória feita) =====
+function campClassificacao(g) {
+    var times = campeonato.grupos[g].map(function (t, i) {
+        return { i: i, nome: t.nome, pts: 0, pj: 0, v: 0, e: 0, d: 0, gf: 0, gs: 0 };
+    });
+    campeonato.jogos.filter(function (j) { return j.grupo === g && j.jogado; }).forEach(function (j) {
+        var c = times[j.casa], f = times[j.fora];
+        c.pj++; f.pj++;
+        c.gf += j.gloriaCasa; c.gs += j.gloriaFora;
+        f.gf += j.gloriaFora; f.gs += j.gloriaCasa;
+        if (j.gloriaCasa > j.gloriaFora) { c.pts += 3; c.v++; f.d++; }
+        else if (j.gloriaFora > j.gloriaCasa) { f.pts += 3; f.v++; c.d++; }
+        else { c.pts++; f.pts++; c.e++; f.e++; }
+    });
+    function confronto(a, b) {
+        var j = null;
+        for (var k = 0; k < campeonato.jogos.length; k++) {
+            var x = campeonato.jogos[k];
+            if (x.grupo === g && x.jogado &&
+                ((x.casa === a.i && x.fora === b.i) || (x.casa === b.i && x.fora === a.i))) { j = x; break; }
+        }
+        if (!j) return 0;
+        var ga = (j.casa === a.i) ? j.gloriaCasa : j.gloriaFora;
+        var gb = (j.casa === a.i) ? j.gloriaFora : j.gloriaCasa;
+        return ga > gb ? 1 : (ga < gb ? -1 : 0);
+    }
+    times.sort(function (a, b) {
+        if (b.pts !== a.pts) return b.pts - a.pts;
+        var cd = confronto(a, b);
+        if (cd !== 0) return -cd;
+        var sa = a.gf - a.gs, sb = b.gf - b.gs;
+        if (sb !== sa) return sb - sa;
+        return b.gf - a.gf;
+    });
+    return times;
+}
+
+// ===== Badges (card da Home) =====
+function getCampBadge(playerId) {
+    if (!campeonato || !campeonato.resultado) return { cls: '', html: '' };
+    var r = campeonato.resultado;
+    if (r.campeaoIds && r.campeaoIds.indexOf(playerId) !== -1)
+        return { cls: ' campeao', html: '<div class="camp-badge campeao">👑 Campeão · Out/2026</div>' };
+    if (r.viceIds && r.viceIds.indexOf(playerId) !== -1)
+        return { cls: ' vice-camp', html: '<div class="camp-badge vice">🥈 Vice · Out/2026</div>' };
+    if (r.terceiroIds && r.terceiroIds.indexOf(playerId) !== -1)
+        return { cls: ' terceiro-camp', html: '<div class="camp-badge terceiro">🥉 3º Lugar · Out/2026</div>' };
+    return { cls: '', html: '' };
+}
+
+// ===== Faixa no perfil =====
+function aplicarFaixaCampeao(playerId) {
+    var faixa = document.getElementById('album-camp-faixa');
+    var foto = document.getElementById('album-profile-photo-area');
+    if (!faixa) return;
+    faixa.style.display = 'none';
+    if (foto) foto.classList.remove('campeao-foto');
+    if (!campeonato || !campeonato.resultado) return;
+    var r = campeonato.resultado;
+    if (r.campeaoIds && r.campeaoIds.indexOf(playerId) !== -1) {
+        faixa.textContent = '👑 CAMPEÃO DE VALHALLA · OUT/2026';
+        faixa.style.display = 'block';
+        if (foto) foto.classList.add('campeao-foto');
+    } else if (r.viceIds && r.viceIds.indexOf(playerId) !== -1) {
+        faixa.textContent = '🥈 VICE-CAMPEÃO · OUT/2026';
+        faixa.style.display = 'block';
+    } else if (r.terceiroIds && r.terceiroIds.indexOf(playerId) !== -1) {
+        faixa.textContent = '🥉 3º LUGAR · OUT/2026';
+        faixa.style.display = 'block';
+    }
+}
+if (typeof showAlbum === 'function') {
+    var _campOrigShowAlbum = showAlbum;
+    showAlbum = async function (playerId) {
+        await _campOrigShowAlbum(playerId);
+        aplicarFaixaCampeao(playerId);
+    };
+}
+
+// ===== Criação de duelo do campeonato =====
+async function campCriarDuelo(nomeA, nomeB, janela) {
+    var idsA = campIdsDoTime(nomeA), idsB = campIdsDoTime(nomeB);
+    var ini = janela.ini;
+    var ref = await window.addDoc(window.collection(window.db, 'duelos'), {
+        desafianteId: idsA[0], desafiante2Id: idsA[1] || null, desafiante3Id: idsA[2] || null,
+        desafianteNome: nomeA,
+        desafiadoId: idsB[0], desafiado2Id: idsB[1] || null, desafiado3Id: idsB[2] || null,
+        desafiadoNome: nomeB,
+        status: 'ativo', campeonato: true,
+        dataInicio: janela.ini, dataFim: janela.fim,
+        gloriaDesafiante: 0, gloriaDesafiado: 0, vencedorId: null,
+        torcidasResolvidas: false,
+        createdAt: new Date().toISOString()
+    });
+    return ref.id;
+}
+
+// ===== AÇÕES ADMIN =====
+async function campCriar() {
+    if (!isAdmin) return showToast('Apenas admin', 'error');
+    if (campeonato) return showToast('Campeonato já existe', 'error');
+    var grupos = {}, faltantes = [];
+    for (var g in CAMP_DUPLAS_GRUPOS) {
+        grupos[g] = CAMP_DUPLAS_GRUPOS[g].map(function (membros) {
+            var ids = [], falt = [];
+            membros.forEach(function (m) {
+                var id = campIdPorNome(m);
+                if (id) ids.push(id); else falt.push(m);
+            });
+            if (falt.length) faltantes = faltantes.concat(falt);
+            return { nome: membros.join(' & '), ids: ids };
+        });
+    }
+    if (faltantes.length) return showToast('Cadastre antes no site: ' + faltantes.join(', '), 'error');
+    // jogos da fase de grupos: todos contra todos (3 rodadas de 2 jogos por grupo)
+    var jogos = [];
+    var rodadas = [[[0,1],[2,3]], [[0,2],[1,3]], [[0,3],[1,2]]];
+    for (var g2 in grupos) {
+        rodadas.forEach(function (rd, r) {
+            rd.forEach(function (px) {
+                jogos.push({ grupo: g2, rodada: r + 1, casa: px[0], fora: px[1], dueloId: null, jogado: false, gloriaCasa: 0, gloriaFora: 0 });
+            });
+        });
+    }
+    campeonato = {
+        edicao: 'out2026', nome: 'Campeonato de Outubro', status: 'grupos',
+        grupos: grupos, jogos: jogos, bracket: null, resultado: null
+    };
+    await campSalvar();
+    showToast('Campeonato criado! Gere a Rodada 1 (01/10).', 'success');
+    renderCampeonato();
+}
+window.campCriar = campCriar;
+
+async function campGerarRodada(n) {
+    if (!isAdmin || !campeonato) return;
+    if (n >= 2) {
+        var pendAnterior = campeonato.jogos.some(function (j) { return j.rodada === n - 1 && !j.jogado; });
+        if (pendAnterior) return showToast('Finalize e sincronize a Rodada ' + (n - 1) + ' antes de gerar a Rodada ' + n, 'error');
+    }
+    var janela = CAMP_JANELAS['g' + n];
+    var criados = 0;
+    for (var i = 0; i < campeonato.jogos.length; i++) {
+        var j = campeonato.jogos[i];
+        if (j.rodada !== n || j.dueloId) continue;
+        var A = campeonato.grupos[j.grupo][j.casa], B = campeonato.grupos[j.grupo][j.fora];
+        campeonato.jogos[i].dueloId = await campCriarDuelo(A.nome, B.nome, janela);
+        criados++;
+    }
+    await campSalvar();
+    showToast('Rodada ' + n + ': ' + criados + ' duelos criados (janela ' + janela.ini.slice(0,10) + '–' + janela.fim.slice(0,10) + ')', 'success');
+    renderCampeonato();
+}
+window.campGerarRodada = campGerarRodada;
+
+async function campSincronizar() {
+    if (!campeonato) return;
+    var mudou = false;
+    for (var i = 0; i < campeonato.jogos.length; i++) {
+        var j = campeonato.jogos[i];
+        if (!j.dueloId || j.jogado) continue;
+        var d = campDueloPorId(j.dueloId);
+        if (d && d.status === 'finalizado') {
+            j.jogado = true;
+            j.gloriaCasa = (d.gloriaDesafiante !== undefined) ? d.gloriaDesafiante : 0;
+            j.gloriaFora = (d.gloriaDesafiado !== undefined) ? d.gloriaDesafiado : 0;
+            mudou = true;
+        }
+    }
+    if (campeonato.bracket) {
+        var b = campeonato.bracket;
+        ['qf', 'sf'].forEach(function (fase) {
+            if (!b[fase]) return;
+            b[fase].forEach(function (item) {
+                if (!item.dueloId) return;
+                var d = campDueloPorId(item.dueloId);
+                if (d && d.status === 'finalizado' && !item.jogado) {
+                    item.jogado = true; item.vencedor = d.vencedorNome; item.perdedor = campNomePerdedor(d);
+                    item.gloriaA = d.gloriaDesafiante || 0; item.gloriaB = d.gloriaDesafiado || 0;
+                    mudou = true;
+                }
+            });
+        });
+        ['ubF', 'lbS', 'lbf', 'gf'].forEach(function (fase) {
+            if (!b[fase] || !b[fase].dueloId) return;
+            var d = campDueloPorId(b[fase].dueloId);
+            if (d && d.status === 'finalizado' && !b[fase].jogado) {
+                b[fase].jogado = true; b[fase].vencedor = d.vencedorNome; b[fase].perdedor = campNomePerdedor(d);
+                b[fase].gloriaA = d.gloriaDesafiante || 0; b[fase].gloriaB = d.gloriaDesafiado || 0;
+                mudou = true;
+            }
+        });
+    }
+    if (mudou) await campSalvar();
+    showToast('Placares sincronizados!', 'success');
+    renderCampeonato();
+}
+window.campSincronizar = campSincronizar;
+
+async function campGerarQuartas() {
+    if (!isAdmin || !campeonato) return;
+    // todos os jogos de grupo devem estar finalizados
+    var incompleto = campeonato.jogos.some(function (j) { return !j.dueloId || !j.jogado; });
+    if (incompleto) return showToast('Ainda há duelos de grupo em aberto — sincronize e finalize todos', 'error');
+    var clas = {};
+    for (var g in campeonato.grupos) clas[g] = campClassificacao(g);
+    var pares = [
+        [clas.A[0], clas.D[1]], [clas.B[0], clas.C[1]],
+        [clas.C[0], clas.B[1]], [clas.D[0], clas.A[1]]
+    ];
+    var qf = [];
+    for (var i = 0; i < pares.length; i++) {
+        var dueloId = await campCriarDuelo(pares[i][0].nome, pares[i][1].nome, CAMP_JANELAS.qf);
+        qf.push({ a: pares[i][0].nome, b: pares[i][1].nome, dueloId: dueloId, jogado: false });
+    }
+    campeonato.bracket = { qf: qf, sf: null, ubF: null, lbS: null, lbf: null, gf: null };
+    campeonato.status = 'quartas';
+    await campSalvar();
+    showToast('Quartas de Final geradas (10–13/10)!', 'success');
+    renderCampeonato();
+}
+window.campGerarQuartas = campGerarQuartas;
+
+async function campAvancar(fase) {
+    if (!isAdmin || !campeonato || !campeonato.bracket) return;
+    var b = campeonato.bracket;
+    function venc(item) { return (item && item.jogado) ? item.vencedor : null; }
+    function perd(item) { return (item && item.jogado) ? item.perdedor : null; }
+
+    if (fase === 'sf') {
+        if (!b.qf.every(function (q) { return q.jogado; })) return showToast('Finalize todas as quartas', 'error');
+        b.sf = [
+            { a: venc(b.qf[0]), b: venc(b.qf[3]), dueloId: await campCriarDuelo(venc(b.qf[0]), venc(b.qf[3]), CAMP_JANELAS.sf), jogado: false },
+            { a: venc(b.qf[1]), b: venc(b.qf[2]), dueloId: await campCriarDuelo(venc(b.qf[1]), venc(b.qf[2]), CAMP_JANELAS.sf), jogado: false }
+        ];
+        campeonato.status = 'semis';
+    } else if (fase === 'finais') {
+        if (!b.sf || !b.sf.every(function (s) { return s.jogado; })) return showToast('Finalize as semifinais', 'error');
+        b.ubF = { a: venc(b.sf[0]), b: venc(b.sf[1]), dueloId: await campCriarDuelo(venc(b.sf[0]), venc(b.sf[1]), CAMP_JANELAS.fin), jogado: false };
+        b.lbS = { a: perd(b.sf[0]), b: perd(b.sf[1]), dueloId: await campCriarDuelo(perd(b.sf[0]), perd(b.sf[1]), CAMP_JANELAS.fin), jogado: false };
+        campeonato.status = 'finais';
+    } else if (fase === 'lbf') {
+        if (!b.ubF || !b.ubF.jogado || !b.lbS || !b.lbS.jogado) return showToast('Finalize Final Upper e Lower Semi', 'error');
+        b.lbf = { a: perd(b.ubF), b: venc(b.lbS), dueloId: await campCriarDuelo(perd(b.ubF), venc(b.lbS), CAMP_JANELAS.lbf), jogado: false };
+        campeonato.status = 'lowerfinal';
+    } else if (fase === 'gf') {
+        if (!b.lbf || !b.lbf.jogado) return showToast('Finalize a Lower Final', 'error');
+        b.gf = { a: venc(b.ubF), b: venc(b.lbf), dueloId: await campCriarDuelo(venc(b.ubF), venc(b.lbf), CAMP_JANELAS.gf), jogado: false };
+        campeonato.status = 'grandefinal';
+    }
+    await campSalvar();
+    showToast('Próxima fase gerada!', 'success');
+    renderCampeonato();
+}
+window.campAvancar = campAvancar;
+
+async function campFinalizar() {
+    if (!isAdmin || !campeonato || !campeonato.bracket || !campeonato.bracket.gf) return;
+    if (!campeonato.bracket.gf.jogado) return showToast('A Grande Final ainda não acabou', 'error');
+    var b = campeonato.bracket;
+    campeonato.resultado = {
+        campeao: b.gf.vencedor, campeaoIds: campIdsDoTime(b.gf.vencedor),
+        vice: b.gf.perdedor, viceIds: campIdsDoTime(b.gf.perdedor),
+        terceiro: b.lbf.perdedor, terceiroIds: campIdsDoTime(b.lbf.perdedor)
+    };
+    campeonato.status = 'fim';
+    await campSalvar();
+    try { renderPlayers(); } catch (e) {}
+    showToast('🏆 CAMPEÃO: ' + campeonato.resultado.campeao, 'success');
+    renderCampeonato();
+}
+window.campFinalizar = campFinalizar;
+
+// ===== GESTÃO DOS DUELOS DO CAMPEONATO (ADMIN) =====
+async function campFinalizarDuelo(dueloId) {
+    if (!isAdmin) return;
+    var d = campDueloPorId(dueloId);
+    if (!d || d.status !== 'ativo') return;
+    var pl = campPlacarDuelo(d);
+    if (!confirm('Finalizar este duelo agora?\n\n' + d.desafianteNome + ' ' + pl.a + ' × ' + pl.b + ' ' + d.desafiadoNome + '\n\n+4 para o vencedor, -2 para o perdedor.')) return;
+    try {
+        await executarFinalizacaoDuelo(d, false);
+        showToast('Duelo finalizado!', 'success');
+        renderCampeonato();
+    } catch (e) { showToast('Erro: ' + e.message, 'error'); }
+}
+window.campFinalizarDuelo = campFinalizarDuelo;
+
+async function campExcluirDuelo(dueloId) {
+    if (!isAdmin || !campeonato) return;
+    if (!confirm('Excluir este duelo do campeonato?\n\nO slot fica livre para gerar novamente (botão "Regenerar pendentes").')) return;
+    try {
+        // Excluir eventos vinculados a ESTE duelo (vitória/derrota/empate/torcidas)
+        var evs = events.filter(function (e) { return e.dueloId === dueloId; });
+        for (var i = 0; i < evs.length; i++) {
+            await window.deleteDoc(window.doc(window.db, 'eventos', evs[i].id));
+        }
+        await window.deleteDoc(window.doc(window.db, 'duelos', dueloId));
+        // Liberar o slot no campeonato
+        campeonato.jogos.forEach(function (j) {
+            if (j.dueloId === dueloId) { j.dueloId = null; j.jogado = false; j.gloriaCasa = 0; j.gloriaFora = 0; }
+        });
+        var b = campeonato.bracket;
+        if (b) {
+            ['qf', 'sf'].forEach(function (f) {
+                if (b[f]) b[f].forEach(function (item) {
+                    if (item.dueloId === dueloId) { item.dueloId = null; item.jogado = false; item.vencedor = null; item.perdedor = null; }
+                });
+            });
+            ['ubF', 'lbS', 'lbf', 'gf'].forEach(function (f) {
+                if (b[f] && b[f].dueloId === dueloId) { b[f].dueloId = null; b[f].jogado = false; b[f].vencedor = null; b[f].perdedor = null; }
+            });
+        }
+        await campSalvar();
+        showToast('Duelo excluído — slot liberado', 'success');
+        renderCampeonato();
+    } catch (e) { showToast('Erro: ' + e.message, 'error'); }
+}
+window.campExcluirDuelo = campExcluirDuelo;
+
+async function campRegenerarPendentes() {
+    if (!isAdmin || !campeonato) return;
+    var criados = 0;
+    // Fase de grupos: jogos sem dueloId
+    for (var i = 0; i < campeonato.jogos.length; i++) {
+        var j = campeonato.jogos[i];
+        if (j.dueloId) continue;
+        var A = campeonato.grupos[j.grupo][j.casa], B = campeonato.grupos[j.grupo][j.fora];
+        campeonato.jogos[i].dueloId = await campCriarDuelo(A.nome, B.nome, CAMP_JANELAS['g' + j.rodada]);
+        criados++;
+    }
+    // Bracket: slots sem dueloId
+    var b = campeonato.bracket;
+    if (b) {
+        if (b.qf) for (var q = 0; q < b.qf.length; q++) {
+            if (!b.qf[q].dueloId) { b.qf[q].dueloId = await campCriarDuelo(b.qf[q].a, b.qf[q].b, CAMP_JANELAS.qf); criados++; }
+        }
+        if (b.sf) for (var s = 0; s < b.sf.length; s++) {
+            if (!b.sf[s].dueloId) { b.sf[s].dueloId = await campCriarDuelo(b.sf[s].a, b.sf[s].b, CAMP_JANELAS.sf); criados++; }
+        }
+        if (b.ubF && !b.ubF.dueloId) { b.ubF.dueloId = await campCriarDuelo(b.ubF.a, b.ubF.b, CAMP_JANELAS.fin); criados++; }
+        if (b.lbS && !b.lbS.dueloId) { b.lbS.dueloId = await campCriarDuelo(b.lbS.a, b.lbS.b, CAMP_JANELAS.fin); criados++; }
+        if (b.lbf && !b.lbf.dueloId) { b.lbf.dueloId = await campCriarDuelo(b.lbf.a, b.lbf.b, CAMP_JANELAS.lbf); criados++; }
+        if (b.gf && !b.gf.dueloId) { b.gf.dueloId = await campCriarDuelo(b.gf.a, b.gf.b, CAMP_JANELAS.gf); criados++; }
+    }
+    await campSalvar();
+    showToast(criados + ' duelo(s) regenerado(s)', 'success');
+    renderCampeonato();
+}
+window.campRegenerarPendentes = campRegenerarPendentes;
+
+// ===== RENDER =====
+function renderCampeonato() {
+    var content = document.getElementById('camp-content');
+    var adminBar = document.getElementById('camp-admin-bar');
+    var adminBtns = document.getElementById('camp-admin-buttons');
+    if (!content) return;
+    if (isAdmin && adminBar) {
+        adminBar.classList.remove('hidden');
+        var btns = [];
+        if (!campeonato) {
+            btns.push('<button class="camp-btn btn-primary" onclick="campCriar()">➕ Criar Campeonato de Outubro</button>');
+        } else {
+            btns.push('<button class="camp-btn bg-gray-700" onclick="campSincronizar()">🔄 Sincronizar placares</button>');
+            btns.push('<button class="camp-btn bg-teal-700" onclick="campRegenerarPendentes()">♻️ Regenerar pendentes</button>');
+            if (campeonato.status === 'grupos') {
+                btns.push('<button class="camp-btn bg-[#8C6239]" onclick="campGerarRodada(1)">R1 grupos (01–03/10)</button>');
+                btns.push('<button class="camp-btn bg-[#8C6239]" onclick="campGerarRodada(2)">R2 grupos (04–06/10)</button>');
+                btns.push('<button class="camp-btn bg-[#8C6239]" onclick="campGerarRodada(3)">R3 grupos (07–09/10)</button>');
+                btns.push('<button class="camp-btn bg-blue-700" onclick="campGerarQuartas()">Gerar QUARTAS (10–13/10)</button>');
+            } else if (campeonato.status === 'quartas') {
+                btns.push('<button class="camp-btn bg-blue-700" onclick="campAvancar(\'sf\')">Avançar: SEMIFINAIS (14–17/10)</button>');
+            } else if (campeonato.status === 'semis') {
+                btns.push('<button class="camp-btn bg-purple-700" onclick="campAvancar(\'finais\')">Avançar: FINAIS Upper+Lower (18–21/10)</button>');
+            } else if (campeonato.status === 'finais') {
+                btns.push('<button class="camp-btn bg-orange-700" onclick="campAvancar(\'lbf\')">Avançar: LOWER FINAL (22–26/10)</button>');
+            } else if (campeonato.status === 'lowerfinal') {
+                btns.push('<button class="camp-btn bg-yellow-600" onclick="campAvancar(\'gf\')">Avançar: GRANDE FINAL (27–31/10)</button>');
+            } else if (campeonato.status === 'grandefinal') {
+                btns.push('<button class="camp-btn bg-green-700" onclick="campFinalizar()">🏆 FINALIZAR CAMPEONATO</button>');
+            }
+        }
+        adminBtns.innerHTML = btns.join('');
+    } else if (adminBar) {
+        adminBar.classList.add('hidden');
+    }
+
+    if (!campeonato) {
+        content.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhum campeonato ativo no momento.</p>';
+        return;
+    }
+
+    var html = '';
+    // ===== FASE DE GRUPOS =====
+    html += '<h4 class="font-bold mb-3"><i class="fas fa-shield-halved mr-2 text-[#C8A25A]"></i>Fase de Grupos <span class="text-xs text-gray-500 font-normal">(vitória 3 pts · empate 1 · glória+runas+honrarias contam)</span></h4>';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">';
+    for (var g in campeonato.grupos) {
+        var tb = campClassificacao(g);
+        html += '<div class="camp-grupo-card"><h5 class="font-bold text-[#C8A25A] mb-2" style="font-family:Cinzel,serif">GRUPO ' + g + '</h5>';
+        html += '<table><tr><th>#</th><th>Dupla</th><th>PJ</th><th>SG</th><th>Pts</th></tr>';
+        tb.forEach(function (t, i) {
+            html += '<tr class="' + (i === 0 ? 'camp-linha-1' : (i === 1 ? 'camp-linha-2' : '')) + '"><td>' + (i + 1) + '</td><td>' + t.nome + '</td><td>' + t.pj + '</td><td>' + (t.gf - t.gs) + '</td><td>' + t.pts + '</td></tr>';
+        });
+        html += '</table><div class="mt-2">';
+        // jogos do grupo com placar ao vivo
+        campeonato.jogos.filter(function (j) { return j.grupo === g; }).forEach(function (j) {
+            var d = j.dueloId ? campDueloPorId(j.dueloId) : null;
+            var pl = d ? campPlacarDuelo(d) : null;
+            var nomeA = campeonato.grupos[g][j.casa].nome, nomeB = campeonato.grupos[g][j.fora].nome;
+            html += '<div class="camp-duelo-box ' + (pl && pl.fim ? 'camp-duelo-fim' : '') + '"><div class="flex justify-between"><span>' + nomeA + '</span><span class="camp-duelo-placar">' + (pl ? pl.a : '–') + ' × ' + (pl ? pl.b : '–') + '</span><span>' + nomeB + '</span></div>' +
+                '<div class="text-xs text-gray-500 mt-1">Rodada ' + j.rodada + (pl && pl.fim ? ' · finalizado' : (d ? ' · ao vivo' : '')) + '</div></div>';
+        });
+        html += '</div></div>';
+    }
+    html += '</div>';
+
+    // ===== BRACKET =====
+    if (campeonato.bracket) {
+        var b = campeonato.bracket;
+        html += '<h4 class="font-bold mb-3"><i class="fas fa-sitemap mr-2 text-[#C8A25A]"></i>Fase Final — Upper / Lower</h4>';
+        function box(item, label, destaque) {
+            if (!item) return '';
+            var d = item.dueloId ? campDueloPorId(item.dueloId) : null;
+            var pl = d ? campPlacarDuelo(d) : null;
+            var aNome = item.a || '—', bNome = item.b || '—';
+            var cls = destaque ? 'camp-duelo-fim' : '';
+            return '<div class="camp-duelo-box ' + cls + '"><div class="text-[10px] text-gray-500 font-bold mb-1" style="font-family:Cinzel,serif">' + label + '</div>' +
+                '<div class="flex justify-between"><span>' + aNome + '</span><span class="camp-duelo-placar">' + (pl ? pl.a : '–') + ' × ' + (pl ? pl.b : '–') + '</span><span>' + bNome + '</span></div></div>';
+        }
+        html += '<div class="grid md:grid-cols-2 gap-6"><div><h5 class="text-sm font-bold text-[#C8A25A] mb-2" style="font-family:Cinzel,serif">UPPER BRACKET</h5>';
+        b.qf.forEach(function (q, i) { html += box(q, 'QUARTA ' + (i + 1) + ' · 10–13/10'); });
+        if (b.sf) b.sf.forEach(function (s) { html += box(s, 'SEMIFINAL · 14–17/10'); });
+        if (b.ubF) html += box(b.ubF, 'FINAL UPPER · 18–21/10');
+        html += '</div><div><h5 class="text-sm font-bold text-gray-400 mb-2" style="font-family:Cinzel,serif">LOWER BRACKET</h5>';
+        if (b.lbS) html += box(b.lbS, 'LOWER SEMI · 18–21/10');
+        if (b.lbf) html += box(b.lbf, 'LOWER FINAL · 22–26/10');
+        if (b.gf) html += box(b.gf, '🏆 GRANDE FINAL · 27–31/10', true);
+        html += '</div></div>';
+    }
+
+    // ===== GESTÃO DE DUELOS (ADMIN) =====
+    if (isAdmin) {
+        var cds = duelos.filter(function (d) { return d.campeonato; });
+        if (cds.length) {
+            cds.sort(function (a, b2) { return new Date(a.dataInicio) - new Date(b2.dataInicio); });
+            html += '<h4 class="font-bold mt-8 mb-3"><i class="fas fa-hammer mr-2 text-[#C8A25A]"></i>Gestão dos Duelos do Campeonato</h4>';
+            cds.forEach(function (d) {
+                var pl2 = campPlacarDuelo(d);
+                var st = d.status === 'ativo' ? '<span class="text-green-400 font-bold">EM ANDAMENTO</span>' : (d.status === 'finalizado' ? '<span class="text-gray-500">finalizado</span>' : d.status);
+                html += '<div class="camp-duelo-box"><div class="flex justify-between items-center flex-wrap gap-2">' +
+                    '<span><b>' + d.desafianteNome + '</b> <span class="camp-duelo-placar">' + pl2.a + ' × ' + pl2.b + '</span> <b>' + d.desafiadoNome + '</b></span>' +
+                    '<span class="text-xs text-gray-500">' + (d.dataInicio || '').slice(0, 10) + ' – ' + (d.dataFim || '').slice(0, 10) + ' · ' + st + '</span>' +
+                    '<span class="flex gap-2">' +
+                    (d.status === 'ativo' ? '<button class="camp-btn bg-green-700" onclick="campFinalizarDuelo(\'' + d.id + '\')">Finalizar</button>' : '') +
+                    '<button class="camp-btn bg-red-900" onclick="campExcluirDuelo(\'' + d.id + '\')">Excluir</button>' +
+                    '</span></div></div>';
+            });
+        }
+    }
+
+    // ===== PÓDIO =====
+    if (campeonato.resultado) {
+        var r = campeonato.resultado;
+        html += '<h4 class="font-bold mt-8 mb-3"><i class="fas fa-crown mr-2 text-yellow-400"></i>Hall dos Campeões</h4>';
+        html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">';
+        html += '<div class="camp-podio camp-podio-bronze"><div class="text-2xl mb-1">🥉</div><p class="font-bold text-sm">' + r.terceiro + '</p><p class="text-xs text-gray-500">3º Lugar · Out/2026</p></div>';
+        html += '<div class="camp-podio camp-podio-ouro"><div class="text-3xl mb-1">👑</div><p class="font-black" style="color:#FFD700">' + r.campeao + '</p><p class="text-xs text-gray-400">CAMPEÃO DE OUTUBRO</p></div>';
+        html += '<div class="camp-podio camp-podio-prata"><div class="text-2xl mb-1">🥈</div><p class="font-bold text-sm">' + r.vice + '</p><p class="text-xs text-gray-500">Vice-Campeão · Out/2026</p></div>';
+        html += '</div>';
+    }
+    content.innerHTML = html;
+}
+window.renderCampeonato = renderCampeonato;
+
+// ===== INIT =====
+function campInit() {
+    if (!window.db) { setTimeout(campInit, 500); return; }
+    window.onSnapshot(window.doc(window.db, 'campeonatos', 'out2026'), function (snap) {
+        campeonato = snap.exists() ? snap.data() : null;
+        try { renderPlayers(); } catch (e) {}
+        var el = document.getElementById('arena-panel-campeonato');
+        if (el && !el.classList.contains('hidden')) renderCampeonato();
+        // atualiza faixa se o álbum estiver aberto
+        if (currentAlbumPlayer) aplicarFaixaCampeao(currentAlbumPlayer);
+    });
+}
+campInit();
+</script>
+
 </body>
 </html>
