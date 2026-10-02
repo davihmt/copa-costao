@@ -14449,7 +14449,11 @@ function renderJulgamentoVenda() {
             if (data && typeof data === 'object' && data.jogadorId && !data.pessoaTipo &&
                 ref && ref.type === 'collection' && ref.id === 'eventos') {
                 var ehComissao = false;
-                try { ehComissao = (window.comissao || []).some(function (c) { return c.id === data.jogadorId; }); } catch (e1) {}
+                try {
+                    var temCom = (window.comissao || []).some(function (c) { return c.id === data.jogadorId; });
+                    var temJog = (window.players || []).some(function (p) { return p.id === data.jogadorId; });
+                    ehComissao = temCom && !temJog; // só é sábio se o id NÃO existir entre guerreiros
+                } catch (e1) {}
                 data.pessoaTipo = ehComissao ? 'comissao' : 'jogador';
             }
         } catch (e) {}
@@ -14498,7 +14502,7 @@ function campIdPorNome(nome) {
     return null;
 }
 function campIdsDoTime(nomeTime) {
-    for (var g in campeonato.grupos) {
+    for (var gi = 0; gi < ['A','B','C','D'].length; gi++) { var g = ['A','B','C','D'][gi];
         for (var i = 0; i < campeonato.grupos[g].length; i++) {
             if (campeonato.grupos[g][i].nome === nomeTime) return campeonato.grupos[g][i].ids;
         }
@@ -14950,7 +14954,7 @@ function renderCampeonato() {
     // ===== FASE DE GRUPOS =====
     html += '<h4 class="font-bold mb-3"><i class="fas fa-shield-halved mr-2 text-[#C8A25A]"></i>Fase de Grupos <span class="text-xs text-gray-500 font-normal">(vitória 3 pts · empate 1 · glória+runas+honrarias contam)</span></h4>';
     html += '<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">';
-    for (var g in campeonato.grupos) {
+    for (var gi = 0; gi < ['A','B','C','D'].length; gi++) { var g = ['A','B','C','D'][gi];
         var tb = campClassificacao(g);
         html += '<div class="camp-grupo-card"><h5 class="font-bold text-[#C8A25A] mb-2" style="font-family:Cinzel,serif">GRUPO ' + g + '</h5>';
         html += '<table><tr><th>#</th><th>Dupla</th><th>PJ</th><th>SG</th><th>Pts</th></tr>';
