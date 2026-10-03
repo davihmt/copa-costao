@@ -11702,9 +11702,11 @@ async function cadastrarCorpoTecnico() {
             if (!nome) { showToast('Nome é obrigatório', 'error'); return; }
 
             const funcaoMap = {
-                'auxiliar-tecnico': { label: 'Auxiliar Técnico', origem: 'Líder de Promotores' },
-                'tecnico': { label: 'Técnico', origem: 'Gerente' },
-                'coordenador-tecnico': { label: 'Coordenador Técnico', origem: 'Coordenadora Administrativo' }
+                'mestre-armas': { label: '⚔️ Mestre de Armas', origem: 'Líder de Promotores' },
+                'lorde-guerra': { label: '🛡️ Lorde da Guerra', origem: 'Gerente' },
+                'rei-comercio': { label: '👑 Rei do Comércio', origem: 'Comercial' },
+                'guardiao-pergaminhos': { label: '📜 Guardião dos Pergaminhos', origem: 'Coordenador Administrativo' },
+                'senescal-reino': { label: '🏰 Senescal do Reino', origem: 'Diretoria' }
             };
 
             try {
@@ -14099,8 +14101,16 @@ function editarConquistaConfig(conqId) {
             const foto = document.getElementById('edit-corpo-foto').value.trim();
             if (!nome) { showToast('Nome é obrigatório', 'error'); return; }
             try {
+                const funcaoMapEd = {
+                    'mestre-armas': { label: '⚔️ Mestre de Armas', origem: 'Líder de Promotores' },
+                    'lorde-guerra': { label: '🛡️ Lorde da Guerra', origem: 'Gerente' },
+                    'rei-comercio': { label: '👑 Rei do Comércio', origem: 'Comercial' },
+                    'guardiao-pergaminhos': { label: '📜 Guardião dos Pergaminhos', origem: 'Coordenador Administrativo' },
+                    'senescal-reino': { label: '🏰 Senescal do Reino', origem: 'Diretoria' }
+                };
+                const fm = funcaoMapEd[funcao] || { label: funcao, origem: '' };
                 await window.updateDoc(window.doc(window.db, 'corpoTecnico', id), {
-                    nome, funcao, funcaoLabel, foto,
+                    nome, funcao, funcaoLabel: fm.label, origem: fm.origem, foto,
                     updatedAt: new Date().toISOString()
                 });
                 showToast('Ancião atualizado com sucesso!', 'success');
