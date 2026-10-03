@@ -4030,6 +4030,7 @@
         let rankingPeriod = 'month';
         let inAdmin = false;
         let selectedFigPlayers = new Set(); // NOVO: guerreiros selecionados para runas
+        let figPlayerFunc = {}; // id -> função pela qual foi selecionado (evita marcação dupla Liner+Closer)
 
         // ===== PERIOD HELPERS =====
         function getBRDate(dateStr) {
@@ -4124,17 +4125,16 @@ function getTodayStr() {
         ];
 
         const CONQUISTAS_DEFAULT = [
-            { id: 'massacre', nome: 'MASSACRE!!!', meta: 14, periodo: 'day', img: '+14.png', premio: "KIT PRAIA + GENUINO'S", tipoAlvo: 'guerreiro' },
-            { id: 'furia-de-odin', nome: 'FÚRIA DE ODIN!!!', meta: 30, periodo: 'week', img: '+30.png', premio: 'FOLGA + ALMOÇO COSTAO', tipoAlvo: 'guerreiro' },
-            { id: 'campeao-do-norte-50', nome: 'CAMPEÃO DO NORTE!', meta: 50, periodo: 'month', img: '+50.png', premio: 'FOLGA + KIT VINHO', tipoAlvo: 'guerreiro' },
-            { id: 'berserker-60', nome: 'BERSERKER!', meta: 60, periodo: 'month', img: '+60.png', premio: 'ALMOÇO COSTAO', tipoAlvo: 'guerreiro' },
-            { id: 'senhor-da-guerra-80', nome: 'SENHOR DA GUERRA!', meta: 80, periodo: 'month', img: '+80.png', premio: 'R$ 200 SPA', tipoAlvo: 'guerreiro' },
-            { id: 'lenda-de-valhalla-120', nome: 'LENDA DE VALHALLA!!', meta: 120, periodo: 'month', img: '+120.png', premio: 'TOUR BC EXPERIENCE', tipoAlvo: 'guerreiro' },
-            { id: 'lenda-de-valhalla-150', nome: 'LENDA DE VALHALLA!!!', meta: 150, periodo: 'month', img: '+150.png', premio: 'TOUR BC EXPERIENCE PLUS', tipoAlvo: 'guerreiro' },
-            { id: 'mestre-dos-conselhos', nome: 'MESTRE DOS CONSELHOS', meta: 20, periodo: 'month', img: '+20.png', premio: 'KIT VINHO', tipoAlvo: 'comissao' },
-            { id: 'guardiao-da-tradicao', nome: 'GUARDIÃO DA TRADIÇÃO', meta: 30, periodo: 'month', img: '+30.png', premio: 'FOLGA + ALMOÇO COSTAO', tipoAlvo: 'comissao' },
-            { id: 'oraculo-de-valhalla', nome: 'ORÁCULO DE VALHALLA', meta: 40, periodo: 'month', img: '+40.png', premio: 'FOLGA + KIT VINHO', tipoAlvo: 'comissao' },
-            { id: 'alto-conselheiro', nome: 'ALTO CONSELHEIRO', meta: 50, periodo: 'month', img: '+50.png', premio: 'R$ 200 SPA', tipoAlvo: 'comissao' }
+            { id: 'o-chamado', nome: 'O CHAMADO', meta: 15, periodo: 'day', img: 'o-chamado.png', premio: "1 VINHO OU ESPUMANTE", tipoAlvo: 'guerreiro', custo: 140 },
+            { id: 'banquete-dos-guerreiros', nome: 'BANQUETE DOS GUERREIROS', meta: 35, periodo: 'week', img: 'banquete-dos-guerreiros.png', premio: "CHEGAR 1H MAIS TARDE OU SAIR 1H MAIS CEDO", tipoAlvo: 'guerreiro', custo: 92 },
+            { id: 'descanso-dos-heroios', nome: 'DESCANSO DOS HERÓIS', meta: 50, periodo: 'month', img: 'descanso-dos-heroios.png', premio: "1 REFRIGERANTE", tipoAlvo: 'guerreiro', custo: 116 },
+            { id: 'festim-de-odin', nome: 'FESTIM DE ODIN', meta: 75, periodo: 'month', img: 'festim-de-odin.png', premio: "1 BARRA DE MILKA", tipoAlvo: 'guerreiro', custo: 0 },
+            { id: 'toalha-dos-guerreiros', nome: 'TOALHA DOS GUERREIROS', meta: 100, periodo: 'month', img: 'toalha-dos-guerreiros.png', premio: "TOALHA BRANCA COSTÃO", tipoAlvo: 'guerreiro', custo: 0 },
+            { id: 'honra-dos-ancioes', nome: 'HONRA DOS ANCIÕES', meta: 90, periodo: 'month', img: 'honra-dos-ancioes.png', premio: "1 FOLGA + CHEGAR 1H MAIS CEDO OU SAIR 1H MAIS CEDO", tipoAlvo: 'guerreiro', custo: 28 },
+            { id: 'mestre-dos-conselhos', nome: 'MESTRE DOS CONSELHOS', meta: 20, periodo: 'month', img: '+20.png', premio: 'KIT VINHO', tipoAlvo: 'comissao', custo: 28 },
+            { id: 'guardiao-da-tradicao', nome: 'GUARDIÃO DA TRADIÇÃO', meta: 30, periodo: 'month', img: '+30.png', premio: 'TOALHA', tipoAlvo: 'comissao', custo: 20 },
+            { id: 'oraculo-de-valhalla', nome: 'ORÁCULO DE VALHALLA', meta: 40, periodo: 'month', img: '+40.png', premio: 'FOLGA', tipoAlvo: 'comissao', custo: 0 },
+            { id: 'alto-conselheiro', nome: 'ALTO CONSELHEIRO', meta: 50, periodo: 'month', img: '+50.png', premio: 'ALMOÇO', tipoAlvo: 'comissao', custo: 96 }
         ];
         var corpoTecnico = [];
         let honrarias = [];
@@ -4314,8 +4314,9 @@ function getTodayStr() {
             _verificandoDuelos = true;
             try {
                 if (!events || events.length === 0) return;
-                const agoraBR = getBRDate(new Date());
-                agoraBR.setHours(23, 59, 59, 999);
+                // Comparação com o agora REAL: o duelo só expira quando o relógio passa da dataFim
+                // (23:59:59 do último dia = na virada para o dia seguinte)
+                const agoraBR = new Date();
                 const expirados = duelos.filter(d => d.status === 'ativo' && d.dataFim && new Date(d.dataFim) < agoraBR);
                 for (const duelo of expirados) {
                     try { await executarFinalizacaoDuelo(duelo, true); } catch (e) {}
@@ -4364,9 +4365,8 @@ function getTodayStr() {
             // Só finalizar se os eventos já foram carregados
             if (!events || events.length === 0) return;
 
-            // Horário atual em Brasília (comparação precisa)
-            const agoraBR = getBRDate(new Date());
-            agoraBR.setHours(23, 59, 59, 999); // Final do dia para comparação
+            // Agora real: a guerra só finaliza quando o relógio passa da dataFim (na virada)
+            const agoraBR = new Date();
 
             const expiradas = guerrasClas.filter(g => {
                 if (g.status !== 'ativa' || !g.dataFim) return false;
@@ -10353,16 +10353,22 @@ function updateAdminSelects() {
             }
 
             // Group players by function
+            // Guerreiros que atuam como Liner E Closer aparecem nas DUAS seções
+            const LINERS_E_CLOSERS = ['flavio', 'medina', 'renato', 'gabriel', 'marta'];
             const functions = {};
             players.forEach(p => {
                 const func = p.time || 'Sem Casa';
-                if (!functions[func]) functions[func] = [];
-                functions[func].push(p);
+                const primeiroNome = (p.nome || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                const grupos = LINERS_E_CLOSERS.includes(primeiroNome) ? ['LINER', 'CLOSER'] : [func];
+                grupos.forEach(g => {
+                    if (!functions[g]) functions[g] = [];
+                    functions[g].push(p);
+                });
             });
 
             let html = '';
             for (const [func, members] of Object.entries(functions)) {
-                const selectedFromFunc = members.filter(p => selectedFigPlayers.has(p.id));
+                const selectedFromFunc = members.filter(p => selectedFigPlayers.has(p.id) && (figPlayerFunc[p.id] || '') === func);
                 const hasSelection = selectedFromFunc.length > 0;
 
                 html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#C8A25A] uppercase tracking-wider">${func}${hasSelection ? ' <span class="text-green-400">✓ Selecionado</span>' : ''}</h4></div>`;
@@ -10376,9 +10382,9 @@ function updateAdminSelects() {
                     ? (p.foto ? getImageUrl(p.foto) : '') 
                     : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
                     const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
-                    const isSelected = selectedFigPlayers.has(p.id);
+                    const isSelected = selectedFigPlayers.has(p.id) && (figPlayerFunc[p.id] || '') === func;
                     return `
-                        <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}')" style="padding:10px 14px;cursor:pointer;">
+                        <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}', '${func}')" style="padding:10px 14px;cursor:pointer;">
                             <div class="check-circle" style="flex-shrink:0;width:22px;height:22px;"><i class="fas fa-check" style="font-size:10px;"></i></div>
                             <div style="width:48px;height:48px;flex-shrink:0;position:relative;border-radius:50%;overflow:hidden;border:2px solid ${isSelected ? '#C8A25A' : '#4B5563'};">
                                 <img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center 10%;display:block;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -10397,13 +10403,21 @@ function updateAdminSelects() {
             updateFigSelectedCount();
         };
 
-function toggleFigPlayer(playerId) {
+function toggleFigPlayer(playerId, func) {
             const player = players.find(p => p.id === playerId);
             if (!player) return;
 
-            // Check if already selected
-            if (selectedFigPlayers.has(playerId)) {
+            // Já estava selecionado PELA MESMA seção -> desmarca
+            if (selectedFigPlayers.has(playerId) && figPlayerFunc[playerId] === func) {
                 selectedFigPlayers.delete(playerId);
+                delete figPlayerFunc[playerId];
+                renderFigPlayersGrid();
+                return;
+            }
+
+            // Já estava selecionado por OUTRA seção -> MOVE a marcação para esta seção (não soma)
+            if (selectedFigPlayers.has(playerId)) {
+                figPlayerFunc[playerId] = func;
                 renderFigPlayersGrid();
                 return;
             }
@@ -10415,6 +10429,7 @@ function toggleFigPlayer(playerId) {
             }
 
             selectedFigPlayers.add(playerId);
+            figPlayerFunc[playerId] = func;
             renderFigPlayersGrid();
         };
 
@@ -14678,8 +14693,8 @@ async function campCriar() {
 }
 window.campCriar = campCriar;
 
-async function campGerarRodada(n) {
-    if (!isAdmin || !campeonato) return;
+async function campGerarRodada(n, automatico) {
+    if ((!isAdmin && !automatico) || !campeonato) return;
     if (n >= 2) {
         var pendAnterior = campeonato.jogos.some(function (j) { return j.rodada === n - 1 && !j.jogado; });
         if (pendAnterior) return showToast('Finalize e sincronize a Rodada ' + (n - 1) + ' antes de gerar a Rodada ' + n, 'error');
@@ -14722,7 +14737,7 @@ async function campRepararTrios(silencioso) {
 }
 window.campRepararTrios = campRepararTrios;
 
-async function campSincronizar() {
+async function campSincronizar(silencioso) {
     if (!campeonato) return;
     try { await campRepararTrios(true); } catch (e) {}
     var mudou = false;
@@ -14762,8 +14777,10 @@ async function campSincronizar() {
         });
     }
     if (mudou) await campSalvar();
-    showToast('Placares sincronizados!', 'success');
-    renderCampeonato();
+    if (!silencioso) {
+        showToast('Placares sincronizados!', 'success');
+        renderCampeonato();
+    }
 }
 window.campSincronizar = campSincronizar;
 
@@ -15054,6 +15071,32 @@ function campInit() {
         if (currentAlbumPlayer) aplicarFaixaCampeao(currentAlbumPlayer);
     });
 }
+// ===== AUTO-GERAÇÃO DAS RODADAS DE GRUPO =====
+// Na virada de cada janela (R1→04/10, R2→07/10), se a rodada anterior estiver completa,
+// a próxima rodada é gerada automaticamente (sem precisar clicar no botão).
+async function campAutoGerarRodadas() {
+    if (!campeonato || campeonato.status !== 'grupos') return;
+    if (!duelos || !duelos.length) return;
+    try { await campSincronizar(true); } catch (e) {}
+    var agora = new Date();
+    var rodadas = [
+        { n: 1, ini: CAMP_JANELAS.g1.ini },
+        { n: 2, ini: CAMP_JANELAS.g2.ini },
+        { n: 3, ini: CAMP_JANELAS.g3.ini }
+    ];
+    for (var i = 0; i < rodadas.length; i++) {
+        var r = rodadas[i];
+        if (new Date(r.ini) > agora) continue; // janela ainda não começou
+        if (r.n >= 2) {
+            var pendAnterior = campeonato.jogos.some(function (j) { return j.rodada === r.n - 1 && !j.jogado; });
+            if (pendAnterior) continue; // rodada anterior ainda não fechou
+        }
+        var temSemDuelo = campeonato.jogos.some(function (j) { return j.rodada === r.n && !j.dueloId; });
+        if (!temSemDuelo) continue; // já gerada
+        await campGerarRodada(r.n, true);
+    }
+}
+
 campInit();
 
 // Reparo automático do trio: verifica algumas vezes após carregar (duelos podem demorar)
@@ -15063,6 +15106,10 @@ campInit();
         if (n > 0) campReparoAgendado(n - 1);
     }, 4000);
 })(3);
+
+// Auto-geração das rodadas: primeira checagem 20s após carregar, depois a cada 5 min
+setTimeout(function () { campAutoGerarRodadas().catch(function () {}); }, 20000);
+setInterval(function () { campAutoGerarRodadas().catch(function () {}); }, 5 * 60 * 1000);
 </script>
 
 </body>
