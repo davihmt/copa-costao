@@ -14,7 +14,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, updateDoc, addDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, updateDoc, addDoc, deleteField, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBXS2YaByLTEugKUmUUlllJOonXY02qdbs",
@@ -42,6 +42,7 @@
         window.updateDoc = updateDoc;
         window.addDoc = addDoc;
         window.deleteField = deleteField;
+        window.where = where;
     </script>
     <style>
         * { font-family: 'Montserrat', sans-serif; }
@@ -7463,6 +7464,7 @@ function renderTorcidasGuerraAdmin() {
             loadGuerrasClas();
             loadPlayers();
             loadEvents();
+            loadTotaisAntigos(); // totais pré-agregados de julho/agosto (performance/cota)
 
             // Garantir que selects de honraria sejam populados após carregamento
             setTimeout(() => {
@@ -7734,7 +7736,7 @@ function deduplicarTorcidas(eventos) {
 
         async function loadEvents() {
             try {
-                const q = window.query(window.collection(window.db, 'eventos'), window.orderBy('data', 'desc'));
+                const q = window.query(window.collection(window.db, 'eventos'), window.where('data', '>=', EVENTOS_CORTE), window.orderBy('data', 'desc'));
                 window.onSnapshot(q, (snapshot) => {
                     events = [];
                     snapshot.forEach(doc => {
@@ -7820,8 +7822,51 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
         }
         // ===== FIM PADRÃO =====
 
+// ===== CORTE DE EVENTOS ANTIGOS (performance/cota) =====
+        // Eventos antes de setembro/2026 NÃO são carregados no início:
+        // seus totais vêm da coleção 'totaisAntigos' (pré-agregado, ~50 docs).
+        // Meses antigos são carregados SOB DEMANDA quando alguém filtra o ranking Total por eles.
+        const EVENTOS_CORTE = '2026-09-01';
+        var totaisAntigosJog = {};
+        var totaisAntigosCom = {};
+        var eventosAntigosCarregados = {};
+
+        async function loadTotaisAntigos() {
+            try {
+                const snap = await window.getDocs(window.collection(window.db, 'totaisAntigos'));
+                snap.forEach(d => {
+                    const t = d.data();
+                    if (t.tipo === 'comissao') totaisAntigosCom[d.id] = t;
+                    else totaisAntigosJog[d.id] = t;
+                });
+                invalidateStatsCache();
+                try { renderPlayers(); } catch (e) {}
+                try { renderRanking(); } catch (e) {}
+            } catch (e) {}
+        }
+
+        async function carregarEventosMesAntigo(mes) {
+            if (!mes || eventosAntigosCarregados[mes]) return;
+            eventosAntigosCarregados[mes] = true;
+            try {
+                const ini = mes + '-01';
+                const fimD = new Date(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 1);
+                const fim = fimD.getFullYear() + '-' + String(fimD.getMonth() + 1).padStart(2, '0') + '-01';
+                const q = window.query(window.collection(window.db, 'eventos'),
+                    window.where('data', '>=', ini), window.where('data', '<', fim));
+                const snap = await window.getDocs(q);
+                const existentes = {};
+                events.forEach(e => { existentes[e.id] = true; });
+                snap.forEach(d => {
+                    if (!existentes[d.id]) events.push({ id: d.id, ...d.data() });
+                });
+                invalidateStatsCache();
+            } catch (e) {}
+        }
+        window.carregarEventosMesAntigo = carregarEventosMesAntigo;
+
         function getPlayerStats(playerId) {
-            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador');
+            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador' && (!e.data || String(e.data) >= EVENTOS_CORTE));
             playerEventsCache = playerEvents;
 
             // Popular select de meses
@@ -7856,6 +7901,8 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             var batalhasTotal = 0, batalhasDay = 0, batalhasWeek = 0, batalhasMonth = 0;
 
             playerEvents.forEach(ev => {
+                // Eventos antes do corte não são carregados (totais vêm de totaisAntigos)
+                if (ev.data && String(ev.data) < EVENTOS_CORTE) return;
                 // DEBUG: Show first event for each player
                 if (playerEvents.indexOf(ev) === 0) {
                 }
@@ -7917,6 +7964,18 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
                 }
             });
 
+            // Soma dos eventos antes de setembro/2026 (pré-agregado — sem carregar milhares de docs)
+            const _ant = totaisAntigosJog[playerId];
+            if (_ant) {
+                baseTotal += Number(_ant.baseTotal) || 0;
+                stickersTotal += Number(_ant.stickersTotal) || 0;
+                punishTotal += Number(_ant.punishTotal) || 0;
+                verdesTotal += Number(_ant.verdesTotal) || 0;
+                elogiosRecebidos += Number(_ant.elogiosRecebidos) || 0;
+                elogiosDados += Number(_ant.elogiosDados) || 0;
+                batalhasTotal += Number(_ant.batalhasTotal) || 0;
+            }
+
             return {
                 baseTotal, baseDay, baseWeek, baseMonth,
                 stickersTotal, stickersDay, stickersWeek, stickersMonth,
@@ -7937,7 +7996,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
         // ===== STATS POR PERÍODO (para filtro do perfil) =====
         function getPlayerStatsPorPeriodo(playerId, periodo) {
-            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador');
+            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador' && (!e.data || String(e.data) >= EVENTOS_CORTE));
             const hoje = new Date();
             hoje.setHours(12, 0, 0, 0);
 
@@ -8020,7 +8079,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             }
 
             // Coletar meses únicos dos eventos do jogador
-            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador');
+            const playerEvents = events.filter(e => e.jogadorId === playerId && (e.pessoaTipo || 'jogador') === 'jogador' && (!e.data || String(e.data) >= EVENTOS_CORTE));
             const mesesUnicos = [...new Set(playerEvents.map(e => {
                 const d = e.data || e.createdAt;
                 return d ? d.substring(0, 7) : null;
@@ -8100,7 +8159,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
 
             let baseMonth = 0, stickersMonth = 0, punicoesMonth = 0, honrariasMonth = 0, batalhasMonth = 0, verdesMonth = 0, conquistasMonth = 0;
 
-            const playerEvents = events.filter(e => e.jogadorId === comissaoId && (e.pessoaTipo || 'comissao') === 'comissao');
+            const playerEvents = events.filter(e => e.jogadorId === comissaoId && (e.pessoaTipo || 'comissao') === 'comissao' && (!e.data || String(e.data) >= EVENTOS_CORTE));
             for (const ev of playerEvents) {
                 const d = getBRDate(ev.data || ev.createdAt);
                 if (d >= inicioMes && d <= fimMes) {
@@ -8148,7 +8207,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             const mesesDisponiveis = new Set();
             mesesDisponiveis.add('total');
 
-            const playerEvents = events.filter(e => e.jogadorId === comissaoId && (e.pessoaTipo || 'comissao') === 'comissao');
+            const playerEvents = events.filter(e => e.jogadorId === comissaoId && (e.pessoaTipo || 'comissao') === 'comissao' && (!e.data || String(e.data) >= EVENTOS_CORTE));
             for (const ev of playerEvents) {
                 const d = getBRDate(ev.data || ev.createdAt);
                 const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -8333,6 +8392,18 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
             const totalElogiosWeek = elogiosRecebidosWeek + elogiosDadosWeek;
             const totalElogiosMonth = elogiosRecebidosMonth + elogiosDadosMonth;
 
+            // Soma dos eventos antes de setembro/2026 (pré-agregado)
+            const _antC = totaisAntigosCom[comissaoId];
+            if (_antC) {
+                baseTotal += Number(_antC.baseTotal) || 0;
+                stickersTotal += Number(_antC.stickersTotal) || 0;
+                punishTotal += Number(_antC.punishTotal) || 0;
+                verdesTotal += Number(_antC.verdesTotal) || 0;
+                elogiosRecebidos += Number(_antC.elogiosRecebidos) || 0;
+                elogiosDados += Number(_antC.elogiosDados) || 0;
+                batalhasTotal += Number(_antC.batalhasTotal) || 0;
+            }
+
             return {
                 baseTotal, baseDay, baseWeek, baseMonth,
                 stickersTotal, stickersDay, stickersWeek, stickersMonth,
@@ -8433,6 +8504,10 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
         function setRankingMesTotal(v) {
             rankingMesTotal = v || null;
             rankingMesCache = {};
+            // Meses antes do corte: carrega os eventos daquele mês sob demanda (1x por sessão)
+            if (v && v < EVENTOS_CORTE.slice(0, 7)) {
+                carregarEventosMesAntigo(v).then(function () { renderRanking(); });
+            }
             renderRanking();
         }
         window.setRankingMesTotal = setRankingMesTotal;
@@ -15079,6 +15154,7 @@ function campInit() {
 // Na virada de cada janela (R1→04/10, R2→07/10), se a rodada anterior estiver completa,
 // a próxima rodada é gerada automaticamente (sem precisar clicar no botão).
 async function campAutoGerarRodadas() {
+    if (document.visibilityState && document.visibilityState !== 'visible') return; // só aba ativa
     if (!campeonato || campeonato.status !== 'grupos') return;
     if (!duelos || !duelos.length) return;
     try { await campSincronizar(true); } catch (e) {}
@@ -15108,8 +15184,8 @@ campInit();
     setTimeout(function () {
         try { if (typeof campRepararTrios === 'function' && duelos && duelos.length) campRepararTrios(true); } catch (e) {}
         if (n > 0) campReparoAgendado(n - 1);
-    }, 4000);
-})(3);
+    }, n === 1 ? 90000 : 20000);
+})(1);
 
 // Auto-geração das rodadas: primeira checagem 20s após carregar, depois a cada 5 min
 setTimeout(function () { campAutoGerarRodadas().catch(function () {}); }, 20000);
