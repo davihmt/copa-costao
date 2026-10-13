@@ -14,7 +14,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, updateDoc, addDoc, deleteField, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, query, orderBy, updateDoc, addDoc, deleteField, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBXS2YaByLTEugKUmUUlllJOonXY02qdbs",
@@ -27,7 +27,16 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // Cache persistente no aparelho (IndexedDB): reaberturas quase instantâneas,
+        // sincroniza só as mudanças em vez de baixar tudo de novo.
+        let db;
+        try {
+            db = initializeFirestore(app, {
+                localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+            });
+        } catch (e) {
+            db = getFirestore(app);
+        }
 
         window.db = db;
         window.collection = collection;
@@ -4153,7 +4162,7 @@ function getTodayStr() {
                 async function loadConquistasHistorico() {
             try {
                 const q = window.query(window.collection(window.db, 'conquistasHistorico'), window.orderBy('dataConquista', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
+                listenOnce(q, (snapshot) => {
                     conquistasHistorico = [];
                     snapshot.forEach(doc => {
                         conquistasHistorico.push({ id: doc.id, ...doc.data() });
@@ -4191,7 +4200,8 @@ function getTodayStr() {
         async function loadDuelos() {
             try {
                 const q = window.query(window.collection(window.db, 'duelos'), window.orderBy('createdAt', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
+            _unsubDuelos = cancelarListener(_unsubDuelos);
+                _unsubDuelos = window.onSnapshot(q, (snapshot) => {
                     duelos = [];
                     snapshot.forEach(doc => {
                         duelos.push({ id: doc.id, ...doc.data() });
@@ -4336,7 +4346,7 @@ function getTodayStr() {
         async function loadDuelosHistorico() {
             try {
                 const q = window.query(window.collection(window.db, 'duelosHistorico'), window.orderBy('updatedAt', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
+                listenOnce(q, (snapshot) => {
                     duelosHistorico = [];
                     snapshot.forEach(doc => {
                         duelosHistorico.push({ id: doc.id, ...doc.data() });
@@ -4352,7 +4362,7 @@ function getTodayStr() {
         async function loadGuerrasClas() {
             try {
                 const q = window.query(window.collection(window.db, 'guerrasClas'), window.orderBy('createdAt', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
+                listenOnce(q, (snapshot) => {
                     guerrasClas = [];
                     snapshot.forEach(doc => {
                         guerrasClas.push({ id: doc.id, ...doc.data() });
@@ -7697,7 +7707,8 @@ function closeLightbox() {
         async function loadPlayers() {
             try {
                 const q = window.query(window.collection(window.db, 'jogadores'), window.orderBy('nome'));
-                window.onSnapshot(q, (snapshot) => {
+            _unsubPlayers = cancelarListener(_unsubPlayers);
+                _unsubPlayers = window.onSnapshot(q, (snapshot) => {
                     players = [];
                     snapshot.forEach(doc => {
                         players.push({ id: doc.id, ...doc.data() });
@@ -7735,10 +7746,25 @@ function deduplicarTorcidas(eventos) {
             });
         }
 
+        // ===== BUSCA PONTUAL (sem listener) para coleções secundárias =====
+        // Reduz as conexões simultâneas com o Firestore (evita resets/lentidão no mobile).
+        // O botão "Atualizar Crônica" (refreshData) recarrega todas.
+        var _unsubPlayers = null, _unsubEvents = null, _unsubDuelos = null, _unsubElogios = null;
+        function cancelarListener(u) { if (u) { try { u(); } catch (e) {} } return null; }
+
+        async function listenOnce(q, cb) {
+            try {
+                const snap = await window.getDocs(q);
+                cb(snap);
+            } catch (e) {}
+        }
+        window.listenOnce = listenOnce;
+
         async function loadEvents() {
             try {
                 const q = window.query(window.collection(window.db, 'eventos'), window.where('data', '>=', EVENTOS_CORTE), window.orderBy('data', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
+            _unsubEvents = cancelarListener(_unsubEvents);
+                _unsubEvents = window.onSnapshot(q, (snapshot) => {
                     events = [];
                     snapshot.forEach(doc => {
                         events.push({ id: doc.id, ...doc.data() });
@@ -11718,7 +11744,8 @@ async function loadEquipes() {
 async function loadElogios() {
             try {
                 const q = window.query(window.collection(window.db, 'elogios'), window.orderBy('data', 'desc'));
-                window.onSnapshot(q, (snapshot) => {
+            _unsubElogios = cancelarListener(_unsubElogios);
+                _unsubElogios = window.onSnapshot(q, (snapshot) => {
                     honrarias = [];
                     snapshot.forEach(doc => {
                         honrarias.push({ id: doc.id, ...doc.data() });
@@ -13781,7 +13808,7 @@ async function processarConquistasRetroativas() {
         async function loadFigurinhasConfig() {
             try {
                 const q = window.query(window.collection(window.db, 'figurinhasConfig'), window.orderBy('nome'));
-                window.onSnapshot(q, (snapshot) => {
+                listenOnce(q, (snapshot) => {
                     const firebaseFigs = [];
                     snapshot.forEach(doc => {
                         const data = doc.data();
@@ -13800,7 +13827,7 @@ async function processarConquistasRetroativas() {
 async function loadConquistasConfig() {
             try {
                 const q = window.query(window.collection(window.db, 'conquistasConfig'), window.orderBy('meta'));
-                window.onSnapshot(q, (snapshot) => {
+                listenOnce(q, (snapshot) => {
                     const firebaseConqs = [];
                     snapshot.forEach(doc => {
                         const data = doc.data();
@@ -15147,7 +15174,8 @@ window.renderCampeonato = renderCampeonato;
 // ===== INIT =====
 function campInit() {
     if (!window.db) { setTimeout(campInit, 500); return; }
-    window.onSnapshot(window.doc(window.db, 'campeonatos', 'out2026'), function (snap) {
+    if (window._unsubCamp) { try { window._unsubCamp(); } catch (e) {} }
+    window._unsubCamp = window.onSnapshot(window.doc(window.db, 'campeonatos', 'out2026'), function (snap) {
         campeonato = snap.exists() ? snap.data() : null;
         try { renderPlayers(); } catch (e) {}
         var el = document.getElementById('arena-panel-campeonato');
