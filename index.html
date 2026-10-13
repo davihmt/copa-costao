@@ -4025,6 +4025,7 @@
         }
         // ===== STATE =====
         var players = [];
+        var dadosCarregados = false;
         var events = [];
         let currentAlbumPlayer = null;
         let currentAlbumComissao = null;
@@ -7826,7 +7827,7 @@ function getPatenteBadgeComissao(comissaoId, modo = 'home') {
         // Eventos antes de setembro/2026 NÃO são carregados no início:
         // seus totais vêm da coleção 'totaisAntigos' (pré-agregado, ~50 docs).
         // Meses antigos são carregados SOB DEMANDA quando alguém filtra o ranking Total por eles.
-        const EVENTOS_CORTE = '2026-09-01';
+        const EVENTOS_CORTE = '2026-10-01';
         var totaisAntigosJog = {};
         var totaisAntigosCom = {};
         var eventosAntigosCarregados = {};
@@ -8805,7 +8806,12 @@ async function renderPlayers() {
             }
 
             if (players.length === 0 && comissao.length === 0 && corpoTecnico.length === 0) {
-                html = '<p class="text-gray-400 col-span-full text-center py-10">Nenhum guerreiro cadastrado</p>';
+                html = dadosCarregados
+                    ? '<p class="text-gray-400 col-span-full text-center py-10">Nenhum guerreiro cadastrado</p>'
+                    : '<p class="text-gray-500 col-span-full text-center py-10"><i class="fas fa-circle-notch fa-spin mr-2"></i>Convocando os guerreiros...</p>';
+            } else {
+                dadosCarregados = true;
+                try { localStorage.setItem('vc_grid_cache', grid.innerHTML); localStorage.setItem('vc_grid_cache_ts', Date.now()); } catch (e) {}
             }
 
             grid.innerHTML = html;
@@ -15178,6 +15184,18 @@ async function campAutoGerarRodadas() {
 }
 
 campInit();
+
+// ===== CACHE INSTANTÂNEO DA HOME (percepção de velocidade no mobile) =====
+(function () {
+    try {
+        var cache = localStorage.getItem('vc_grid_cache');
+        var ts = Number(localStorage.getItem('vc_grid_cache_ts') || 0);
+        var grid = document.getElementById('players-grid');
+        if (cache && ts && Date.now() - ts < 30 * 60 * 1000 && grid && !grid.innerHTML.trim()) {
+            grid.innerHTML = cache;
+        }
+    } catch (e) {}
+})();
 
 // Reparo automático do trio: verifica algumas vezes após carregar (duelos podem demorar)
 (function campReparoAgendado(n) {
