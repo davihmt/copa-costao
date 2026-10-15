@@ -10469,7 +10469,7 @@ function updateAdminSelects() {
 
             // Group players by function
             // Guerreiros que atuam como Liner E Closer aparecem nas DUAS seções
-            const LINERS_E_CLOSERS = ['flavio', 'medina', 'renato', 'gabriel', 'marta'];
+            const LINERS_E_CLOSERS = ['flavio', 'medina', 'renato', 'gabriel', 'marta', 'juan'];
             const functions = {};
             players.forEach(p => {
                 const func = p.time || 'Sem Casa';
@@ -10483,7 +10483,7 @@ function updateAdminSelects() {
 
             let html = '';
             for (const [func, members] of Object.entries(functions)) {
-                const selectedFromFunc = members.filter(p => selectedFigPlayers.has(p.id) && (figPlayerFunc[p.id] || '') === func);
+                const selectedFromFunc = members.filter(p => selectedFigPlayers.has(p.id) && (figPlayerFunc[p.id] || []).indexOf(func) !== -1);
                 const hasSelection = selectedFromFunc.length > 0;
 
                 html += `<div class="col-span-full mb-2 mt-4 first:mt-0"><h4 class="text-sm font-bold text-[#C8A25A] uppercase tracking-wider">${func}${hasSelection ? ' <span class="text-green-400">✓ Selecionado</span>' : ''}</h4></div>`;
@@ -10497,7 +10497,7 @@ function updateAdminSelects() {
                     ? (p.foto ? getImageUrl(p.foto) : '') 
                     : (p.fotoPerfil ? getImageUrl(p.fotoPerfil) : '');
                     const initials = ((p.nome && p.nome[0]) || '') + ((p.sobrenome && p.sobrenome[0]) || '');
-                    const isSelected = selectedFigPlayers.has(p.id) && (figPlayerFunc[p.id] || '') === func;
+                    const isSelected = selectedFigPlayers.has(p.id) && (figPlayerFunc[p.id] || []).indexOf(func) !== -1;
                     return `
                         <div class="multi-select-player ${isSelected ? 'selected' : ''}" onclick="toggleFigPlayer('${p.id}', '${func}')" style="padding:10px 14px;cursor:pointer;">
                             <div class="check-circle" style="flex-shrink:0;width:22px;height:22px;"><i class="fas fa-check" style="font-size:10px;"></i></div>
@@ -10522,29 +10522,32 @@ function toggleFigPlayer(playerId, func) {
             const player = players.find(p => p.id === playerId);
             if (!player) return;
 
-            // Já estava selecionado PELA MESMA seção -> desmarca
-            if (selectedFigPlayers.has(playerId) && figPlayerFunc[playerId] === func) {
-                selectedFigPlayers.delete(playerId);
-                delete figPlayerFunc[playerId];
+            const secoes = figPlayerFunc[playerId] || [];
+            const idx = secoes.indexOf(func);
+
+            // Já marcado NESTA seção -> desmarca só ela
+            if (selectedFigPlayers.has(playerId) && idx !== -1) {
+                secoes.splice(idx, 1);
+                if (!secoes.length) {
+                    selectedFigPlayers.delete(playerId);
+                    delete figPlayerFunc[playerId];
+                } else {
+                    figPlayerFunc[playerId] = secoes;
+                }
                 renderFigPlayersGrid();
                 return;
             }
 
-            // Já estava selecionado por OUTRA seção -> MOVE a marcação para esta seção (não soma)
-            if (selectedFigPlayers.has(playerId)) {
-                figPlayerFunc[playerId] = func;
-                renderFigPlayersGrid();
-                return;
-            }
-
-            // Max 3 players total
-            if (selectedFigPlayers.size >= 3) {
+            // Nova pessoa no limite de 3
+            if (!selectedFigPlayers.has(playerId) && selectedFigPlayers.size >= 3) {
                 showToast('Máximo de 3 guerreiros atingido', 'error');
                 return;
             }
 
+            // Marca esta seção (pode marcar Liner E Closer da mesma pessoa)
+            secoes.push(func);
+            figPlayerFunc[playerId] = secoes;
             selectedFigPlayers.add(playerId);
-            figPlayerFunc[playerId] = func;
             renderFigPlayersGrid();
         };
 
