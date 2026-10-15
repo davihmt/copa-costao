@@ -15127,12 +15127,10 @@ function renderCampeonato() {
             var pl = d ? campPlacarDuelo(d) : null;
             var aNome = item.a || '—', bNome = item.b || '—';
             var vencA = false, vencB = false;
+            // Destaque de vencedor SOMENTE em duelo finalizado (ao vivo ninguém venceu ainda)
             if (pl && pl.fim && d && d.vencedorNome) {
                 vencA = d.vencedorNome === aNome;
                 vencB = d.vencedorNome === bNome;
-            } else if (pl && !pl.fim) {
-                vencA = pl.a > pl.b;
-                vencB = pl.b > pl.a;
             }
             var clsA = vencA ? 'camp-time-a camp-avancou' : (vencB ? 'camp-time-a camp-eliminado' : 'camp-time-a');
             var clsB = vencB ? 'camp-time-b camp-avancou' : (vencA ? 'camp-time-b camp-eliminado' : 'camp-time-b');
@@ -15142,19 +15140,26 @@ function renderCampeonato() {
             return '<div class="camp-duelo-box ' + cls + '">' + lbl +
                 '<div class="camp-duelo-linha"><span class="' + clsA + '">' + aNome + marcA + '</span><span class="camp-duelo-placar">' + (pl ? pl.a : '–') + ' × ' + (pl ? pl.b : '–') + '</span><span class="' + clsB + '">' + bNome + marcB + '</span></div></div>';
         }
+        // QUARTAS — seção própria (alimentam Upper e Lower)
+        html += '<div class="camp-fase-label" style="margin-top:6px">⚔️ Quartas de Final · 10–13/10</div>';
+        html += '<div class="grid md:grid-cols-2 gap-2 mb-3">';
+        b.qf.forEach(function (q) { html += box(q, ''); });
+        html += '</div>';
+
+        // UPPER e LOWER lado a lado
         html += '<div class="grid md:grid-cols-2 gap-6"><div><h5 class="text-sm font-bold text-[#C8A25A] mb-2" style="font-family:Cinzel,serif">UPPER BRACKET</h5>';
-        html += '<div class="camp-fase-label">⚔️ Quartas de Final · 10–13/10</div>';
-        b.qf.forEach(function (q, i) { html += box(q, ''); });
         if (b.sf && b.sf.length) {
             html += '<div class="camp-fase-label">⚔️ Semifinais · 14–17/10</div>';
             b.sf.forEach(function (s) { html += box(s, ''); });
+        } else {
+            html += '<p class="text-xs text-gray-600 italic px-1 py-2">As vencedoras das quartas decidem as vagas daqui</p>';
         }
         if (b.ubF) {
             html += '<div class="camp-fase-label">👑 Final Upper · 18–21/10</div>';
             html += box(b.ubF, '');
         }
         html += '</div><div><h5 class="text-sm font-bold text-gray-400 mb-2" style="font-family:Cinzel,serif">LOWER BRACKET</h5>';
-        if (!b.lbS && !b.lbf && !b.gf) {
+        if (!b.lbS && !b.lbf) {
             html += '<p class="text-xs text-gray-500 italic px-1 py-3 border border-dashed border-gray-700 rounded-xl text-center">As perdedoras das <b>semifinais</b> descem para cá<br><span class="text-gray-600">Lower Semi · 18–21/10</span></p>';
         }
         if (b.lbS) {
@@ -15165,11 +15170,13 @@ function renderCampeonato() {
             html += '<div class="camp-fase-label">⚔️ Lower Final · 22–26/10</div>';
             html += box(b.lbf, '');
         }
-        if (b.gf) {
-            html += '<div class="camp-fase-label">🏆 Grande Final · 27–31/10</div>';
-            html += box(b.gf, '', true);
-        }
         html += '</div></div>';
+
+        // GRANDE FINAL — destaque central
+        if (b.gf) {
+            html += '<div class="mt-5"><div class="camp-fase-label" style="border-left-color:#FFD700;color:#C8A25A">🏆 Grande Final · 27–31/10 · jogo único</div>' +
+                '<div class="max-w-md mx-auto">' + box(b.gf, '', true) + '</div></div>';
+        }
     }
 
     // ===== GESTÃO DE DUELOS (ADMIN) =====
