@@ -2081,6 +2081,10 @@
         .camp-time-a { text-align: left; min-width: 0; overflow-wrap: anywhere; }
         .camp-time-b { text-align: right; min-width: 0; overflow-wrap: anywhere; }
         .camp-duelo-placar { white-space: nowrap; }
+        .camp-avancou { color: #FFD700; font-weight: 800; }
+        .camp-eliminado { color: #6b7280; opacity: 0.6; }
+        .camp-fase-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.12em; color: #9ca3af; margin: 12px 0 6px; border-left: 3px solid rgba(200,162,90,0.5); padding-left: 7px; text-transform: uppercase; }
+        .camp-fase-label:first-of-type { margin-top: 4px; }
         .camp-duelo-placar { font-weight: 900; color: #C8A25A; }
         .camp-duelo-fim { border-color: rgba(255,215,0,0.4); }
         .camp-podio { text-align: center; border-radius: 14px; padding: 16px; }
@@ -15122,18 +15126,49 @@ function renderCampeonato() {
             var d = item.dueloId ? campDueloPorId(item.dueloId) : null;
             var pl = d ? campPlacarDuelo(d) : null;
             var aNome = item.a || '—', bNome = item.b || '—';
+            var vencA = false, vencB = false;
+            if (pl && pl.fim && d && d.vencedorNome) {
+                vencA = d.vencedorNome === aNome;
+                vencB = d.vencedorNome === bNome;
+            } else if (pl && !pl.fim) {
+                vencA = pl.a > pl.b;
+                vencB = pl.b > pl.a;
+            }
+            var clsA = vencA ? 'camp-time-a camp-avancou' : (vencB ? 'camp-time-a camp-eliminado' : 'camp-time-a');
+            var clsB = vencB ? 'camp-time-b camp-avancou' : (vencA ? 'camp-time-b camp-eliminado' : 'camp-time-b');
             var cls = destaque ? 'camp-duelo-fim' : '';
-            return '<div class="camp-duelo-box ' + cls + '"><div class="text-[10px] text-gray-500 font-bold mb-1" style="font-family:Cinzel,serif">' + label + '</div>' +
-                '<div class="camp-duelo-linha"><span class="camp-time-a">' + aNome + '</span><span class="camp-duelo-placar">' + (pl ? pl.a : '–') + ' × ' + (pl ? pl.b : '–') + '</span><span class="camp-time-b">' + bNome + '</span></div></div>';
+            var lbl = label ? '<div class="text-[10px] text-gray-500 font-bold mb-1" style="font-family:Cinzel,serif">' + label + '</div>' : '';
+            var marcA = vencA ? ' ✅' : '', marcB = vencB ? ' ✅' : '';
+            return '<div class="camp-duelo-box ' + cls + '">' + lbl +
+                '<div class="camp-duelo-linha"><span class="' + clsA + '">' + aNome + marcA + '</span><span class="camp-duelo-placar">' + (pl ? pl.a : '–') + ' × ' + (pl ? pl.b : '–') + '</span><span class="' + clsB + '">' + bNome + marcB + '</span></div></div>';
         }
         html += '<div class="grid md:grid-cols-2 gap-6"><div><h5 class="text-sm font-bold text-[#C8A25A] mb-2" style="font-family:Cinzel,serif">UPPER BRACKET</h5>';
-        b.qf.forEach(function (q, i) { html += box(q, 'QUARTA ' + (i + 1) + ' · 10–13/10'); });
-        if (b.sf) b.sf.forEach(function (s) { html += box(s, 'SEMIFINAL · 14–17/10'); });
-        if (b.ubF) html += box(b.ubF, 'FINAL UPPER · 18–21/10');
+        html += '<div class="camp-fase-label">⚔️ Quartas de Final · 10–13/10</div>';
+        b.qf.forEach(function (q, i) { html += box(q, ''); });
+        if (b.sf && b.sf.length) {
+            html += '<div class="camp-fase-label">⚔️ Semifinais · 14–17/10</div>';
+            b.sf.forEach(function (s) { html += box(s, ''); });
+        }
+        if (b.ubF) {
+            html += '<div class="camp-fase-label">👑 Final Upper · 18–21/10</div>';
+            html += box(b.ubF, '');
+        }
         html += '</div><div><h5 class="text-sm font-bold text-gray-400 mb-2" style="font-family:Cinzel,serif">LOWER BRACKET</h5>';
-        if (b.lbS) html += box(b.lbS, 'LOWER SEMI · 18–21/10');
-        if (b.lbf) html += box(b.lbf, 'LOWER FINAL · 22–26/10');
-        if (b.gf) html += box(b.gf, '🏆 GRANDE FINAL · 27–31/10', true);
+        if (!b.lbS && !b.lbf && !b.gf) {
+            html += '<p class="text-xs text-gray-500 italic px-1 py-3 border border-dashed border-gray-700 rounded-xl text-center">As perdedoras das <b>semifinais</b> descem para cá<br><span class="text-gray-600">Lower Semi · 18–21/10</span></p>';
+        }
+        if (b.lbS) {
+            html += '<div class="camp-fase-label">⚔️ Lower Semi · 18–21/10</div>';
+            html += box(b.lbS, '');
+        }
+        if (b.lbf) {
+            html += '<div class="camp-fase-label">⚔️ Lower Final · 22–26/10</div>';
+            html += box(b.lbf, '');
+        }
+        if (b.gf) {
+            html += '<div class="camp-fase-label">🏆 Grande Final · 27–31/10</div>';
+            html += box(b.gf, '', true);
+        }
         html += '</div></div>';
     }
 
