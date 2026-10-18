@@ -2085,6 +2085,9 @@
         .camp-eliminado { color: #6b7280; opacity: 0.6; }
         .camp-fase-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.12em; color: #9ca3af; margin: 12px 0 6px; border-left: 3px solid rgba(200,162,90,0.5); padding-left: 7px; text-transform: uppercase; }
         .camp-fase-label:first-of-type { margin-top: 4px; }
+        .camp-ao-vivo { display: inline-block; margin-left: 6px; font-size: 9px; color: #4ade80; font-weight: 800; letter-spacing: .08em; animation: campVivoPulse 1.5s ease-in-out infinite; }
+        @keyframes campVivoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+        .camp-final-upper { border-color: rgba(255,215,0,0.55) !important; box-shadow: 0 0 18px rgba(255,215,0,0.12); background: linear-gradient(145deg, rgba(255,215,0,0.04), rgba(255,255,255,0.02)) !important; }
         .camp-duelo-placar { font-weight: 900; color: #C8A25A; }
         .camp-duelo-fim { border-color: rgba(255,215,0,0.4); }
         .camp-podio { text-align: center; border-radius: 14px; padding: 16px; }
@@ -4664,11 +4667,20 @@ function getDueloAtivo(jogadorId) {
                 for (const ev of playerEvents) {
                     let evTs = null;
 
-                    // PRIORIDADE 1: createdAt (timestamp real do Firebase)
-                    if (ev.createdAt) {
+                    // PRIORIDADE 1: data (YYYY-MM-DD) — a data em que o evento VALE (fim do dia)
+                    // Eventos retroativos lançados depois contam na data correta, não no dia do lançamento
+                    if (ev.data) {
+                        const dm = String(ev.data).match(/^(\d{4})-(\d{2})-(\d{2})/);
+                        if (dm) {
+                            evTs = new Date(Number(dm[1]), Number(dm[2])-1, Number(dm[3]), 23, 59, 59).getTime();
+                        } else {
+                            evTs = new Date(ev.data + 'T23:59:59').getTime();
+                        }
+                    }
+                    // PRIORIDADE 2: createdAt (fallback para eventos sem data)
+                    else if (ev.createdAt) {
                         const cm = String(ev.createdAt).match(/^(\d{4})-(\d{2})-(\d{2})/);
                         if (cm) {
-                            // Se createdAt tem hora, usar timestamp real
                             const fullTs = new Date(ev.createdAt).getTime();
                             if (!isNaN(fullTs)) {
                                 evTs = fullTs;
@@ -4677,15 +4689,6 @@ function getDueloAtivo(jogadorId) {
                             }
                         } else {
                             evTs = new Date(ev.createdAt).getTime();
-                        }
-                    }
-                    // PRIORIDADE 2: data (YYYY-MM-DD) - usar FIM do dia
-                    else if (ev.data) {
-                        const dm = String(ev.data).match(/^(\d{4})-(\d{2})-(\d{2})/);
-                        if (dm) {
-                            evTs = new Date(Number(dm[1]), Number(dm[2])-1, Number(dm[3]), 23, 59, 59).getTime();
-                        } else {
-                            evTs = new Date(ev.data + 'T23:59:59').getTime();
                         }
                     }
 
@@ -15137,11 +15140,13 @@ function renderCampeonato() {
             }
             var clsA = vencA ? 'camp-time-a camp-avancou' : (vencB ? 'camp-time-a camp-eliminado' : 'camp-time-a');
             var clsB = vencB ? 'camp-time-b camp-avancou' : (vencA ? 'camp-time-b camp-eliminado' : 'camp-time-b');
-            var cls = destaque ? 'camp-duelo-fim' : '';
+            var cls = destaque === true ? 'camp-duelo-fim' : (destaque === 'final-upper' ? 'camp-final-upper' : '');
             var lbl = label ? '<div class="text-[10px] text-gray-500 font-bold mb-1" style="font-family:Cinzel,serif">' + label + '</div>' : '';
+            var vivo = pl && !pl.fim && d && d.status === 'ativo';
+            var badgeVivo = vivo ? '<span class="camp-ao-vivo">🔥 AO VIVO</span>' : '';
             var marcA = vencA ? ' ✅' : '', marcB = vencB ? ' ✅' : '';
             return '<div class="camp-duelo-box ' + cls + '">' + lbl +
-                '<div class="camp-duelo-linha"><span class="' + clsA + '">' + aNome + marcA + '</span><span class="camp-duelo-placar">' + (pl ? pl.a : '–') + ' × ' + (pl ? pl.b : '–') + '</span><span class="' + clsB + '">' + bNome + marcB + '</span></div></div>';
+                '<div class="camp-duelo-linha"><span class="' + clsA + '">' + aNome + marcA + '</span><span class="camp-duelo-placar">' + (pl ? pl.a : '–') + ' × ' + (pl ? pl.b : '–') + badgeVivo + '</span><span class="' + clsB + '">' + bNome + marcB + '</span></div></div>';
         }
         // QUARTAS — seção própria (alimentam Upper e Lower)
         html += '<div class="camp-fase-label" style="margin-top:6px">⚔️ Quartas de Final · 10–13/10</div>';
@@ -15158,8 +15163,8 @@ function renderCampeonato() {
             html += '<p class="text-xs text-gray-600 italic px-1 py-2">As vencedoras das quartas decidem as vagas daqui</p>';
         }
         if (b.ubF) {
-            html += '<div class="camp-fase-label">👑 Final Upper · 18–21/10</div>';
-            html += box(b.ubF, '');
+            html += '<div class="camp-fase-label" style="border-left-color:#FFD700;color:#C8A25A">👑 FINAL UPPER · 18–21/10</div>';
+            html += box(b.ubF, '', 'final-upper');
         }
         html += '</div><div><h5 class="text-sm font-bold text-gray-400 mb-2" style="font-family:Cinzel,serif">LOWER BRACKET</h5>';
         if (!b.lbS && !b.lbf) {
