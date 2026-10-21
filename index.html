@@ -10557,7 +10557,8 @@ function toggleFigPlayer(playerId, func) {
 function updateFigSelectedCount() {
             const countEl = document.getElementById('fig-selected-count');
             if (countEl) {
-                countEl.textContent = `(${selectedFigPlayers.size} selecionados)`;
+                const totalMarcacoes = Object.values(figPlayerFunc).reduce(function (s, a) { return s + a.length; }, 0);
+                countEl.textContent = `(${totalMarcacoes} selecionados)`;
             }
         }
 
@@ -11323,20 +11324,32 @@ async function lancarFigurinha() {
                 img: figConfig.img || ''
             };
 
+            // Uma runa por marcação: a mesma pessoa marcada em Liner E Closer recebe 2 runas
+            const lancamentos = [];
+            selectedFigPlayers.forEach(jogadorId => {
+                const secoes = figPlayerFunc[jogadorId] || [''];
+                secoes.forEach(func => {
+                    lancamentos.push({ jogadorId, func });
+                });
+            });
+
             try {
                 const promises = [];
-                selectedFigPlayers.forEach(jogadorId => {
+                lancamentos.forEach(l => {
                     promises.push(
                         window.addDoc(window.collection(window.db, 'eventos'), {
-                            jogadorId, tipo: 'figurinha', subtipo: tipo, subtipoLabel: map[tipo].label,
+                            jogadorId: l.jogadorId, tipo: 'figurinha', subtipo: tipo,
+                            subtipoLabel: map[tipo].label + (l.func ? ' (' + l.func + ')' : ''),
                             subtipoImg: map[tipo].img, valor: map[tipo].val, data,
+                            observacao: l.func ? `${map[tipo].label} (${l.func})` : '',
                             createdAt: new Date().toISOString()
                         })
                     );
                 });
 
                 await Promise.all(promises);
-                showToast(`${map[tipo].label} (+${map[tipo].val}) lançada para ${selectedFigPlayers.size} guerreiro(es)!`, 'success');
+                const pessoas = selectedFigPlayers.size;
+                showToast(`${map[tipo].label} (+${map[tipo].val}) — ${lancamentos.length} runa(s) para ${pessoas} guerreiro(s)!`, 'success');
 
                   // Verificar conquistas automáticas
                   for (const jogadorId of selectedFigPlayers) {
