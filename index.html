@@ -2085,6 +2085,9 @@
         .camp-eliminado { color: #6b7280; opacity: 0.6; }
         .camp-fase-label { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.12em; color: #9ca3af; margin: 12px 0 6px; border-left: 3px solid rgba(200,162,90,0.5); padding-left: 7px; text-transform: uppercase; }
         .camp-fase-label:first-of-type { margin-top: 4px; }
+        /* STAND BY — abas bloqueadas */
+        .tab-standby { opacity: 0.4 !important; filter: grayscale(0.6); }
+        .tab-standby:hover { opacity: 0.55 !important; }
         .camp-ao-vivo { display: inline-block; margin-left: 6px; font-size: 9px; color: #4ade80; font-weight: 800; letter-spacing: .08em; animation: campVivoPulse 1.5s ease-in-out infinite; }
         @keyframes campVivoPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
         .camp-final-upper { border-color: rgba(255,215,0,0.55) !important; box-shadow: 0 0 18px rgba(255,215,0,0.12); background: linear-gradient(145deg, rgba(255,215,0,0.04), rgba(255,255,255,0.02)) !important; }
@@ -2186,11 +2189,11 @@
                 <button onclick="showSection('ranking')" id="nav-ranking" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
                     <i class="fas fa-crown mr-1"></i> Destaques
                 </button>
-                <button onclick="showSection('mural')" id="nav-mural" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
-                    <i class="fas fa-scroll mr-1"></i> Insígnias
+                <button onclick="showSection('mural')" id="nav-mural" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px] tab-standby" title="Em stand by — voltamos em dezembro">
+                    <i class="fas fa-lock mr-1"></i> Insígnias
                 </button>
-                <button onclick="showSection('arena')" id="nav-arena" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
-                    <i class="fas fa-shield-halved mr-1"></i> Arena
+                <button onclick="showSection('arena')" id="nav-arena" class="px-3 py-2 rounded-lg font-semibold tab-inactive transition-all text-xs flex-1 min-w-[70px] max-w-[120px] tab-standby" title="Em stand by — voltamos em dezembro">
+                    <i class="fas fa-lock mr-1"></i> Arena
                 </button>
                 <button onclick="showAdminLogin()" class="px-3 py-2 rounded-lg font-semibold bg-gradient-to-r from-yellow-500 to-orange-500 text-[#ECE8E1] hover:shadow-lg transition-all text-xs flex-1 min-w-[70px] max-w-[120px]">
                     <i class="fas fa-key mr-1"></i> Admin
@@ -2215,6 +2218,12 @@
             <div class="mb-6 text-center">
                 <div style="text-align:center;margin-bottom:1rem;">
                     <img src="./valhalla-logo.png" alt="Valhalla Costão" class="mx-auto mb-4" style="max-height:320px;width:auto;filter:drop-shadow(0 10px 30px rgba(0,0,0,0.8));">
+                </div>
+                <!-- AVISO STAND BY -->
+                <div class="glass rounded-2xl p-6 mb-6 text-center" style="border:1px solid rgba(200,162,90,0.35);background:linear-gradient(145deg,rgba(200,162,90,0.08),rgba(11,10,10,0.5));">
+                    <h3 style="font-family:'Cinzel',serif" class="text-xl font-bold text-[#C8A25A] mb-2">⚔️ VALHALLA EM STAND BY ⚔️</h3>
+                    <p class="text-sm text-gray-300 mb-1">Os salões estão em silêncio... estamos forjando <b class="text-[#C8A25A]">novidades para dezembro</b>!</p>
+                    <p class="text-xs text-gray-500">Enquanto isso, visite o perfil de cada guerreiro para relembrar a história, as glórias e os feitos conquistados.</p>
                 </div>
             </div>
             <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -7530,6 +7539,11 @@ function renderTorcidasGuerraAdmin() {
         };
         window.aplicarTema = window.testarTema;
         function showSection(section) {
+            // STAND BY: Arena e Insígnias bloqueadas até dezembro
+            if (section === 'arena' || section === 'mural') {
+                showToast('⚔️ Em stand by — voltamos em dezembro com novidades!', 'info');
+                return;
+            }
             inAdmin = (section === 'admin');
 
             // Esconder TODAS as seções principais + álbuns
